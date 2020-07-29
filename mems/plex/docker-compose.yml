@@ -1,0 +1,26 @@
+version: '2'
+
+services:
+  app:
+    image: linuxserver/plex
+    restart: 'always'
+    container_name: plex
+    entrypoint: [] 
+    command: /bin/bash -c '/init' 
+    environment:
+      VERSION: latest
+      TZ: America/New_York
+    network_mode: "host"
+    ports:
+      - '32400:32400'
+      - '32400:32400/udp'
+      - '32469:32469'
+      - '32469:32469/udp'
+      - '5353:5353/udp'
+      - '1900:1900/udp'
+    volumes:
+      - /mnt/spank-bank/Media:/data/media:ro
+      - plex-config:/config
+    
+volumes:
+  plex-config:

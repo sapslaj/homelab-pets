@@ -1,0 +1,75 @@
+version: '2'
+services:
+  transmission:
+    image: haugene/transmission-openvpn
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun
+    restart: always
+    ports:
+      - "9091:9091"
+      - "8888:8888"
+    dns:
+      - 1.1.1.1
+      - 1.0.0.1
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /mnt/spank-bank/Media/:/data
+    env_file:
+      - .env
+  proxy:
+    image: haugene/transmission-openvpn-proxy
+    restart: unless-stopped
+    links:
+      - transmission
+    ports:
+      - 8080:8080
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+  radarr:
+    image: linuxserver/radarr
+    container_name: radarr
+    environment:
+      PUID: 0
+      PGID: 0
+    volumes:
+      - radarr-config:/config
+      - /mnt/spank-bank/Media/:/data
+    ports:
+      - 7878:7878
+    restart: unless-stopped
+  sonarr:
+    image: linuxserver/sonarr
+    container_name: sonarr
+    environment:
+      PUID: 0
+      PGID: 0
+    volumes:
+      - sonarr-config:/config
+      - /mnt/spank-bank/Media/:/data
+    ports:
+      - 8989:8989
+    restart: unless-stopped
+  jackett:
+    image: linuxserver/jackett
+    container_name: jackett
+    environment:
+      PUID: 0
+      PGID: 0
+      TZ: America/New_York
+    volumes:
+      - jackett-config:/config
+      #- :/downloads
+    ports:
+      - 9117:9117
+    restart: unless-stopped
+
+volumes:
+  jackett-config:
+    driver: local
+  radarr-config:
+    driver: local
+  sonarr-config:
+    driver: local

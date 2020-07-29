@@ -1,0 +1,10 @@
+version: '2'
+
+services:
+  watchtower:
+    image: containrrr/watchtower
+    restart: 'always'
+    container_name: watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+

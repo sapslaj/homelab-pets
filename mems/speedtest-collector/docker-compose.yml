@@ -1,0 +1,6 @@
+version: '2'
+services:
+  collector:
+    build: .
+    restart: unless-stopped
+    env_file: .env

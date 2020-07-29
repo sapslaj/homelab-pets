@@ -1,0 +1,3 @@
+[submodule "speedtest-collector"]
+	path = speedtest-collector
+	url = https://gitlab.homelab.sapslaj.com/sapslaj/speedtest-collector

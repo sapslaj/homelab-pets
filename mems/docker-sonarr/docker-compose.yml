@@ -1,0 +1,15 @@
+version: '2'
+services:
+  sonarr:
+    image: linuxserver/sonarr
+    container_name: sonarr
+    volumes:
+      - sonarr-config:/config
+      - /mnt/spank-bank/Media/:/data
+    ports:
+      - 8989:8989
+    restart: unless-stopped
+
+volumes:
+  sonarr-config:
+    driver: local
