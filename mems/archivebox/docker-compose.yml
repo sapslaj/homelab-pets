@@ -1,0 +1,18 @@
+version: '2'
+
+services:
+  archivebox:
+    image: nikisweeting/archivebox:latest
+    command: server 0.0.0.0:8000
+    stdin_open: true
+    tty: true
+    environment:
+      CHROME_SANDBOX: 'False'
+      ALLOW_ROOT: 'True'
+    ports:
+      - 8000:8000
+    environment:
+      - USE_COLOR=True
+      - SHOW_PROGRESS=False
+    volumes:
+      - /mnt/spank-bank/archivebox:/data
