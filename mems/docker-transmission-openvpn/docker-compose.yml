@@ -1,5 +1,23 @@
-version: '2'
+version: '3'
 services:
+  vpn:
+    image: bubuntux/nordvpn
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    sysctls:
+      - net.ipv4.conf.all.rp_filter=2
+    devices:
+      - /dev/net/tun
+    env_file:
+      - .env
+    dns:
+      - 1.1.1.1
+      - 1.0.0.1
+    extra_hosts:
+      - w569ut7zbkiqf5b.xyz:104.28.28.105
+      - zwyr157wwiu6eior.com:104.17.188.107
+      - boi9osyg1uwtyafn.com:104.16.229.42
   transmission:
     image: haugene/transmission-openvpn
     restart: unless-stopped
@@ -19,7 +37,7 @@ services:
       - /mnt/spank-bank/Media/:/data
     env_file:
       - .env
-  proxy:
+  transmission-proxy:
     image: haugene/transmission-openvpn-proxy
     restart: unless-stopped
     links:
