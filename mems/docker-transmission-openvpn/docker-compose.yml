@@ -49,30 +49,45 @@ services:
   radarr:
     image: linuxserver/radarr
     container_name: radarr
+    network_mode: service:vpn
     environment:
       PUID: 0
       PGID: 0
     volumes:
       - radarr-config:/config
       - /mnt/spank-bank/Media/:/data
+    restart: unless-stopped
+  radarr-proxy:
+    image: dperson/nginx
+    links:
+      - vpn:radarr
     ports:
-      - 7878:7878
+      - 7878:80
+    command: -w "http://radarr:7878/;/"
     restart: unless-stopped
   sonarr:
     image: linuxserver/sonarr
     container_name: sonarr
+    network_mode: service:vpn
     environment:
       PUID: 0
       PGID: 0
     volumes:
       - sonarr-config:/config
       - /mnt/spank-bank/Media/:/data
+    restart: unless-stopped
+  sonarr-proxy:
+    image: dperson/nginx
+    links:
+      - vpn:sonarr
     ports:
-      - 8989:8989
+      - 8989:80
+    command: -w "http://sonarr:8989/;/"
     restart: unless-stopped
   jackett:
     image: linuxserver/jackett
     container_name: jackett
+    network_mode: service:vpn
     environment:
       PUID: 0
       PGID: 0
@@ -80,8 +95,14 @@ services:
     volumes:
       - jackett-config:/config
       #- :/downloads
+    restart: unless-stopped
+  jackett-proxy:
+    image: dperson/nginx
+    links:
+      - vpn:jackett
     ports:
-      - 9117:9117
+      - 9117:80
+    command: -w "http://jackett:9117/;/"
     restart: unless-stopped
 
 volumes:
