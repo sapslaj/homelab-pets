@@ -50,6 +50,8 @@ services:
     image: linuxserver/radarr
     container_name: radarr
     # network_mode: service:vpn
+    links:
+      - vpn:jackett
     ports:
       - 7878:7878
     environment:
@@ -69,6 +71,8 @@ services:
     image: linuxserver/sonarr
     container_name: sonarr
     # network_mode: service:vpn
+    links:
+      - vpn:jackett
     ports:
       - 8989:8989
     environment:
@@ -89,8 +93,8 @@ services:
     container_name: jackett
     network_mode: service:vpn
     environment:
-      PUID: 0
-      PGID: 0
+      PUID: 33
+      PGID: 33
       TZ: America/New_York
     volumes:
       - jackett-config:/config
