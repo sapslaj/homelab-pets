@@ -1,7 +1,7 @@
 version: '3'
 services:
   vpn:
-    image: bubuntux/nordvpn
+    image: bubuntux/nordvpn:openvpn
     cap_add:
       - NET_ADMIN
       - SYS_MODULE
