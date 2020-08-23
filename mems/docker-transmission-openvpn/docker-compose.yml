@@ -50,6 +50,17 @@ services:
       - 8080:8080
     volumes:
       - /etc/localtime:/etc/localtime:ro
+  nyaa-proxy:
+    build: ./nyaa-proxy
+    network_mode: service:vpn
+    command: nyaa-proxy --port=8081 --backend=https://nyaa.si
+    restart: unless-stopped
+  nyaa-proxy-proxy: # vpn container refuses to forward traffic from outside the host to nyaa-proxy for whatever reason.
+    image: dperson/nginx
+    ports:
+      - 8081:80
+    command: -w "http://vpn:8081/;/"
+    restart: unless-stopped
   radarr:
     image: linuxserver/radarr
     container_name: radarr
