@@ -1,0 +1,13 @@
+[Unit]
+Description=Cloudflare DDNS Updater
+After=network.target
+
+[Service]
+Type=oneshot
+Environment=CF_API_EMAIL='saps.laj@gmail.com'
+Environment=CF_API_KEY='' # Redacted
+ExecStart=/usr/bin/python3 /usr/sbin/cloudflare-ddns-update.py homelab.sapslaj.com
+StandardOutput=journal
+
+[Install]
+WantedBy=multi-user.target
