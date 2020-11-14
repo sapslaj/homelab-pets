@@ -2,6 +2,7 @@ version: '3'
 services:
   vpn:
     image: bubuntux/nordvpn:openvpn
+    restart: unless-stopped
     cap_add:
       - NET_ADMIN
       - SYS_MODULE
@@ -29,7 +30,7 @@ services:
       - NET_ADMIN
     devices:
       - /dev/net/tun
-    restart: always
+    restart: unless-stopped
     ports:
       - "9091:9091"
       - "8888:8888"
