@@ -1,0 +1,13 @@
+global:
+  sendAnonymousUsage: false
+
+log:
+  level: DEBUG
+
+entryPoints:
+  radarr:
+    address: :7879
+
+providers:
+  file:
+    filename: /etc/traefik/sites.yml

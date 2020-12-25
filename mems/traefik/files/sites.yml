@@ -1,0 +1,12 @@
+http:
+  routers:
+    radarr:
+      entryPoints:
+        - radarr
+      rule: Host(`*`)
+      service: radarr
+  services:
+    radarr:
+      loadBalancer:
+        servers:
+          - url: http://localhost:7878/

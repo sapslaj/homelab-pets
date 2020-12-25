@@ -1,0 +1,30 @@
+- hosts: localhost
+  become: yes
+  handlers:
+    - name: restart traefik
+      systemd:
+        name: traefik.service
+        state: restarted
+        daemon_reload: yes
+  tasks:
+    - file:
+        path: /etc/traefik
+        state: directory
+    - copy:
+        src: '{{ item }}'
+        dest: /etc/traefik/{{ item }}
+      with_items:
+        - traefik.yml
+        - sites.yml
+      notify:
+        - restart traefik
+    - copy:
+        src: traefik.service
+        dest: /etc/systemd/system/traefik.service
+      notify:
+        - restart traefik
+    - meta: flush_handlers
+    - systemd:
+        name: traefik.service
+        enabled: yes
+        state: started
