@@ -1,2 +1,4 @@
 # TODO: use git-crypt for these files.
 .env
+
+.tmp
