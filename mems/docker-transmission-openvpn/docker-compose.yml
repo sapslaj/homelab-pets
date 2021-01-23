@@ -2,6 +2,7 @@ version: '3'
 services:
   vpn:
     image: bubuntux/nordvpn:openvpn
+    container_name: vpn
     restart: unless-stopped
     cap_add:
       - NET_ADMIN
@@ -25,6 +26,7 @@ services:
       disable: true
   transmission:
     image: haugene/transmission-openvpn
+    container_name: transmission
     restart: unless-stopped
     cap_add:
       - NET_ADMIN
@@ -44,6 +46,7 @@ services:
       - .env
   transmission-proxy:
     image: haugene/transmission-openvpn-proxy
+    container_name: transmission-proxy
     restart: unless-stopped
     links:
       - transmission
