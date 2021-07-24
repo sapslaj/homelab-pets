@@ -1,4 +1,4 @@
-FROM golang:latest
+FROM golang:1.14
 WORKDIR /usr/src/nyaa-proxy
 COPY . .
 # RUN go mod download

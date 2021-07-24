@@ -1,29 +1,30 @@
 version: '3'
 services:
   vpn:
-    image: bubuntux/nordvpn:openvpn
+    image: bubuntux/nordvpn:v3.9.1
     container_name: vpn
     restart: unless-stopped
     cap_add:
       - NET_ADMIN
-      - SYS_MODULE
-    sysctls:
-      - net.ipv4.conf.all.rp_filter=2
-    devices:
-      - /dev/net/tun
+    #   - SYS_MODULE
+    # sysctls:
+    #   - net.ipv4.conf.all.rp_filter=2
+    # devices:
+    #   - /dev/net/tun
     env_file:
       - .env
-    dns:
-      - 1.1.1.1
-      - 1.0.0.1
+    # dns:
+    #   - 1.1.1.1
+    #   - 1.0.0.1
     extra_hosts:
       - w569ut7zbkiqf5b.xyz:104.28.28.105
       - zwyr157wwiu6eior.com:104.17.188.107
       - boi9osyg1uwtyafn.com:104.16.229.42
+      - cdn.zwyr157wwiu6eior.com:104.17.207.102
     ports:
       - 9117:9117 # Jackett
-    healthcheck:
-      disable: true
+    # healthcheck:
+    #   disable: true
   transmission:
     image: haugene/transmission-openvpn
     container_name: transmission
@@ -54,17 +55,17 @@ services:
       - 8080:8080
     volumes:
       - /etc/localtime:/etc/localtime:ro
-  nyaa-proxy:
-    build: ./nyaa-proxy
-    network_mode: service:vpn
-    command: nyaa-proxy --port=8081 --backend=https://nyaa.si
-    restart: unless-stopped
-  nyaa-proxy-proxy: # vpn container refuses to forward traffic from outside the host to nyaa-proxy for whatever reason.
-    image: dperson/nginx
-    ports:
-      - 8081:80
-    command: -w "http://vpn:8081/;/"
-    restart: unless-stopped
+  # nyaa-proxy:
+  #   build: ./nyaa-proxy
+  #   network_mode: service:vpn
+  #   command: nyaa-proxy --port=8081 --backend=https://nyaa.si
+  #   restart: unless-stopped
+  # nyaa-proxy-proxy: # vpn container refuses to forward traffic from outside the host to nyaa-proxy for whatever reason.
+  #   image: dperson/nginx
+  #   ports:
+  #     - 8081:80
+  #   command: -w "http://vpn:8081/;/"
+  #   restart: unless-stopped
   radarr:
     image: linuxserver/radarr
     container_name: radarr
