@@ -1,0 +1,11 @@
+- hosts: all
+  become: true
+  roles:
+    - role: cloudalchemy.node_exporter
+  tasks:
+    - name: alow port 9100 in firewalld
+      firewalld:
+        port: 9100/tcp
+        permanent: yes
+        immediate: yes
+        state: enabled
