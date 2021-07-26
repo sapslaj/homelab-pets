@@ -1,0 +1,23 @@
+- hosts: all
+  become: true
+  roles:
+    - role: cloudalchemy.prometheus
+      vars:
+        prometheus_alert_rules: []
+        prometheus_targets: []
+        prometheus_scrape_jobs: []
+        prometheus_config_file: files/prometheus.yml
+        prometheus_config_flags_extra:
+          web.enable-lifecycle:
+  tasks:
+    - name: copy Prometheus rules
+      copy:
+        src: rules/
+        dest: /etc/prometheus/rules/
+      notify: reload prometheus
+  handlers:
+    - name: reload prometheus
+      uri:
+        url: http://localhost:9090/-/reload
+        method: POST
+      ignore_errors: '{{ ansible_check_mode }}'
