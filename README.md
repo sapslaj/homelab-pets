@@ -11,3 +11,11 @@ NAS, misc Docker stuff (media servers, linux server ISO download system)
 ### eris
 
 Pi-Hole, CloudFlare DDNS Updater
+
+### octopi
+
+OctoPrint
+
+### playboy
+
+print server, Kodi/OSMC, other living room stuff
