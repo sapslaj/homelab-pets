@@ -16,8 +16,9 @@ inputs:
 runs:
   using: composite
   steps:
-    - shell: bash -ieo pipefail {0}
+    - shell: bash
       run: |
+        source ~/.profile
         set -x
         ansible --version
         cd "${{ inputs.dir }}"
