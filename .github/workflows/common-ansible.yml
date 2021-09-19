@@ -1,0 +1,13 @@
+name: common-ansible
+on:
+  push:
+    branches: [master]
+    paths: [common/ansible/**]
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v2
+      - run: |
+          cd common/ansible
+          ansible-playbook -i inventory -u ci main.yml

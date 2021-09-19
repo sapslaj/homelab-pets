@@ -1,0 +1,41 @@
+- name: create selfheal tasks directory
+  file:
+    path: /etc/selfheal/tasks
+    state: directory
+
+- name: copy entrypoint playbook
+  copy:
+    src: selfheal/selfheal.yml
+    dest: /etc/selfheal/selfheal.yml
+
+- name: determine (roughly) the ansible version on host
+  shell: |
+    set -o pipefail
+    ansible --version | head -n 1 | perl -ne 'print "$1.$2" while(/ansible\s(\d)\.(\d)/g)'
+  args:
+    executable: /bin/bash
+  register: _ansible_version
+  changed_when: false
+
+- name: copy systemd service
+  template:
+    src: selfheal/selfheal.service
+    dest: /etc/systemd/system/
+  notify:
+    - restart selfheal service
+
+- name: copy systemd timer
+  copy:
+    src: selfheal/selfheal.timer
+    dest: /etc/systemd/system/
+  notify:
+    - restart selfheal timer
+
+- meta: flush_handlers
+
+- name: enable systemd timer
+  systemd:
+    name: selfheal.timer
+    state: started
+    enabled: yes
+    daemon_reload: yes

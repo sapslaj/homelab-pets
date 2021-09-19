@@ -1,0 +1,16 @@
+{% if _ansible_version.stdout is defined %}
+{% set version = _ansible_version.stdout | float %}
+{% else %}
+{% set version = ansible_version.major + (ansible_version.minor / 10) %}
+{% endif %}
+[Unit]
+Description=Self-heal services
+After=network-online.target
+
+[Service]
+Type=oneshot
+{% if version >= 2.5 %}
+Environment="ANSIBLE_STDOUT_CALLBACK=actionable"
+{% endif %}
+ExecStart=/usr/bin/ansible-playbook -i localhost, selfheal.yml
+WorkingDirectory=/etc/selfheal

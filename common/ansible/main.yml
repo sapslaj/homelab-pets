@@ -1,0 +1,7 @@
+- hosts: all
+  become: true
+  roles:
+    - role: sapslaj.ansible_target
+    - role: sapslaj.users
+    - role: sapslaj.selfheal
+    - role: cloudalchemy.node_exporter

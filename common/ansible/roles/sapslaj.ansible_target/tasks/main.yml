@@ -1,0 +1,16 @@
+- name: install packages needed for Ansible management (Debian)
+  apt:
+    state: present
+    force_apt_get: true
+    name:
+      - ansible
+      - build-essential
+      - python-apt
+  when: ansible_distribution in ["Debian", "Ubuntu", "Linux Mint", "OSMC"]
+
+- name: install packages needed for Ansible management (Red Hat - dnf)
+  dnf:
+    state: installed
+    name:
+      - ansible
+  when: ansible_distribution in ["Fedora", "Red Hat", "CentOS"]
