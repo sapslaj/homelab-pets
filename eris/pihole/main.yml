@@ -1,0 +1,34 @@
+- hosts: all
+  become: true
+  tasks:
+    - name: copy pihole-update.service
+      copy:
+        src: pihole-update/pihole-update.service
+        dest: /etc/systemd/system/pihole-update.service
+      notify:
+        - restart pihole-update service
+    - name: copy pihole-update.timer
+      copy:
+        src: pihole-update/pihole-update.timer
+        dest: /etc/systemd/system/pihole-update.timer
+      notify:
+        - restart pihole-update timer
+  handlers:
+    - name: restart pihole-update service
+      systemd:
+        name: pihole-update.service
+        state: restarted
+        daemon_reload: yes
+    - name: restart pihole-update timer
+      systemd:
+        name: pihole-update.timer
+        state: restarted
+        daemon_reload: yes
+
+- hosts: all
+  become: true
+  tasks:
+    - name: copy dnsmasq config files
+      copy:
+        src: dnsmasq.d/
+        dest: /etc/dnsmasq.d/
