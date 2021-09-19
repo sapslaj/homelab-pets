@@ -1,0 +1,18 @@
+name: Mems / Plex
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/mems-plex.yml
+      - mems/plex/**
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v2
+      - name: Deploy docker-compose app
+        uses: ./.github/actions/deploy-docker-compose
+        with:
+          host: mems.homelab.sapslaj.com
+          dir: mems/plex

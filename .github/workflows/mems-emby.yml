@@ -1,0 +1,18 @@
+name: Mems / Emby
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/mems-emby.yml
+      - mems/emby/**
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v2
+      - name: Deploy docker-compose app
+        uses: ./.github/actions/deploy-docker-compose
+        with:
+          host: mems.homelab.sapslaj.com
+          dir: mems/emby
