@@ -23,9 +23,10 @@ scrape_configs:
         - 2D9A4A7692EF498B81A28C055740D573
     static_configs:
       - targets:
-          - octopi.homelab.sapslaj.com:80 
+          - octopi.homelab.sapslaj.com:80
   - job_name: node_exporter
     static_configs:
       - targets:
           - eris.homelab.sapslaj.com:9100
           - mems.homelab.sapslaj.com:9100
+          - playboy.homelab.sapslaj.com:9100
