@@ -11,10 +11,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Run ansible-playbook
-        run: |
-          cd common/ansible
-          ansible-playbook -i inventory -u ci main.yml
-        env:
-          ANSIBLE_HOST_KEY_CHECKING: 'False'
-          ANSIBLE_FORCE_COLOR: 'True'
-          ANSIBLE_STDOUT_CALLBACK: yaml
+        uses: ./.github/actions/run-playbook
+        with:
+          dir: common/ansible
