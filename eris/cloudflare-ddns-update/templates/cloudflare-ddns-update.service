@@ -5,7 +5,7 @@ After=network.target
 [Service]
 Type=oneshot
 Environment=CF_API_EMAIL='saps.laj@gmail.com'
-Environment=CF_API_KEY='' # Redacted
+Environment=CF_API_KEY='{{ cf_api_key | trim }}'
 ExecStart=/usr/bin/python3 /usr/sbin/cloudflare-ddns-update.py homelab.sapslaj.com
 StandardOutput=journal
 
