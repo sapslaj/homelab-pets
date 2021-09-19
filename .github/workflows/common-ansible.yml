@@ -1,8 +1,10 @@
-name: common-ansible
+name: Common / Ansible
 on:
   push:
-    branches: [master]
-    paths: [common/ansible/**]
+    branches: [main]
+    paths:
+      - .github/workflows/common-ansible.yml
+      - common/ansible/**
 jobs:
   deploy:
     runs-on: self-hosted
