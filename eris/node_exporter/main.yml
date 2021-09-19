@@ -1,4 +1,0 @@
-- hosts: all
-  become: true
-  roles:
-    - role: cloudalchemy.node_exporter
