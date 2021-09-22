@@ -3,6 +3,11 @@
   vars_files:
     - secret_vars/all.yml
   tasks:
+    - name: install libs
+      pip:
+        name:
+          - requests
+          - cloudflare
     - name: copy script
       copy:
         src: cloudflare-ddns-update.py
