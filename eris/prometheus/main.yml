@@ -1,6 +1,7 @@
 - hosts: all
   become: true
   roles:
+    - role: cloudalchemy.blackbox-exporter
     - role: cloudalchemy.prometheus
       vars:
         prometheus_alert_rules: []

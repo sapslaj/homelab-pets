@@ -1,1 +1,2 @@
 - name: cloudalchemy.prometheus
+- name: cloudalchemy.blackbox-exporter
