@@ -15,11 +15,12 @@ scrape_configs:
   - job_name: prometheus
     static_configs:
       - targets:
-          - localhost:9090
+          - eris.homelab.sapslaj.com:9090
+          - prometheus.direct.sapslaj.cloud:9090
   - job_name: blackbox
     static_configs:
       - targets:
-          - localhost:9115
+          - eris.homelab.sapslaj.com:9115
   - job_name: octoprint
     metrics_path: /plugin/prometheus_exporter/metrics
     params:
@@ -34,3 +35,42 @@ scrape_configs:
           - eris.homelab.sapslaj.com:9100
           - mems.homelab.sapslaj.com:9100
           - playboy.homelab.sapslaj.com:9100
+  - job_name: blackbox_http2xx
+    metrics_path: /probe
+    params:
+      module:
+        - http_2xx
+    relabel_configs: &blackbox_relabel_configs
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: localhost:9115
+    static_configs:
+      - targets:
+          - http://mems.homelab.sapslaj.com:9117 # Jackett
+          - http://mems.homelab.sapslaj.com:8989 # Sonarr
+          # - http://mems.homelab.sapslaj.com:8080 # Transmission (nginx)
+          - http://mems.homelab.sapslaj.com:8096 # Emby
+  - job_name: blackbox_tcp_connect
+    metrics_path: /probe
+    params:
+      module:
+        - tcp_connect
+    relabel_configs: *blackbox_relabel_configs
+    static_configs:
+      - targets:
+          # - mems.homelab.sapslaj.com:7878 # Radarr
+          - mems.homelab.sapslaj.com:32400 # Plex
+          - eris.homelab.sapslaj.com:53 # PiHole
+  - job_name: blackbox_icmp
+    metrics_path: /probe
+    params:
+      module:
+        - icmp
+    relabel_configs: *blackbox_relabel_configs
+    static_configs:
+      - targets:
+          - mems.homelab.sapslaj.com
+          - eris.homelab.sapslaj.com
