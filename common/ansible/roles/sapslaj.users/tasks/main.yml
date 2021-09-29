@@ -18,6 +18,7 @@
   user:
     name: '{{ item.name }}'
     password: '{{ item.password }}'
+    append: yes
     groups:
       - admin
   with_items: '{{ common_users }}'
@@ -30,10 +31,10 @@
   with_items: '{{ common_users }}'
   ignore_errors: '{{ ansible_check_mode }}'
 
-- name: set default shell to bash
+- name: set default shell to bash if permitted
   user:
     name: '{{ item.name }}'
     shell: /bin/bash
   with_items: '{{ common_users }}'
-  when: stat_bash.stat.exists and stat_bash.stat.xoth
+  when: stat_bash.stat.exists and stat_bash.stat.xoth and inventory_hostname not in item.no_manage_shell_hosts|default([])
   ignore_errors: '{{ ansible_check_mode }}'
