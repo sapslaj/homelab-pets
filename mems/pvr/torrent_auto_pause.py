@@ -7,16 +7,17 @@ start_torrents = []
 stop_torrents = []
 
 for torrent in torrents:
-    should_be_active = not all([
+    seeders = sum([stats.seeder_count for stats in torrent.tracker_stats])
+    should_be_paused = all([
         torrent.percent_done == 1.0,
         torrent.upload_ratio > 2.0,
-        sum([stats.seeder_count for stats in torrent.tracker_stats]) > 10,
+        seeders > 10,
     ])
-    if torrent.status == clutch.schema.user.response.torrent.accessor.Status.STOPPED and should_be_active:
-        print(f"Queueing {torrent.name} <{torrent.id}> to be started")
+    if torrent.status == clutch.schema.user.response.torrent.accessor.Status.STOPPED and not should_be_paused:
+        print(f"Starting {torrent.name} <{torrent.id}> (s: {seeders}; r: {torrent.upload_ratio}; %: {torrent.percent_done})")
         start_torrents.append(torrent.id)
-    elif torrent.status != clutch.schema.user.response.torrent.accessor.Status.STOPPED and not should_be_active:
-        print(f"Queueing {torrent.name} <{torrent.id}> to be stopped")
+    if torrent.status != clutch.schema.user.response.torrent.accessor.Status.STOPPED and should_be_paused:
+        print(f"Stopping {torrent.name} <{torrent.id}> (s: {seeders}; r: {torrent.upload_ratio}; %: {torrent.percent_done})")
         stop_torrents.append(torrent.id)
 
 if stop_torrents:
