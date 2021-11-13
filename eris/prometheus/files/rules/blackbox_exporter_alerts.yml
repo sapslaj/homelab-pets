@@ -11,7 +11,7 @@ groups:
           description: "Probe failed"
       - alert: SlowProbe
         expr: avg_over_time(probe_duration_seconds[1m]) > 1
-        for: 5m
+        for: 10m
         labels:
           severity: warning
         annotations:
