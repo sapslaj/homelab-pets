@@ -9,6 +9,7 @@
         prometheus_alert_rules: []
         prometheus_targets: []
         prometheus_scrape_jobs: []
+        prometheus_storage_retention: 400d
         prometheus_config_file: files/prometheus.yml
         prometheus_config_flags_extra:
           web.enable-lifecycle:
