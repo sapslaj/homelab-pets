@@ -36,6 +36,10 @@ scrape_configs:
           - mems.homelab.sapslaj.com:9100
           - playboy.homelab.sapslaj.com:9100
           - octopi.homelab.sapslaj.com:9100
+  - job_name: du_spank_bank
+    static_configs:
+      - targets:
+          - mems.homelab.sapslaj.com:9477
   - job_name: blackbox_http2xx
     metrics_path: /probe
     params:
