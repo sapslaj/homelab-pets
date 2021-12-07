@@ -1,0 +1,18 @@
+name: Mems / spank_bank_du
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/mems-spank_bank_du.yml
+      - mems/spank_bank_du/**
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run ansible-playbook
+        uses: ./.github/actions/run-playbook
+        with:
+          dir: mems/spank_bank_du
+          inventory: mems.homelab.sapslaj.com,

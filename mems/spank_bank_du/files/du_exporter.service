@@ -1,0 +1,13 @@
+[Unit]
+Description=du_exporter
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/mnt/spank-bank
+ExecStart=/usr/local/bin/du_exporter -i 300 -d 1 archive Media volumes
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
