@@ -5,6 +5,8 @@
       copy:
         src: du_exporter
         dest: /usr/local/bin/du_exporter
+      notify:
+        - restart du_exporter service
     - name: copy service unit
       copy:
         src: du_exporter.service
