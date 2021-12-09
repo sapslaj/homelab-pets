@@ -6,7 +6,7 @@ Wants=network-online.target
 [Service]
 Type=simple
 WorkingDirectory=/mnt/spank-bank
-ExecStart=/usr/local/bin/du_exporter -i 300 -L -l -d 1 archive Media volumes
+ExecStart=/usr/local/bin/du_exporter -w -i 300 -L -l -d 1 archive Media volumes
 Restart=on-failure
 
 [Install]
