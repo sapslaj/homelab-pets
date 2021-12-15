@@ -21,21 +21,21 @@ scrape_configs:
     static_configs:
       - targets:
           - eris.homelab.sapslaj.com:9115
-  - job_name: octoprint
-    metrics_path: /plugin/prometheus_exporter/metrics
-    params:
-      apikey:
-        - 2D9A4A7692EF498B81A28C055740D573
-    static_configs:
-      - targets:
-          - octopi.homelab.sapslaj.com:80
+  # - job_name: octoprint
+  #   metrics_path: /plugin/prometheus_exporter/metrics
+  #   params:
+  #     apikey:
+  #       - 2D9A4A7692EF498B81A28C055740D573
+  #   static_configs:
+  #     - targets:
+  #         - octopi.homelab.sapslaj.com:80
   - job_name: node_exporter
     static_configs:
       - targets:
           - eris.homelab.sapslaj.com:9100
           - mems.homelab.sapslaj.com:9100
           - playboy.homelab.sapslaj.com:9100
-          - octopi.homelab.sapslaj.com:9100
+          # - octopi.homelab.sapslaj.com:9100
   - job_name: du_spank_bank
     static_configs:
       - targets:
@@ -60,7 +60,7 @@ scrape_configs:
           - http://mems.homelab.sapslaj.com:8096    # Emby
           - http://mems.homelab.sapslaj.com:8989    # Sonarr
           - http://mems.homelab.sapslaj.com:9117    # Jackett
-          - http://octopi.homelab.sapslaj.com:80    # OctoPrint UI
+          # - http://octopi.homelab.sapslaj.com:80    # OctoPrint UI
           - http://playboy.homelab.sapslaj.com:631  # CUPS UI
   - job_name: blackbox_tcp_connect
     metrics_path: /probe
@@ -84,4 +84,4 @@ scrape_configs:
           - mems.homelab.sapslaj.com
           - eris.homelab.sapslaj.com
           - playboy.homelab.sapslaj.com
-          - octopi.homelab.sapslaj.com
+          # - octopi.homelab.sapslaj.com
