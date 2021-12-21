@@ -92,3 +92,19 @@
         volumes:
           - /mnt/spank-bank/volumes/pvr/radarr-config:/config
           - /mnt/spank-bank/Media:/data
+    - name: lidarr container
+      docker_container:
+        name: lidarr
+        image: lscr.io/linuxserver/lidarr
+        restart_policy: unless-stopped
+        links:
+          - vpn:jackett
+        ports:
+          - 0.0.0.0:8686:8686
+          - '[::]:8686:8686'
+        env:
+          PUID: '0'
+          PGID: '0'
+        volumes:
+          - /mnt/spank-bank/volumes/pvr/lidarr-config:/config
+          - /mnt/spank-bank/Media:/data
