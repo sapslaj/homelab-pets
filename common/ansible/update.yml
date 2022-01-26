@@ -1,0 +1,16 @@
+- hosts: all
+  become: yes
+  tasks:
+    - name: update all packages
+      package:
+        name: '*'
+        state: latest
+
+- hosts: all
+  become: yes
+  tasks:
+    - name: check if a reboot is required
+      shell: "[ -f /var/run/reboot-required ]"
+      failed_when: False
+      register: reboot_required
+      changed_when: reboot_required.rc == 0
