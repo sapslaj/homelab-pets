@@ -4,6 +4,10 @@ Pet servers; and an attempt to make them less pet-like.
 
 ## Servers
 
+### aqua
+
+NAS, KVM host
+
 ### mems
 
 NAS, misc Docker stuff (media servers, linux server ISO download system)

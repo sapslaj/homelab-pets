@@ -1,0 +1,80 @@
+- hosts: all
+  become: true
+  handlers:
+    - name: restart NetworkManager
+      systemd:
+        name: NetworkManager.service
+        state: restarted
+    - name: restart libvirtd
+      systemd:
+        name: libvirtd.service
+        state: restarted
+  tasks:
+    - name: install storage packages
+      apt:
+        name:
+          - mdadm
+          - parted
+    - name: install NetworkManager
+      apt:
+        name: network-manager
+    - name: set NetworkManager to manage all interfaces
+      lineinfile:
+        path: /etc/NetworkManager/NetworkManager.conf
+        regexp: ^managed=
+        line: managed=true
+      notify:
+        - restart NetworkManager
+    - meta: flush_handlers
+    - name: setup bridge
+      nmcli:
+        state: present
+        type: bridge
+        conn_name: bridge0
+    - name: add interface to bridge
+      nmcli:
+        state: present
+        type: bridge-slave
+        conn_name: enp10s0 # TODO pull conn_name from facts
+        master: bridge0
+    - name: install KVM packages
+      apt:
+        name:
+          - netcat
+          - qemu-system
+          - qemu-utils
+          - libvirt-clients
+          - libvirt-daemon
+          - libvirt-daemon-system
+    - name: add users to libvirt group
+      user:
+        name: '{{ item }}'
+        append: yes
+        groups:
+          - libvirt
+      with_items:
+        - ci
+        - sapslaj
+    - name: chown libvirt default pool
+      file:
+        dest: /var/lib/libvirt/images
+        recurse: true
+        owner: root
+        group: libvirt
+        mode: g+rwx
+    - name: disable qemu security driver so libvirt TF provider works
+      lineinfile:
+        path: /etc/libvirt/qemu.conf
+        regexp: ^#?security_driver =
+        line: security_driver = "none"
+      notify:
+        - restart libvirtd
+    - meta: flush_handlers
+    - name: install cockpit
+      apt:
+        name:
+          - cockpit
+          - cockpit-machines
+          - cockpit-networkmanager
+          - cockpit-storaged
+          - python3-gi
