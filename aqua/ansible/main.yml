@@ -35,8 +35,11 @@
       nmcli:
         state: present
         type: bridge-slave
-        conn_name: enp10s0 # TODO pull conn_name from facts
+        conn_name: '{{ item }}' # TODO pull conn_name from facts
         master: bridge0
+      with_items:
+        - enp9s0
+        - enp10s0
     - name: install KVM packages
       apt:
         name:
