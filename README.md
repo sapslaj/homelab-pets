@@ -12,6 +12,14 @@ NAS, KVM host
 
 NAS, misc Docker stuff (media servers, linux server ISO download system)
 
+### tohru
+
+GitHub Actions CI
+
+### zerotwo
+
+k3s
+
 ### eris
 
 Pi-Hole, CloudFlare DDNS Updater
