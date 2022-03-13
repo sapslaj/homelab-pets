@@ -1,16 +1,16 @@
 terraform {
+  required_providers {
+    libvirt = {
+      source = "dmacvicar/libvirt"
+    }
+  }
+
   backend "remote" {
     hostname     = "app.terraform.io"
     organization = "sapslaj"
 
     workspaces {
-      name = "homelab-pets-zerotwo-system"
-    }
-  }
-
-  required_providers {
-    libvirt = {
-      source = "dmacvicar/libvirt"
+      name = "homelab-pets-tohru"
     }
   }
 }
@@ -35,8 +35,8 @@ module "vm" {
 
   base_volume_id = local.libvirt_platform.ubuntu_20_04_qcow2_id
 
-  name   = "zerotwo"
-  cpus   = 4
+  name   = "tohru"
+  cpus   = 2
   memory = 2
 
   cloudinit         = local.libvirt_platform.cloudinit.base
