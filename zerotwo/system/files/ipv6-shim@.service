@@ -1,0 +1,7 @@
+[Unit]
+Description=IPv6 Shim
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/socat TCP6-LISTEN:%i,fork TCP4:127.0.0.1:%i

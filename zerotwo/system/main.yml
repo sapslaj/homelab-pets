@@ -1,0 +1,31 @@
+- hosts: all
+  become: true
+  vars:
+    shim_ports:
+      - 80
+      - 443
+  handlers:
+    - name: restart ipv6-shim
+      systemd:
+        name: ipv6-shim@{{ item }}.service
+        state: restarted
+        daemon_reload: yes
+      with_items: '{{ shim_ports }}'
+  tasks:
+    - name: Install socat
+      apt:
+        name:
+          - socat
+    - name: Copy ipv6-shim.service
+      copy:
+        src: ipv6-shim@.service
+        dest: /etc/systemd/system/ipv6-shim@.service
+      notify:
+        - restart ipv6-shim
+    - meta: flush_handlers
+    - name: Start ipv6-shim
+      systemd:
+        name: ipv6-shim@{{ item }}.service
+        enabled: yes
+        state: started
+      with_items: '{{ shim_ports }}'
