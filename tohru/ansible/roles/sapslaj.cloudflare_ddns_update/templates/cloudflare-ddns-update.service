@@ -1,0 +1,18 @@
+[Unit]
+Description=Cloudflare DDNS Updater
+After=network.target
+StartLimitIntervalSec=30min
+StartLimitBurst=3
+
+[Service]
+Type=oneshot
+Environment=CF_API_EMAIL='saps.laj@gmail.com'
+Environment=CF_API_KEY='{{ cf_api_key | trim }}'
+ExecStart=/usr/bin/python3 /usr/sbin/cloudflare-ddns-update.py homelab.sapslaj.com
+StandardOutput=journal
+Restart=on-failure
+RestartSec=5min
+WatchdogSec=30
+
+[Install]
+WantedBy=multi-user.target

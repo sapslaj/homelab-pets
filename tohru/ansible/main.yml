@@ -29,3 +29,10 @@
     github_repo: homelab-pets
   roles:
     - role: monolithprojects.github_actions_runner
+
+- hosts: all
+  become: true
+  vars_files:
+    - secret_vars/all.yml
+  roles:
+    - role: sapslaj.cloudflare_ddns_update

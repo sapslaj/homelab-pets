@@ -1,0 +1,21 @@
+- name: install libs
+  pip:
+    name:
+      - requests
+      - cloudflare
+- name: copy script
+  copy:
+    src: cloudflare-ddns-update.py
+    dest: /usr/sbin/cloudflare-ddns-update.py
+- name: copy service unit
+  template:
+    src: cloudflare-ddns-update.service
+    dest: /etc/systemd/system/cloudflare-ddns-update.service
+  notify:
+    - restart cloudflare-ddns-update service
+- name: copy timer unit
+  copy:
+    src: cloudflare-ddns-update.timer
+    dest: /etc/systemd/system/cloudflare-ddns-update.timer
+  notify:
+    - restart cloudflare-ddns-update timer
