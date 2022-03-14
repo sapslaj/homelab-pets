@@ -32,9 +32,13 @@ resource "helm_release" "prometheus" {
       }
     }
     server = {
+      retention = "400d"
       ingress = {
         enabled = true
         hosts   = ["prometheus.sapslaj.xyz"]
+      }
+      statefulSet = {
+        enabled = true
       }
     }
     extraScrapeConfigs = yamlencode([
