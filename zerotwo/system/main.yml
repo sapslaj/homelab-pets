@@ -29,3 +29,7 @@
         enabled: yes
         state: started
       with_items: '{{ shim_ports }}'
+    - name: copy selfheal task list for docker_standalone
+      copy:
+        src: selfheal.yml
+        dest: /etc/selfheal/tasks/ipv6_shim.yml
