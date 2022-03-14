@@ -1,17 +1,20 @@
-resource "aws_route53_record" "prometheus_aaaa" {
-  name    = "prometheus"
-  ttl     = 300
-  type    = "AAAA"
-  zone_id = data.aws_route53_zone.sapslaj_xyz.zone_id
-  records = local.dns_aaaa_records
+module "prometheus_ingress_dns" {
+  source = "./modules/ingress_dns"
+  for_each = toset([
+    "prometheus",
+  ])
+
+  name = each.key
 }
 
-resource "aws_route53_record" "prometheus_a" {
-  name    = "prometheus"
-  ttl     = 300
-  type    = "A"
-  zone_id = data.aws_route53_zone.sapslaj_xyz.zone_id
-  records = local.dns_a_records_private
+moved {
+  from = aws_route53_record.prometheus_aaaa
+  to   = module.prometheus_ingress_dns["prometheus"].aws_route53_record.aaaa
+}
+
+moved {
+  from = aws_route53_record.prometheus_a
+  to   = module.prometheus_ingress_dns["prometheus"].aws_route53_record.a
 }
 
 resource "helm_release" "prometheus" {
