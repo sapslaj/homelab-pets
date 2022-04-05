@@ -15,6 +15,15 @@
         name:
           - mdadm
           - parted
+          - udisks2
+          - lvm
+          - udisks2-lvm
+          - xfsprogs
+          - xfsdump
+          - acl
+          - attr
+          - quota
+          - software-properties-common
     - name: Set net.ipv4.ip_forward=1
       sysctl:
         name: net.ipv4.ip_forward
