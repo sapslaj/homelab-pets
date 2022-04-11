@@ -1,0 +1,33 @@
+- name: install KVM packages
+  apt:
+    name:
+      - netcat
+      - qemu-system
+      - qemu-utils
+      - libvirt-clients
+      - libvirt-daemon
+      - libvirt-daemon-system
+- name: add users to libvirt group
+  user:
+    name: '{{ item }}'
+    append: yes
+    groups:
+      - libvirt
+  with_items:
+    - ci
+    - sapslaj
+- name: chown libvirt default pool
+  file:
+    dest: /var/lib/libvirt/images
+    recurse: true
+    owner: root
+    group: libvirt
+    mode: g+rwx
+- name: disable qemu security driver so libvirt TF provider works
+  lineinfile:
+    path: /etc/libvirt/qemu.conf
+    regexp: ^#?security_driver =
+    line: security_driver = "none"
+  notify:
+    - restart libvirtd
+- meta: flush_handlers

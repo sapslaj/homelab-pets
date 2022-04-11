@@ -1,0 +1,14 @@
+- name: install storage packages
+  apt:
+    name:
+      - mdadm
+      - parted
+      - udisks2
+      - lvm2
+      - udisks2-lvm2
+      - xfsprogs
+      - xfsdump
+      - acl
+      - attr
+      - quota
+      - software-properties-common

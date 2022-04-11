@@ -1,0 +1,8 @@
+- name: install cockpit
+  apt:
+    name:
+      - cockpit
+      - cockpit-machines
+      - cockpit-networkmanager
+      - cockpit-storaged
+      - python3-gi
