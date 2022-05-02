@@ -8,6 +8,8 @@ services:
       - NET_ADMIN
     devices:
       - /dev/net/tun
+    ulimits:
+      nofile: 32768
     restart: unless-stopped
     ports:
       - "9091:9091"
