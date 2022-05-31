@@ -9,8 +9,13 @@
       systemd:
         name: libvirtd.service
         state: restarted
+    - name: restart nfs-kernel-server
+      systemd:
+        name: nfs-kernel-server.service
+        state: restarted
   tasks:
     - import_tasks: tasks/storage.yml
     - import_tasks: tasks/networking.yml
     - import_tasks: tasks/libvirt.yml
+    - import_tasks: tasks/nfs.yml
     - import_tasks: tasks/cockpit.yml

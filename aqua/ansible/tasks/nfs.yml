@@ -1,0 +1,10 @@
+- name: install NFS packages
+  apt:
+    name:
+      - nfs-kernel-server
+- name: set NFS exports
+  copy:
+    src: nfs/exports
+    dest: /etc/exports
+  notify:
+    - restart nfs-kernel-server
