@@ -2,6 +2,8 @@
   apt:
     name:
       - netcat
+      - ovmf
+      - ovmf-ia32
       - qemu-system
       - qemu-utils
       - libvirt-clients
