@@ -22,6 +22,7 @@
     groups:
       - admin
   with_items: '{{ common_users }}'
+  ignore_errors: '{{ ansible_check_mode }}'
 
 - name: add users ssh key
   authorized_key:

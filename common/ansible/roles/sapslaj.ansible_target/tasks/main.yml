@@ -5,10 +5,18 @@
       APT::Install-Recommends "0";
       APT::Install-Suggests "0";
   when: ansible_distribution in ["Debian", "Ubuntu", "Linux Mint", "OSMC"]
+
+- name: update apt cache (Debian)
+  apt:
+    force_apt_get: true
+    update_cache: true
+  when: ansible_distribution in ["Debian", "Ubuntu", "Linux Mint", "OSMC"]
+
 - name: install packages needed for Ansible management (Newer Debian)
   apt:
     state: present
     force_apt_get: true
+    update_cache: true
     name:
       - ansible
       - build-essential
