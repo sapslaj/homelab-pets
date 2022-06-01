@@ -1,0 +1,9 @@
+[Unit]
+Description=Cleanup Docker artifacts to preserve disk space (daily)
+
+[Timer]
+OnCalendar=daily
+Persistent=true
+
+[Install]
+WantedBy=timers.target

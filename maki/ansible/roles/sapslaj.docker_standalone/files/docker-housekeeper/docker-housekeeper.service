@@ -1,0 +1,11 @@
+[Unit]
+Description=Cleanup Docker artifacts to preserve disk space
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/docker image prune -a -f
+ExecStart=/usr/bin/docker volume prune -f
+WorkingDirectory=/tmp
+
+[Install]
+WantedBy=multi-user.target

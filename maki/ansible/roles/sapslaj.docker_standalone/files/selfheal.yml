@@ -1,0 +1,8 @@
+- systemd:
+    name: docker.service
+    state: started
+- docker_container:
+    name: watchtower
+- docker_container:
+    name: cadvisor
+    privileged: yes

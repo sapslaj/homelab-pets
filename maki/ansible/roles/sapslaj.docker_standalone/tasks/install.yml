@@ -1,0 +1,24 @@
+- name: install - install docker and python3
+  apt:
+    name:
+      - docker.io
+      - python3
+    state: present
+
+- name: install - install pip
+  apt:
+    name: python3-pip
+    state: present
+
+- name: install - install Docker Python3 library
+  pip:
+    name:
+      - docker
+    executable: pip3
+
+- name: install - copy daemon.json
+  copy:
+    src: docker/daemon.json
+    dest: /etc/docker/daemon.json
+  notify:
+    - restart docker

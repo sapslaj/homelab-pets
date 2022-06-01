@@ -1,0 +1,4 @@
+- name: copy selfheal task list for docker_standalone
+  copy:
+    src: selfheal.yml
+    dest: /etc/selfheal/tasks/docker_standalone.yml

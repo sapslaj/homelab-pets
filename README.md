@@ -8,9 +8,25 @@ Pet servers; and an attempt to make them less pet-like.
 
 NAS, KVM host
 
+### eris
+
+~Pi-Hole~
+
+### maki
+
+PVR
+
 ### mems
 
-NAS, misc Docker stuff (media servers, linux server ISO download system)
+old NAS, misc Docker stuff (media servers, linux server ISO download system)
+
+### playboy
+
+print server, Steam Link
+
+### rem/ram
+
+_(only rem exists for now)_ AdGuard Home DNS
 
 ### tohru
 
@@ -19,15 +35,3 @@ GitHub Actions CI
 ### zerotwo
 
 k3s
-
-### eris
-
-Pi-Hole, CloudFlare DDNS Updater
-
-### octopi
-
-OctoPrint
-
-### playboy
-
-print server, Kodi/OSMC, other living room stuff
