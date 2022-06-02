@@ -1,0 +1,10 @@
+- name: restart vsdd service
+  systemd:
+    name: vsdd.service
+    state: restarted
+    daemon_reload: yes
+- name: restart vsdd timer
+  systemd:
+    name: vsdd.timer
+    state: restarted
+    daemon_reload: yes

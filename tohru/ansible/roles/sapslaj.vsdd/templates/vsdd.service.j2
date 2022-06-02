@@ -1,0 +1,21 @@
+[Unit]
+Description=VyOS Shitty Dynamic DNS
+After=network.target
+StartLimitIntervalSec=30min
+StartLimitBurst=3
+
+[Service]
+Type=oneshot
+Environment=VYOS_HOST=172.24.4.1
+Environment=VYOS_USERNAME=vsdd
+Environment=VYOS_PASSWORD='{{ vsdd_vyos_password | trim }}'
+Environment=AWS_ACCESS_KEY_ID='{{ vsdd_aws_access_key_id | trim }}'
+Environment=AWS_SECRET_ACCESS_KEY='{{ vsdd_aws_secret_access_key | trim }}'
+ExecStart=/usr/bin/python3 /usr/sbin/vsdd.py
+StandardOutput=journal
+Restart=on-failure
+RestartSec=5min
+WatchdogSec=30
+
+[Install]
+WantedBy=multi-user.target
