@@ -1,11 +1,11 @@
-name: Mems / spank_bank_du
+name: Tohru / Ansible
 on:
   workflow_dispatch:
   push:
     branches: [main]
     paths:
-      - .github/workflows/mems-spank_bank_du.yml
-      - mems/spank_bank_du/**
+      - .github/workflows/tohru-ansible.yml
+      - tohru/ansible/**
 jobs:
   deploy:
     runs-on: self-hosted
@@ -14,5 +14,6 @@ jobs:
       - name: Run ansible-playbook
         uses: ./.github/actions/run-playbook
         with:
-          dir: mems/spank_bank_du
-          inventory: mems.sapslaj.xyz,
+          dir: tohru/ansible
+          inventory: tohru.sapslaj.xyz,
+          vault_password: ${{ secrets.vault_password }}

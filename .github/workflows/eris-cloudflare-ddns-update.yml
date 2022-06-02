@@ -15,5 +15,5 @@ jobs:
         uses: ./.github/actions/run-playbook
         with:
           dir: eris/cloudflare-ddns-update
-          inventory: eris.homelab.sapslaj.com,
+          inventory: eris.sapslaj.xyz,
           vault_password: ${{ secrets.vault_password }}

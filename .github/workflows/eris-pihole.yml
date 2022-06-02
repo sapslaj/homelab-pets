@@ -15,4 +15,4 @@ jobs:
         uses: ./.github/actions/run-playbook
         with:
           dir: eris/pihole
-          inventory: eris.homelab.sapslaj.com,
+          inventory: eris.sapslaj.xyz,

@@ -54,11 +54,11 @@ resource "helm_release" "prometheus" {
         job_name = "node_exporter"
         static_configs = [{
           targets = [
-            "mems.homelab.sapslaj.com:9100",
-            "playboy.homelab.sapslaj.com:9100",
-            "aqua.homelab.sapslaj.com:9100",
-            "rem.homelab.sapslaj.com:9100",
-            "tohru.homelab.sapslaj.com:9100",
+            "mems.sapslaj.xyz:9100",
+            "playboy.sapslaj.xyz:9100",
+            "aqua.sapslaj.xyz:9100",
+            "rem.sapslaj.xyz:9100",
+            "tohru.sapslaj.xyz:9100",
           ]
         }]
       },
@@ -66,7 +66,7 @@ resource "helm_release" "prometheus" {
         job_name = "du_spank_bank"
         static_configs = [{
           targets = [
-            "mems.homelab.sapslaj.com:9477",
+            "mems.sapslaj.xyz:9477",
           ]
         }]
       },

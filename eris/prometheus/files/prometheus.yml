@@ -15,12 +15,12 @@ scrape_configs:
   - job_name: prometheus
     static_configs:
       - targets:
-          - eris.homelab.sapslaj.com:9090
+          - eris.sapslaj.xyz:9090
           - prometheus.direct.sapslaj.cloud:9090
   - job_name: blackbox
     static_configs:
       - targets:
-          - eris.homelab.sapslaj.com:9115
+          - eris.sapslaj.xyz:9115
   # - job_name: octoprint
   #   metrics_path: /plugin/prometheus_exporter/metrics
   #   params:
@@ -28,18 +28,18 @@ scrape_configs:
   #       - 2D9A4A7692EF498B81A28C055740D573
   #   static_configs:
   #     - targets:
-  #         - octopi.homelab.sapslaj.com:80
+  #         - octopi.sapslaj.xyz:80
   - job_name: node_exporter
     static_configs:
       - targets:
-          - eris.homelab.sapslaj.com:9100
-          - mems.homelab.sapslaj.com:9100
-          - playboy.homelab.sapslaj.com:9100
-          # - octopi.homelab.sapslaj.com:9100
+          - eris.sapslaj.xyz:9100
+          - mems.sapslaj.xyz:9100
+          - playboy.sapslaj.xyz:9100
+          # - octopi.sapslaj.xyz:9100
   - job_name: du_spank_bank
     static_configs:
       - targets:
-          - mems.homelab.sapslaj.com:9477
+          - mems.sapslaj.xyz:9477
   - job_name: blackbox_http2xx
     metrics_path: /probe
     params:
@@ -54,14 +54,14 @@ scrape_configs:
         replacement: localhost:9115
     static_configs:
       - targets:
-          - http://eris.homelab.sapslaj.com:80      # Pi-hole UI
-          - http://mems.homelab.sapslaj.com:7878    # Radarr
-          - http://mems.homelab.sapslaj.com:8080    # Transmission (nginx)
-          - http://mems.homelab.sapslaj.com:8096    # Emby
-          - http://mems.homelab.sapslaj.com:8989    # Sonarr
-          - http://mems.homelab.sapslaj.com:9117    # Jackett
-          # - http://octopi.homelab.sapslaj.com:80    # OctoPrint UI
-          - http://playboy.homelab.sapslaj.com:631  # CUPS UI
+          - http://eris.sapslaj.xyz:80      # Pi-hole UI
+          - http://mems.sapslaj.xyz:7878    # Radarr
+          - http://mems.sapslaj.xyz:8080    # Transmission (nginx)
+          - http://mems.sapslaj.xyz:8096    # Emby
+          - http://mems.sapslaj.xyz:8989    # Sonarr
+          - http://mems.sapslaj.xyz:9117    # Jackett
+          # - http://octopi.sapslaj.xyz:80    # OctoPrint UI
+          - http://playboy.sapslaj.xyz:631  # CUPS UI
   - job_name: blackbox_tcp_connect
     metrics_path: /probe
     params:
@@ -70,9 +70,9 @@ scrape_configs:
     relabel_configs: *blackbox_relabel_configs
     static_configs:
       - targets:
-          - mems.homelab.sapslaj.com:32400  # Plex
-          - eris.homelab.sapslaj.com:53     # PiHole
-          - playboy.homelab.sapslaj.com:80  # Kodi UI
+          - mems.sapslaj.xyz:32400  # Plex
+          - eris.sapslaj.xyz:53     # PiHole
+          - playboy.sapslaj.xyz:80  # Kodi UI
   - job_name: blackbox_icmp
     metrics_path: /probe
     params:
@@ -81,7 +81,7 @@ scrape_configs:
     relabel_configs: *blackbox_relabel_configs
     static_configs:
       - targets:
-          - mems.homelab.sapslaj.com
-          - eris.homelab.sapslaj.com
-          - playboy.homelab.sapslaj.com
-          # - octopi.homelab.sapslaj.com
+          - mems.sapslaj.xyz
+          - eris.sapslaj.xyz
+          - playboy.sapslaj.xyz
+          # - octopi.sapslaj.xyz

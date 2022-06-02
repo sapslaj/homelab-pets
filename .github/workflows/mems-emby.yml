@@ -15,4 +15,4 @@ jobs:
         uses: ./.github/actions/run-playbook
         with:
           dir: mems/emby
-          inventory: mems.homelab.sapslaj.com,
+          inventory: mems.sapslaj.xyz,

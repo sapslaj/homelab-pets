@@ -3,7 +3,7 @@ import argparse
 import clutch
 import sys
 
-client = clutch.Client(address="http://mems.homelab.sapslaj.com:8080/transmission/rpc")
+client = clutch.Client(address="http://mems.sapslaj.xyz:8080/transmission/rpc")
 torrents = client.torrent.accessor(all_fields=True).arguments.torrents
 
 parser = argparse.ArgumentParser(description="Pause or restart torrents")

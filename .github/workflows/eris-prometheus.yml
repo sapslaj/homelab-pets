@@ -16,4 +16,4 @@ jobs:
         uses: ./.github/actions/run-playbook
         with:
           dir: eris/prometheus
-          inventory: eris.homelab.sapslaj.com,
+          inventory: eris.sapslaj.xyz,

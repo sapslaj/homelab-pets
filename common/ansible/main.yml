@@ -6,4 +6,4 @@
     - role: sapslaj.selfheal
     - role: sapslaj.waifu_motd
     - role: cloudalchemy.node_exporter
-      when: inventory_hostname not in ["zerotwo.homelab.sapslaj.com"]
+      when: inventory_hostname not in ["zerotwo.sapslaj.xyz"]

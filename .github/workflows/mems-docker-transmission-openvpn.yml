@@ -14,5 +14,5 @@ jobs:
       - name: Deploy docker-compose app
         uses: ./.github/actions/deploy-docker-compose
         with:
-          host: mems.homelab.sapslaj.com
+          host: mems.sapslaj.xyz
           dir: mems/docker-transmission-openvpn

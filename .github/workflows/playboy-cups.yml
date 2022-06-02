@@ -15,4 +15,4 @@ jobs:
         uses: ./.github/actions/run-playbook
         with:
           dir: playboy/cups
-          inventory: playboy.homelab.sapslaj.com,
+          inventory: playboy.sapslaj.xyz,
