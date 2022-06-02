@@ -145,7 +145,7 @@ if __name__ == "__main__":
         if lease.pool in {"LAN_Servers", "LAN_Management"}:
             return True
         if lease.pool in {"LAN_Internal"}:
-            return lease.hostname in {"homeassistant"}
+            return lease.hostname in {"homeassistant", "darkness"}
 
     leases = list(filter(lease_filter, leases))
     for lease in leases:
