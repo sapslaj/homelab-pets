@@ -29,11 +29,11 @@
     - role: sapslaj.cloudflare_ddns_update
     - role: sapslaj.vsdd
 
-- hosts: all
-  become: true
-  vars:
-    runner_user: ci
-    github_account: sapslaj
-    github_repo: homelab-pets
-  roles:
-    - role: monolithprojects.github_actions_runner
+# - hosts: all
+#   become: true
+#   vars:
+#     runner_user: ci
+#     github_account: sapslaj
+#     github_repo: homelab-pets
+#   roles:
+#     - role: monolithprojects.github_actions_runner
