@@ -132,7 +132,9 @@ if __name__ == "__main__":
     import os
     import sys
 
-    logging.basicConfig(format="%(asctime)s [%(levelname)-8s] %(name)-24s %(message)s", stream=sys.stdout, level=logging.INFO)
+    logging.basicConfig(
+        format="%(asctime)s [%(levelname)-8s] %(name)-24s %(message)s", stream=sys.stdout, level=logging.INFO
+    )
 
     host = os.environ["VYOS_HOST"]
     username = os.environ["VYOS_USERNAME"]
@@ -145,17 +147,21 @@ if __name__ == "__main__":
         if lease.pool in {"LAN_Servers", "LAN_Management"}:
             return True
         if lease.pool in {"LAN_Internal"}:
-            return lease.hostname in {"homeassistant", "darkness"}
+            return lease.hostname in {"homeassistant", "darkness", "playboy"}
 
     leases = list(filter(lease_filter, leases))
     for lease in leases:
-        logging.info("\t".join([
-            lease.ip,
-            repr(lease.ipv6s),
-            lease.hardware_address,
-            lease.pool,
-            lease.hostname,
-        ]))
+        logging.info(
+            "\t".join(
+                [
+                    lease.ip,
+                    repr(lease.ipv6s),
+                    lease.hardware_address,
+                    lease.pool,
+                    lease.hostname,
+                ]
+            )
+        )
 
     logging.info("Updating sapslaj.xyz zone with leases")
     updater = Route53Updater(hosted_zone_id="Z00048261CEI1B6JY63KT", suffix=".sapslaj.xyz")
