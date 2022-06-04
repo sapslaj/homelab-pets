@@ -1,0 +1,20 @@
+- name: NordVPN Container
+  docker_container:
+    name: vpn
+    image: bubuntux/nordvpn:v3.12.3
+    restart_policy: unless-stopped
+    capabilities:
+      - NET_ADMIN
+    etc_hosts:
+      w569ut7zbkiqf5b.xyz: 104.28.28.105
+      zwyr157wwiu6eior.com: 104.17.188.107
+      boi9osyg1uwtyafn.com: 104.16.229.42
+      cdn.zwyr157wwiu6eior.com: 104.17.207.102
+    ports: '{{ vpn_container_ports }}'
+    env:
+      USER: '{{ nordvpn_username | trim }}'
+      PASS: '{{ nordvpn_password | trim }}'
+      CONNECT: '{{ nordvpn_connect | trim }}'
+      TECHNOLOGY: NordLynx
+      DEBUG: 'on'
+      NETWORK: 172.16.0.0/12

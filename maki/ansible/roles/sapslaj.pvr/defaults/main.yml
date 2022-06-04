@@ -1,0 +1,3 @@
+pvr_volumes_dir: /var/docker/volumes
+pvr_data_dir: /srv
+pvr_vpn_container: vpn

@@ -1,0 +1,14 @@
+- name: transmission container
+  docker_container:
+    name: transmission
+    image: lscr.io/linuxserver/transmission:latest
+    restart_policy: unless-stopped
+    network_mode: container:{{ transmission_vpn_container }}
+    env:
+      PUID: '0'
+      PGID: '0'
+      TZ: America/New_York
+    volumes:
+      - '{{ transmission_data_dir }}/transmission-home:/config'
+      - '{{ transmission_data_dir }}:/downloads'
+      - '{{ transmission_data_dir }}:/data'
