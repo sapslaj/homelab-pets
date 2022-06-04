@@ -145,7 +145,7 @@ if __name__ == "__main__":
 
     def lease_filter(lease):
         if lease.pool in {"LAN_Servers", "LAN_Management"}:
-            return True
+            return lease.hostname not in {"aqua"}
         if lease.pool in {"LAN_Internal"}:
             return lease.hostname in {"homeassistant", "darkness", "playboy"}
 
