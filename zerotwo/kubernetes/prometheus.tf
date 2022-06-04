@@ -54,9 +54,10 @@ resource "helm_release" "prometheus" {
         job_name = "node_exporter"
         static_configs = [{
           targets = [
+            "aqua.sapslaj.xyz:9100",
+            "maki.sapslaj.xyz:9100",
             "mems.sapslaj.xyz:9100",
             "playboy.sapslaj.xyz:9100",
-            "aqua.sapslaj.xyz:9100",
             "rem.sapslaj.xyz:9100",
             "tohru.sapslaj.xyz:9100",
           ]
