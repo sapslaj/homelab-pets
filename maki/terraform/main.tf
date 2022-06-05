@@ -36,8 +36,8 @@ module "vm" {
   base_volume_id = local.libvirt_platform.ubuntu_20_04_qcow2_id
 
   name   = "maki"
-  cpus   = 2
-  memory = 2
+  cpus   = 4
+  memory = 4
 
   cloudinit         = local.libvirt_platform.cloudinit.base
   network_interface = local.libvirt_platform.networks.bridge
