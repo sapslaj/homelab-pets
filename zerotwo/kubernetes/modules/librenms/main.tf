@@ -10,18 +10,70 @@ resource "kubernetes_namespace_v1" "this" {
 locals {
   labels    = var.labels
   namespace = var.create_namespace ? kubernetes_namespace_v1.this[0].metadata[0].name : var.namespace
-  db_labels = merge({
-    "librenms.sapslaj.com/component" = "db"
-  })
   app_labels = merge({
     "librenms.sapslaj.com/component" = "app"
   })
+  db_labels = merge({
+    "librenms.sapslaj.com/component" = "db"
+  })
+  redis_labels = merge({
+    "librenms.sapslaj.com/component" = "redis"
+  })
+}
+
+resource "kubernetes_stateful_set_v1" "redis" {
+  metadata {
+    name      = "librenms-redis"
+    namespace = local.namespace
+    labels    = local.redis_labels
+  }
+
+  spec {
+    replicas = 1
+    service_name = "librenms-redis"
+
+    selector {
+      match_labels = local.redis_labels
+    }
+
+    template {
+      metadata {
+        labels = local.redis_labels
+      }
+
+      spec {
+        container {
+          name  = "redis"
+          image = "redis:5.0-alpine"
+
+          port {
+            container_port = 6379
+          }
+        }
+      }
+    }
+  }
+}
+
+resource "kubernetes_service_v1" "redis" {
+  metadata {
+    name      = "librenms-redis"
+    namespace = local.namespace
+    labels    = local.redis_labels
+  }
+
+  spec {
+    selector = kubernetes_stateful_set_v1.redis.spec[0].template[0].metadata[0].labels
+
+    port {
+      port = 6379
+    }
+  }
 }
 
 resource "random_password" "db" {
   length = 16
 }
-
 
 resource "kubernetes_persistent_volume_claim_v1" "db" {
   metadata {
@@ -50,12 +102,11 @@ resource "kubernetes_stateful_set_v1" "db" {
 
   spec {
     replicas = 1
+    service_name = "librenms-db"
 
     selector {
       match_labels = local.db_labels
     }
-
-    service_name = "librenms-db"
 
     template {
       metadata {
@@ -127,7 +178,6 @@ resource "kubernetes_service_v1" "db" {
   }
 }
 
-
 resource "kubernetes_persistent_volume_claim_v1" "data" {
   metadata {
     name      = "librenms-data"
@@ -146,6 +196,24 @@ resource "kubernetes_persistent_volume_claim_v1" "data" {
   }
 }
 
+resource "kubernetes_config_map_v1" "app_env" {
+  metadata {
+    name      = "librenms-app-env"
+    namespace = local.namespace
+    labels    = local.app_labels
+  }
+
+  data = {
+    DB_HOST     = kubernetes_service_v1.db.metadata[0].name
+    DB_NAME     = "librenms"
+    DB_USER     = "librenms"
+    DB_PASSWORD = random_password.db.result
+    REDIS_HOST = kubernetes_service_v1.redis.metadata[0].name
+    REDIS_PORT = "3306"
+    REDIS_DB= "0"
+  }
+}
+
 resource "kubernetes_stateful_set_v1" "app" {
   metadata {
     name      = "librenms"
@@ -155,12 +223,11 @@ resource "kubernetes_stateful_set_v1" "app" {
 
   spec {
     replicas = 1
+    service_name = "librenms"
 
     selector {
       match_labels = local.app_labels
     }
-
-    service_name = "librenms"
 
     template {
       metadata {
@@ -180,6 +247,16 @@ resource "kubernetes_stateful_set_v1" "app" {
           name  = "librenms"
           image = "librenms/librenms:latest"
 
+          port {
+            container_port = 8000
+          }
+
+          env_from {
+            config_map_ref {
+              name = kubernetes_config_map_v1.app_env.metadata[0].name
+            }
+          }
+
           security_context {
             capabilities {
               add = [
@@ -189,33 +266,39 @@ resource "kubernetes_stateful_set_v1" "app" {
             }
           }
 
-          port {
-            container_port = 8000
+          volume_mount {
+            name       = "data"
+            mount_path = "/data"
+          }
+        }
+
+        container {
+          name  = "dispatcher"
+          image = "librenms/librenms:latest"
+
+          env {
+            name  = "SIDECAR_DISPATCHER"
+            value = "1"
+          }
+
+          env_from {
+            config_map_ref {
+              name = kubernetes_config_map_v1.app_env.metadata[0].name
+            }
+          }
+
+          security_context {
+            capabilities {
+              add = [
+                "NET_ADMIN",
+                "NET_RAW",
+              ]
+            }
           }
 
           volume_mount {
             name       = "data"
             mount_path = "/data"
-          }
-
-          env {
-            name  = "DB_HOST"
-            value = kubernetes_service_v1.db.metadata[0].name
-          }
-
-          env {
-            name  = "DB_NAME"
-            value = "librenms"
-          }
-
-          env {
-            name  = "DB_USER"
-            value = "librenms"
-          }
-
-          env {
-            name  = "DB_PASSWORD"
-            value = random_password.db.result
           }
         }
       }
