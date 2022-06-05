@@ -1,0 +1,10 @@
+- name: restart torrent-auto-pause service
+  systemd:
+    name: torrent-auto-pause.service
+    state: restarted
+    daemon_reload: yes
+- name: restart torrent-auto-pause timer
+  systemd:
+    name: torrent-auto-pause.timer
+    state: restarted
+    daemon_reload: yes

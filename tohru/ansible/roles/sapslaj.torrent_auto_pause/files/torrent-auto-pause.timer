@@ -1,0 +1,9 @@
+[Unit]
+Description=Torrent auto-pause for Transmission
+
+[Timer]
+OnCalendar=daily
+Persistent=true
+
+[Install]
+WantedBy=timers.target
