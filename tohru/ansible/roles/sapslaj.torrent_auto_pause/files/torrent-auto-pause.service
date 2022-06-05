@@ -6,8 +6,7 @@ StartLimitBurst=3
 
 [Service]
 Type=oneshot
-Environment=TRANSMISSION_HOST=http://maki.sapslaj.xyz:9091/transmission/rpc
-ExecStart=/usr/bin/python3 /usr/sbin/torrent-auto-pause.py
+ExecStart=/usr/bin/python3 /usr/sbin/torrent-auto-pause.py --address 'http://maki.sapslaj.xyz:9091/transmission/rpc'
 StandardOutput=journal
 Restart=on-failure
 RestartSec=5min

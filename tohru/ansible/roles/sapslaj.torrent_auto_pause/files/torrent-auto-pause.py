@@ -44,6 +44,12 @@ if __name__ == "__main__":
     parser.add_argument("--address", default=os.environ.get("TRANSMISSION_ADDRESS"))
     args = parser.parse_args()
 
+    if args.address:
+        print(f"Connecting to {args.address}")
+    else:
+        print(f"No address given. Use the --address option or set TRANSMISSION_ADDRESS.")
+        sys.exit(1)
+
     client = clutch.Client(address=args.address)
     torrents = client.torrent.accessor(all_fields=True).arguments.torrents
 
