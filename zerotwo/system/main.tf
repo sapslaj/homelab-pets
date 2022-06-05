@@ -37,7 +37,7 @@ module "vm" {
 
   name   = "zerotwo"
   cpus   = 4
-  memory = 2
+  memory = 4
 
   cloudinit         = local.libvirt_platform.cloudinit.base
   network_interface = local.libvirt_platform.networks.bridge
