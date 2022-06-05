@@ -1,6 +1,6 @@
 - name: Copy MOTD
   copy:
-    src: hostname/{{ inventory_hostname }}
+    src: hostname/{{ inventory_hostname }}.motd
     dest: /etc/motd
   ignore_errors: true
 
