@@ -8,16 +8,6 @@ module "prometheus_ingress_dns" {
   name = each.key
 }
 
-moved {
-  from = aws_route53_record.prometheus_aaaa
-  to   = module.prometheus_ingress_dns["prometheus"].aws_route53_record.aaaa
-}
-
-moved {
-  from = aws_route53_record.prometheus_a
-  to   = module.prometheus_ingress_dns["prometheus"].aws_route53_record.a
-}
-
 resource "helm_release" "prometheus" {
   name = "prometheus"
 
