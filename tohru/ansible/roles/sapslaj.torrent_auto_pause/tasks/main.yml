@@ -1,7 +1,7 @@
 - name: install libs
   pip:
     name:
-      - transmission-cluth
+      - transmission-clutch
 - name: copy script
   copy:
     src: torrent-auto-pause.py
