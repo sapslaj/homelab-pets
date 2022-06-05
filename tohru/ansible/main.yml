@@ -27,6 +27,7 @@
     - secret_vars/all.yml
   roles:
     - role: sapslaj.cloudflare_ddns_update
+    - role: sapslaj.torrent_auto_pause
     - role: sapslaj.vsdd
 
 # - hosts: all
