@@ -1,14 +1,33 @@
 - name: transmission container
   docker_container:
     name: transmission
-    image: lscr.io/linuxserver/transmission:latest
+    image: haugene/transmission-openvpn
     restart_policy: unless-stopped
-    network_mode: container:{{ transmission_vpn_container }}
+    capabilities:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun
+    ulimits:
+      - nofile:32768:32768
+    dns_servers:
+      - 1.1.1.1
+      - 1.0.0.1
     env:
-      PUID: '0'
-      PGID: '0'
-      TZ: America/New_York
+      OPENVPN_PROVIDER: '{{ transmission_openvpn_provider | trim }}'
+      OPENVPN_USERNAME: '{{ transmission_openvpn_username | trim }}'
+      OPENVPN_PASSWORD: '{{ transmission_openvpn_password | trim }}'
+      NORDVPN_COUNTRY: '{{ transmission_nordvpn_country | trim }}'
+      NORDVPN_PROTOCOL: '{{ transmission_nordvpn_protocol | trim }}'
+      TRANSMISSION_DOWNLOAD_QUEUE_ENABLED: 'false'
     volumes:
-      - '{{ transmission_data_dir }}/transmission-home:/config'
-      - '{{ transmission_data_dir }}:/downloads'
       - '{{ transmission_data_dir }}:/data'
+
+- name: transmission proxy container
+  docker_container:
+    name: transmission-proxy
+    image: haugene/transmission-openvpn-proxy
+    restart_policy: unless-stopped
+    links:
+      - transmission:transmission
+    ports:
+      - 9091:8080
