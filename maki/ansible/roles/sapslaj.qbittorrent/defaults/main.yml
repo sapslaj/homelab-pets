@@ -1,0 +1,3 @@
+qbittorrent_vpn_container: vpn
+qbittorrent_data_dir: /srv
+qbittorrent_config_dir: /var/docker/volumes/qbittorrent-config

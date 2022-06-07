@@ -1,0 +1,13 @@
+- name: qbittorrent container
+  docker_container:
+    name: qbittorrent
+    image: lscr.io/linuxserver/qbittorrent:latest
+    restart_policy: unless-stopped
+    network_mode: container:{{ qbittorrent_vpn_container }}
+    env:
+      PUID: '0'
+      PGID: '0'
+      TZ: America/New_York
+    volumes:
+      - '{{ qbittorrent_config_dir }}:/config'
+      - '{{ qbittorrent_data_dir }}:/data'

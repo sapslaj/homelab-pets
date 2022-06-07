@@ -43,6 +43,12 @@
         vpn_container_ports:
           - 0.0.0.0:9117:9117 # Jackett
           - '[::]:9117:9117'
+          - 0.0.0.0:8080:8080 # qBittorrent
+          - '[::]:8080:8080'
+    - role: sapslaj.qbittorrent
+      vars:
+        qbittorrent_config_dir: /mnt/exos/volumes/qbittorrent-config
+        qbittorrent_data_dir: /mnt/exos/Media
     - role: sapslaj.transmission
       vars:
         transmission_data_dir: /mnt/exos/Media
