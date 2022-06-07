@@ -13,3 +13,5 @@
       - /dev/kmsg
     ports:
       - 9338:8080
+    command:
+      - --enable_load_reader=true

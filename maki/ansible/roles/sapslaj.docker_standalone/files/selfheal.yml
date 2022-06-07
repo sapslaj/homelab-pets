@@ -5,6 +5,17 @@
     name: watchtower
 - docker_container:
     name: cadvisor
+    image: gcr.io/google-containers/cadvisor
+    restart_policy: unless-stopped
     privileged: yes
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    devices:
+      - /dev/kmsg
     ports:
       - 9338:8080
+    command:
+      - --enable_load_reader=true
