@@ -54,10 +54,18 @@ resource "helm_release" "prometheus" {
         }]
       },
       {
-        job_name = "du_spank_bank"
+        job_name = "standalone_docker"
         static_configs = [{
           targets = [
-            "mems.sapslaj.xyz:9477",
+            "maki.sapslaj.xyz:9323"
+          ]
+        }]
+      },
+      {
+        job_name = "standalone_docker_cadvisor"
+        static_configs = [{
+          targets = [
+            "maki.sapslaj.xyz:9338"
           ]
         }]
       },
