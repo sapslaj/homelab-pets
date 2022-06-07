@@ -6,3 +6,5 @@
 - docker_container:
     name: cadvisor
     privileged: yes
+    ports:
+      - 9338:8080
