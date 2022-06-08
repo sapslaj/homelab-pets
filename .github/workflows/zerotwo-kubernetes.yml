@@ -1,0 +1,21 @@
+name: ZeroTwo / kubernetes
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/zerotwo-kubernetes.yml
+      - zerotwo/kubernetes/**
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v2
+      - uses: hashicorp/setup-terraform@v2
+        with:
+          cli_config_credentials_token: ${{ secrets.TFE_TOKEN }}
+      - name: Run terraform
+        run: |
+          source ~/.profile
+          terraform -chdir=./zerotwo/kubernetes init
+          terraform -chdir=./zerotwo/kubernetes apply -auto-approve
