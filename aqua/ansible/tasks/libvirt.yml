@@ -9,6 +9,10 @@
       - libvirt-clients
       - libvirt-daemon
       - libvirt-daemon-system
+- name: extra packages for Terraform provider
+  apt:
+    name:
+      - curl
 - name: add users to libvirt group
   user:
     name: '{{ item }}'

@@ -1,0 +1,25 @@
+name: Terraform local action
+description: Run Terraform on a host
+inputs:
+  host:
+    description: host to run on
+    required: true
+  dir:
+    description: Full path to root module
+    required: true
+  cmd:
+    description: Command to run
+    required: true
+  tfe_token:
+    description: Terraform Cloud token
+    required: true
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: |
+        set -euxo pipefail
+        fulldir="$GITHUB_REPOSITORY/${{ inputs.dir }}"
+        ssh -t ci@${{ inputs.host }} "mkdir -p $fulldir"
+        rsync -rvhP ${{ inputs.dir }}/ "ci@${{ inputs.host }}:$fulldir"
+        ssh -t ci@${{ inputs.host }} "\$HOME/.local/bin/terraform "-chdir=$fulldir" ${{ inputs.cmd }}"
