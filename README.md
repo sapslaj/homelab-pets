@@ -8,17 +8,9 @@ Pet servers; and an attempt to make them less pet-like.
 
 NAS, KVM host
 
-### eris
-
-~Pi-Hole~
-
 ### maki
 
 PVR
-
-### mems
-
-old NAS, misc Docker stuff (media servers, linux server ISO download system)
 
 ### playboy
 

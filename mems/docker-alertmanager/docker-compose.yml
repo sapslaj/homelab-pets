@@ -1,9 +1,0 @@
-version: '2'
-services:
-  alertmanager:
-    image: quay.io/prometheus/alertmanager
-    restart: always
-    ports:
-      - "9093:9093"
-    volumes:
-      - /etc/alertmanager:/etc/alertmanager:ro
