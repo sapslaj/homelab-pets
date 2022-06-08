@@ -1,0 +1,34 @@
+name: Maki / terraform
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/maki-terraform.yml
+      - maki/terraform/**
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v2
+      - name: terraform init
+        uses: ./.github/actions/terraform-local-action
+        with:
+          host: aqua.sapslaj.xyz
+          dir: maki/terraform
+          cmd: init
+          tfe_token: ${{ secrets.TFE_TOKEN }}
+      - name: terraform plan
+        uses: ./.github/actions/terraform-local-action
+        with:
+          host: aqua.sapslaj.xyz
+          dir: maki/terraform
+          cmd: plan
+          tfe_token: ${{ secrets.TFE_TOKEN }}
+      - name: terraform apply
+        if: github.ref == 'refs/heads/master'
+        uses: ./.github/actions/terraform-local-action
+        with:
+          host: aqua.sapslaj.xyz
+          dir: maki/terraform
+          cmd: apply -auto-approve
+          tfe_token: ${{ secrets.TFE_TOKEN }}
