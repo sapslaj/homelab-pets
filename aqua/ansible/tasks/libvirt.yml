@@ -13,6 +13,7 @@
   apt:
     name:
       - curl
+      - git
 - name: add users to libvirt group
   user:
     name: '{{ item }}'
