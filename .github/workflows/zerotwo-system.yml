@@ -25,7 +25,7 @@ jobs:
           cmd: plan
           tfe_token: ${{ secrets.TFE_TOKEN }}
       - name: terraform apply
-        if: github.ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/main'
         uses: ./.github/actions/terraform-local-action
         with:
           host: aqua.sapslaj.xyz
