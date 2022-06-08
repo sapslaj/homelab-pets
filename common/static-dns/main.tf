@@ -10,7 +10,7 @@ terraform {
 }
 
 data "aws_route53_zone" "xyz" {
-  name         = "sapslaj.xyz."
+  name = "sapslaj.xyz."
 }
 
 locals {

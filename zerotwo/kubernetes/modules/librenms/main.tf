@@ -29,7 +29,7 @@ resource "kubernetes_stateful_set_v1" "redis" {
   }
 
   spec {
-    replicas = 1
+    replicas     = 1
     service_name = "librenms-redis"
 
     selector {
@@ -101,7 +101,7 @@ resource "kubernetes_stateful_set_v1" "db" {
   }
 
   spec {
-    replicas = 1
+    replicas     = 1
     service_name = "librenms-db"
 
     selector {
@@ -208,9 +208,9 @@ resource "kubernetes_config_map_v1" "app_env" {
     DB_NAME     = "librenms"
     DB_USER     = "librenms"
     DB_PASSWORD = random_password.db.result
-    REDIS_HOST = kubernetes_service_v1.redis.metadata[0].name
-    REDIS_PORT = "3306"
-    REDIS_DB= "0"
+    REDIS_HOST  = kubernetes_service_v1.redis.metadata[0].name
+    REDIS_PORT  = "3306"
+    REDIS_DB    = "0"
   }
 }
 
@@ -222,7 +222,7 @@ resource "kubernetes_stateful_set_v1" "app" {
   }
 
   spec {
-    replicas = 1
+    replicas     = 1
     service_name = "librenms"
 
     selector {
