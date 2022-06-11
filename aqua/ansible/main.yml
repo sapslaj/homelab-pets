@@ -13,6 +13,16 @@
       systemd:
         name: nfs-kernel-server.service
         state: restarted
+    - name: restart du_exporter service
+      systemd:
+        name: du_exporter.service
+        state: restarted
+        daemon_reload: yes
+    - name: restart libvirt_exporter service
+      systemd:
+        name: libvirt_exporter.service
+        state: restarted
+        daemon_reload: yes
   tasks:
     - import_tasks: tasks/storage.yml
     - import_tasks: tasks/networking.yml

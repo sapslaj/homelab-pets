@@ -1,0 +1,13 @@
+[Unit]
+Description=du_exporter
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/mnt/exos
+ExecStart=/usr/local/bin/du_exporter -w -i 300 -L -l -d 1 archive Media volumes
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

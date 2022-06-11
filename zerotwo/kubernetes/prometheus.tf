@@ -68,6 +68,22 @@ resource "helm_release" "prometheus" {
           ]
         }]
       },
+      {
+        job_name = "du"
+        static_configs = [{
+          targets = [
+            "aqua.sapslaj.xyz:9477"
+          ]
+        }]
+      },
+      {
+        job_name = "libvirt"
+        static_configs = [{
+          targets = [
+            "aqua.sapslaj.xyz:9177"
+          ]
+        }]
+      },
     ])
     alertmanagerFiles = {
       "alertmanager.yml" = {

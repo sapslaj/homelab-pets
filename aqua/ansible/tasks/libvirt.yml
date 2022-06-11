@@ -37,4 +37,23 @@
     line: security_driver = "none"
   notify:
     - restart libvirtd
+- name: copy libvirt_exporter
+  copy:
+    src: libvirt/libvirt_exporter
+    dest: /usr/local/bin/libvirt_exporter
+    mode: a+x
+  notify:
+    - restart libvirt_exporter service
+- name: copy libvirt_exporter service
+  copy:
+    src: libvirt/libvirt_exporter.service
+    dest: /etc/systemd/system/libvirt_exporter.service
+  notify:
+    - restart libvirt_exporter service
 - meta: flush_handlers
+- name: enable libvirt_exporter service
+  systemd:
+    name: libvirt_exporter.service
+    state: started
+    enabled: true
+    daemon_reload: yes
