@@ -15,6 +15,14 @@ data "aws_route53_zone" "xyz" {
 
 locals {
   xyz_static = {
+    rem = {
+      a    = "172.24.4.2"
+      aaaa = "2001:470:e022:4::2"
+    }
+    ram = {
+      a    = "172.24.4.3"
+      aaaa = "2001:470:e022:4::3"
+    }
     aqua = {
       a    = "172.24.4.10"
       aaaa = "2001:470:e022:4::a"
