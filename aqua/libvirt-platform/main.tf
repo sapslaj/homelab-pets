@@ -35,8 +35,11 @@ locals {
     }
   }
   networks = {
-    bridge = {
-      bridge = "bridge0"
+    br0_vlan4 = {
+      bridge = "vm.br0.4"
+    }
+    br0_vlan5 = {
+      bridge = "vm.br0.5"
     }
   }
 }

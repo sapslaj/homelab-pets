@@ -47,7 +47,7 @@ module "vm" {
 
   cloudinit         = local.libvirt_platform.cloudinit.base
   cloudinit_network = local.cloudinit_network
-  network_interface = local.libvirt_platform.networks.bridge
+  network_interface = local.libvirt_platform.networks.br0_vlan4
   root_volume = {
     size = 16
   }
