@@ -85,6 +85,15 @@ resource "helm_release" "prometheus" {
           ]
         }]
       },
+      {
+        job_name = "adguard"
+        static_configs = [{
+          targets = [
+            "rem.sapslaj.xyz:9617",
+            "ram.sapslaj.xyz:9617",
+          ]
+        }]
+      },
     ])
     alertmanagerFiles = {
       "alertmanager.yml" = {
