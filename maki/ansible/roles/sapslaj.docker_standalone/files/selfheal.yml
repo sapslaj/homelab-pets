@@ -3,6 +3,12 @@
     state: started
 - docker_container:
     name: watchtower
+    image: containrrr/watchtower
+    restart_policy: unless-stopped
+    env:
+      WATCHTOWER_POLL_INTERVAL: '86400' # One Day
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
 - docker_container:
     name: cadvisor
     image: gcr.io/google-containers/cadvisor

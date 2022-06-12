@@ -49,11 +49,6 @@
       vars:
         qbittorrent_config_dir: /mnt/exos/volumes/qbittorrent-config
         qbittorrent_data_dir: /mnt/exos/Media
-    - role: sapslaj.transmission
-      vars:
-        transmission_data_dir: /mnt/exos/Media
-        transmission_openvpn_username: '{{ nordvpn_username }}'
-        transmission_openvpn_password: '{{ nordvpn_password }}'
     - role: sapslaj.pvr
       vars:
         pvr_volumes_dir: /mnt/exos/volumes/pvr

@@ -1,6 +1,0 @@
-transmission_data_dir: /srv
-transmission_openvpn_provider: NORDVPN
-transmission_openvpn_username: ''
-transmission_openvpn_password: ''
-transmission_nordvpn_country: US
-transmission_nordvpn_protocol: TCP
