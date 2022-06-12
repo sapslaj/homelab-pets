@@ -14,9 +14,11 @@
     value: '1'
     sysctl_set: yes
 
-- name: install NetworkManager
+- name: install networking packages
   apt:
-    name: network-manager
+    name:
+      - lldpd
+      - network-manager
 - name: set NetworkManager to manage all interfaces
   lineinfile:
     path: /etc/NetworkManager/NetworkManager.conf
@@ -26,44 +28,52 @@
     - restart NetworkManager
 - meta: flush_handlers
 
-- name: setup bond
+- name: set enp10s0
   nmcli:
     state: present
-    type: bond
-    mode: 802.3ad
-    conn_name: bond0
-- name: add interface to bond
+    conn_name: enp10s0
+    method4: auto
+    method6: auto
+- name: set enp5s0f0.4
   nmcli:
     state: present
-    type: bond-slave
-    conn_name: '{{ item }}'
-    master: bond0
-  with_items:
-    - enp5s0f0
-    - enp5s0f1
-# This ansible task is borked for some reason so I did it manually.
-# - name: bond VLAN 4
-#   nmcli:
-#     state: present
-#     type: vlan
-#     conn_name: bond0.4
-#     vlandev: bond0
-#     vlanid: 4
-
-- name: setup bridge
-  nmcli:
-    state: present
-    type: bridge
-    conn_name: bridge0
-    never_default4: true
+    conn_name: enp5s0f0.4
+    type: vlan
+    vlandev: enp5s0f0
+    vlanid: 4
+    method4: manual
+    method6: manual
     ip4: 172.24.4.10/24
     ip6: 2001:470:e022:4::a/64
-- name: add interface to bridge
+
+- name: set vm.br0.4
   nmcli:
     state: present
-    type: bridge-slave
-    conn_name: '{{ item }}'
-    master: bridge0
-    hairpin: false
-  with_items:
-    - bond0.4
+    conn_name: vm.br0.4
+    type: bridge
+    method4: disabled
+    method6: disabled
+    priority: 36864
+- name: set enp5s0f1.4
+  nmcli:
+    state: present
+    conn_name: enp5s0f1.4
+    master: vm.br0.4
+    type: vlan
+    vlanid: 4
+
+- name: set vm.br0.5
+  nmcli:
+    state: present
+    conn_name: vm.br0.5
+    type: bridge
+    method4: disabled
+    method6: disabled
+    priority: 36864
+- name: set enp5s0f1.5
+  nmcli:
+    state: present
+    conn_name: enp5s0f1.5
+    master: vm.br0.5
+    type: vlan
+    vlanid: 5
