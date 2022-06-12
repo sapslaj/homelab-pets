@@ -47,6 +47,7 @@ resource "helm_release" "prometheus" {
             "aqua.sapslaj.xyz:9100",
             "maki.sapslaj.xyz:9100",
             "playboy.sapslaj.xyz:9100",
+            "ram.sapslaj.xyz:9100",
             "rem.sapslaj.xyz:9100",
             "tohru.sapslaj.xyz:9100",
           ]
