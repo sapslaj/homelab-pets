@@ -94,6 +94,24 @@ resource "helm_release" "prometheus" {
           ]
         }]
       },
+      {
+        job_name = "librenms"
+        static_configs = [{
+          targets = [
+            "librenms-prometheus-pushgateway.librenms.svc.cluster.local:9091",
+          ]
+          labels = {
+            job = "librenms"
+          }
+        }]
+        metric_relabel_configs = [{
+          source_labels = ["exported_instance"]
+          target_label  = "instance"
+        }, {
+          regex  = "exported_(instance|job)"
+          action = "labeldrop"
+        }]
+      },
     ])
     alertmanagerFiles = {
       "alertmanager.yml" = {

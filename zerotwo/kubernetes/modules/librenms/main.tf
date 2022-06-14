@@ -10,13 +10,16 @@ resource "kubernetes_namespace_v1" "this" {
 locals {
   labels    = var.labels
   namespace = var.create_namespace ? kubernetes_namespace_v1.this[0].metadata[0].name : var.namespace
-  app_labels = merge({
+  app_labels = merge(local.labels, {
     "librenms.sapslaj.com/component" = "app"
   })
-  db_labels = merge({
+  db_labels = merge(local.labels, {
     "librenms.sapslaj.com/component" = "db"
   })
-  redis_labels = merge({
+  pushgateway_labels = merge(local.labels, {
+    "librenms.sapslaj.com/component" = "prometheus-pushgateway"
+  })
+  redis_labels = merge(local.labels, {
     "librenms.sapslaj.com/component" = "redis"
   })
 }
@@ -174,6 +177,69 @@ resource "kubernetes_service_v1" "db" {
 
     port {
       port = 3306
+    }
+  }
+}
+
+resource "kubernetes_deployment_v1" "pushgateway" {
+  metadata {
+    name      = "librenms-prometheus-pushgateway"
+    namespace = local.namespace
+    labels    = local.pushgateway_labels
+  }
+
+  spec {
+    replicas = 1
+
+    selector {
+      match_labels = local.pushgateway_labels
+    }
+
+    template {
+      metadata {
+        labels = local.pushgateway_labels
+      }
+
+      spec {
+        container {
+          name  = "pushgateway"
+          image = "prom/pushgateway:latest"
+
+          port {
+            container_port = 9091
+          }
+        }
+
+        container {
+          name = "cleaner"
+          image = "jorinvo/prometheus-pushgateway-cleaner"
+          args = [
+            "--report-metrics",
+            "--metric-url",
+            "http://localhost:9091/metrics/",
+            "--expiration-in-minutes",
+            "10",
+            "--interval-in-minutes",
+            "5",
+          ]
+        }
+      }
+    }
+  }
+}
+
+resource "kubernetes_service_v1" "pushgateway" {
+  metadata {
+    name      = "librenms-prometheus-pushgateway"
+    namespace = local.namespace
+    labels    = local.pushgateway_labels
+  }
+
+  spec {
+    selector = kubernetes_deployment_v1.pushgateway.spec[0].template[0].metadata[0].labels
+
+    port {
+      port = 9091
     }
   }
 }
