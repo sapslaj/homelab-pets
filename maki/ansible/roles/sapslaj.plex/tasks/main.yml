@@ -1,0 +1,11 @@
+- name: plex container
+  docker_container:
+    name: plex
+    image: lscr.io/linuxserver/plex
+    restart_policy: unless-stopped
+    network_mode: host
+    env:
+      TZ: America/New_York
+    volumes:
+      - '{{ plex_config_dir }}:/config'
+      - '{{ plex_media_dir }}:/data/media:ro'

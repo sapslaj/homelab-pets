@@ -53,3 +53,6 @@
       vars:
         pvr_volumes_dir: /mnt/exos/volumes/pvr
         pvr_data_dir: /mnt/exos/Media
+    - role: sapslaj.plex
+      vars:
+        plex_media_dir: /mnt/exos/Media
