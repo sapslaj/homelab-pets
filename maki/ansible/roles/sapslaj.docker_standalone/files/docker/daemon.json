@@ -1,4 +1,5 @@
 {
+  "log-driver": "journald",
   "metrics-addr": "0.0.0.0:9323",
   "experimental": true
 }
