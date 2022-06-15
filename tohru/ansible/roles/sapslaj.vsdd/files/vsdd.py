@@ -151,9 +151,6 @@ if __name__ == "__main__":
 
     leases = list(filter(lease_filter, leases))
     for lease in leases:
-        print(f"ipv4={lease.ip}")
-        print(f"ipv6={repr(lease.ipv6s)}")
-        print(f"")
         logging.info(
             " ".join(
                 [
