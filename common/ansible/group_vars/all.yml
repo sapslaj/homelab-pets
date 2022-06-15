@@ -5,3 +5,19 @@ common_users:
   - name: ci
     password: '*'
     ssh_key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCmJsCb5da9gTwpettT9ba8cGQwlnKDUNZuwr64KnaLufzCkRaiSBFgsLC3UvFCrmnONZFnwXYruaQXRukKxThOvfRvCPz/ieiD/udzvgXRR/BHyhWUcLSs3IthNF7ic5EAqStL1Fo6Y6oEot43MvD/5W0IonF70J6bjjgxq5kajaubW7EKNUdhbzmycNc0orkEHO4NQSr7OWOULuXd9asVi/W4xG2kOqKEkZ9i5HtHcYsdHW8sbYVVQy/JlXm0I+UdpCQ6XrlasW/QuUrdT/qPKYC4b8a1jvyY1z8I8TMFahQq0UMCdm+QubMWKJCwkc0GskvezfwRO0GCmaNYKFus04qDzk6d5fAji1P8xJsmbm2I0GDD0snxNQ/+1cY+4Dc9g86Hh50HjeR6rCX+fvH5LG/m9G1uT7VbBxRQCpl0QfcKMn0U6w5FcGZIb/SfdXU8erKalAoPow3kCBZ8bwGc7SdWaBEpxpz4SorcDWn5wso+o/AH8dlY42fv7D81yrk= ci@sapslaj.com
+promtail_loki_server_url: http://loki.sapslaj.xyz
+promtail_config_scrape_configs:
+  - job_name: journal
+    journal:
+      json: false
+      max_age: 12h
+      path: /var/log/journal
+      labels:
+        job: systemd-journal
+    relabel_configs:
+      - source_labels: [__journal__systemd_unit]
+        target_label: systemd_unit
+      - source_labels: [__journal__hostname]
+        target_label: systemd_hostname
+      - source_labels: [__journal_syslog_identifier]
+        target_label: systemd_syslog_identifier
