@@ -1,3 +1,9 @@
+resource "kubernetes_namespace_v1" "monitoring" {
+  metadata {
+    name = "monitoring"
+  }
+}
+
 module "prometheus_ingress_dns" {
   source = "./modules/ingress_dns"
   for_each = toset([
@@ -129,6 +135,54 @@ resource "helm_release" "prometheus" {
           ]
         }
       }
+    }
+  })]
+}
+
+module "loki_ingress_dns" {
+  source = "./modules/ingress_dns"
+  for_each = toset([
+    "loki",
+  ])
+
+  name = each.key
+}
+
+resource "helm_release" "loki" {
+  name = "loki"
+  namespace = kubernetes_namespace_v1.monitoring.metadata[0].name
+
+  repository = "https://grafana.github.io/helm-charts"
+  chart = "loki"
+
+  values = [yamlencode({
+    ingress = {
+      enabled = true
+      hosts = [{
+        host = "loki.sapslaj.xyz"
+        paths = ["/"]
+      }]
+    }
+    persistence = {
+      enabled = true
+      accessModes = ["ReadWriteMany"]
+      storageClassName = "nfs"
+    }
+  })]
+}
+
+resource "helm_release" "promtail" {
+  name = "promtail"
+  namespace = kubernetes_namespace_v1.monitoring.metadata[0].name
+
+  repository = "https://grafana.github.io/helm-charts"
+  chart = "promtail"
+
+  values = [yamlencode({
+    config = {
+      clients = [{
+        url = "http://loki:3100/loki/api/v1/push"
+      }]
     }
   })]
 }
