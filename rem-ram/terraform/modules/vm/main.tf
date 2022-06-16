@@ -31,8 +31,6 @@ locals {
       }
     }
   }
-  a_records    = [for a in var.addresses : replace(a, "//.*$/", "") if length(regexall(":", a)) == 0]
-  aaaa_records = [for a in var.addresses : replace(a, "//.*$/", "") if length(regexall(":", a)) > 0]
 }
 
 module "vm" {
@@ -51,24 +49,4 @@ module "vm" {
   root_volume = {
     size = 16
   }
-}
-
-data "aws_route53_zone" "sapslaj_xyz" {
-  name = "sapslaj.xyz"
-}
-
-resource "aws_route53_record" "a" {
-  name    = var.name
-  ttl     = 300
-  type    = "A"
-  zone_id = data.aws_route53_zone.sapslaj_xyz.zone_id
-  records = local.a_records
-}
-
-resource "aws_route53_record" "aaaa" {
-  name    = var.name
-  ttl     = 300
-  type    = "AAAA"
-  zone_id = data.aws_route53_zone.sapslaj_xyz.zone_id
-  records = local.aaaa_records
 }
