@@ -9,6 +9,14 @@ terraform {
   }
 }
 
+resource "aws_route53_zone" "rdns_ipv4" {
+  name = "24.172.in-addr.arpa"
+}
+
+resource "aws_route53_zone" "rdns_ipv6" {
+  name = "2.2.0.e.0.7.4.1.0.0.2.ip6.arpa"
+}
+
 data "aws_route53_zone" "xyz" {
   name = "sapslaj.xyz."
 }
@@ -67,3 +75,23 @@ resource "aws_route53_record" "xyz_static_aaaa" {
   ttl     = "120"
   records = [each.value]
 }
+
+resource "aws_route53_record" "xyz_static_ipv4_ptr" {
+  for_each = { for name, config in local.xyz_static : name => try(config.a) if contains(keys(config), "a") }
+
+  zone_id = aws_route53_zone.rdns_ipv4.zone_id
+  name    = join(".", reverse(split(".", replace(each.value, "172.24.", ""))))
+  type    = "PTR"
+  ttl     = "120"
+  records = ["${each.key}.sapslaj.xyz"]
+}
+
+# resource "aws_route53_record" "xyz_static_ipv6_ptr" {
+#   for_each = { for name, config in local.xyz_static : name => try(config.aaaa) if contains(keys(config), "aaaa") }
+
+#   zone_id = data.aws_route53_zone.rdns_ipv6.zone_id
+#   name    = each.key
+#   type    = "PTR"
+#   ttl     = "120"
+#   records = ["${each.key}.sapslaj.xyz"]
+# }
