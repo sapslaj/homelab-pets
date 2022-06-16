@@ -1,5 +1,5 @@
 [Unit]
-Description=IPv6 Shim
+Description=IPv6 TCP Shim
 After=network.target
 
 [Service]
