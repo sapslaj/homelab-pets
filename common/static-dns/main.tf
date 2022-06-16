@@ -26,14 +26,17 @@ locals {
     rem = {
       a    = "172.24.4.2"
       aaaa = "2001:470:e022:4::2"
+      ipv6_ptr = "2.0.0.0.4.2.2.0.e.0.7.4.1.0.0.2"
     }
     ram = {
       a    = "172.24.4.3"
       aaaa = "2001:470:e022:4::3"
+      ipv6_ptr = "3.0.0.0.4.2.2.0.e.0.7.4.1.0.0.2"
     }
     aqua = {
       a    = "172.24.4.10"
       aaaa = "2001:470:e022:4::a"
+      ipv6_ptr = "a.0.0.0.4.2.2.0.e.0.7.4.1.0.0.2"
     }
     yor = {
       a = "172.24.0.0"
@@ -86,12 +89,12 @@ resource "aws_route53_record" "xyz_static_ipv4_ptr" {
   records = ["${each.key}.sapslaj.xyz"]
 }
 
-# resource "aws_route53_record" "xyz_static_ipv6_ptr" {
-#   for_each = { for name, config in local.xyz_static : name => try(config.aaaa) if contains(keys(config), "aaaa") }
+resource "aws_route53_record" "xyz_static_ipv6_ptr" {
+  for_each = { for name, config in local.xyz_static : name => try(config.ipv6_ptr) if contains(keys(config), "ipv6_ptr") }
 
-#   zone_id = data.aws_route53_zone.rdns_ipv6.zone_id
-#   name    = each.key
-#   type    = "PTR"
-#   ttl     = "120"
-#   records = ["${each.key}.sapslaj.xyz"]
-# }
+  zone_id = aws_route53_zone.rdns_ipv6.zone_id
+  name    = replace(each.value, ".2.2.0.e.0.7.4.1.0.0.2", "")
+  type    = "PTR"
+  ttl     = "120"
+  records = ["${each.key}.sapslaj.xyz"]
+}
