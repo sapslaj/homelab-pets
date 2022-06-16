@@ -9,6 +9,7 @@ module "prometheus_ingress_dns" {
   for_each = toset([
     "alertmanager",
     "prometheus",
+    "syslog",
   ])
 
   name = each.key
@@ -113,7 +114,7 @@ resource "helm_release" "prometheus" {
         metric_relabel_configs = [{
           source_labels = ["exported_instance"]
           target_label  = "instance"
-        }, {
+          }, {
           regex  = "exported_(instance|job)"
           action = "labeldrop"
         }]
@@ -149,34 +150,34 @@ module "loki_ingress_dns" {
 }
 
 resource "helm_release" "loki" {
-  name = "loki"
+  name      = "loki"
   namespace = kubernetes_namespace_v1.monitoring.metadata[0].name
 
   repository = "https://grafana.github.io/helm-charts"
-  chart = "loki"
+  chart      = "loki"
 
   values = [yamlencode({
     ingress = {
       enabled = true
       hosts = [{
-        host = "loki.sapslaj.xyz"
+        host  = "loki.sapslaj.xyz"
         paths = ["/"]
       }]
     }
     persistence = {
-      enabled = true
-      accessModes = ["ReadWriteMany"]
+      enabled          = true
+      accessModes      = ["ReadWriteMany"]
       storageClassName = "nfs"
     }
   })]
 }
 
 resource "helm_release" "promtail" {
-  name = "promtail"
+  name      = "promtail"
   namespace = kubernetes_namespace_v1.monitoring.metadata[0].name
 
   repository = "https://grafana.github.io/helm-charts"
-  chart = "promtail"
+  chart      = "promtail"
 
   values = [yamlencode({
     config = {
@@ -185,4 +186,11 @@ resource "helm_release" "promtail" {
       }]
     }
   })]
+}
+
+module "syslog_promtail" {
+  source = "./modules/syslog_promtail"
+
+  namespace        = "monitoring"
+  create_namespace = false
 }

@@ -211,7 +211,7 @@ resource "kubernetes_deployment_v1" "pushgateway" {
         }
 
         container {
-          name = "cleaner"
+          name  = "cleaner"
           image = "jorinvo/prometheus-pushgateway-cleaner"
           args = [
             "--report-metrics",
