@@ -81,7 +81,8 @@ class Route53Updater:
             changes.append(self._ipv4_record(lease))
             if lease.ipv6s:
                 changes.append(self._ipv6_record(lease))
-        return route53.change_resource_record_sets(HostedZoneId=self.hosted_zone_id, ChangeBatch={"Changes": changes})
+        if changes:
+            return route53.change_resource_record_sets(HostedZoneId=self.hosted_zone_id, ChangeBatch={"Changes": changes})
 
     def _dns_safe_name(self, name):
         return re.sub(r"\s", "-", name)
@@ -102,6 +103,115 @@ class Route53Updater:
 
     def _ipv6_record(self, lease):
         return self._dns_change(name=lease.hostname, addresses=lease.ipv6s, suffix=self.suffix, record_type="AAAA")
+
+
+class Route53IPv4PTRUpdater:
+    def __init__(self, hosted_zone_id: str, forward_lookup_suffix: str):
+        self.hosted_zone_id = hosted_zone_id
+        self.forward_lookup_suffix = forward_lookup_suffix
+
+    def update(self, leases):
+        route53 = boto3.client("route53")
+        zone_name = route53.get_hosted_zone(Id=self.hosted_zone_id)["HostedZone"]["Name"]
+        changes = []
+        for lease in leases:
+            if any(
+                [
+                    not lease.hostname,
+                    not self._fits_in_zone(ip=lease.ip, zone_name=zone_name),
+                ]
+            ):
+                continue
+            changes.append(
+                self._dns_change(ip=lease.ip, hosts=[self._dns_safe_name(lease.hostname) + self.forward_lookup_suffix])
+            )
+        if changes:
+            return route53.change_resource_record_sets(HostedZoneId=self.hosted_zone_id, ChangeBatch={"Changes": changes})
+
+    def _dns_safe_name(self, name):
+        return re.sub(r"\s", "-", name)
+
+    def _fits_in_zone(self, ip: str, zone_name: str):
+        ip_octets = ip.split(".")
+        zone_octets = reversed(zone_name.replace(".in-addr.arpa.", "").split("."))
+        for idx, zone_octet in enumerate(zone_octets):
+            if zone_octet != ip_octets[idx]:
+                return False
+        return True
+
+    def _ip_to_ptr(self, ip: str):
+        return ".".join(reversed(ip.split("."))) + ".in-addr.arpa."
+
+    def _dns_change(self, ip: str, hosts, ttl=120):
+        return {
+            "Action": "UPSERT",
+            "ResourceRecordSet": {
+                "Name": self._ip_to_ptr(ip),
+                "Type": "PTR",
+                "TTL": ttl,
+                "ResourceRecords": [{"Value": host} for host in hosts],
+            },
+        }
+
+
+class Route53IPv6PTRUpdater:
+    def __init__(self, hosted_zone_id: str, forward_lookup_suffix: str):
+        self.hosted_zone_id = hosted_zone_id
+        self.forward_lookup_suffix = forward_lookup_suffix
+
+    def update(self, leases):
+        route53 = boto3.client("route53")
+        zone_name = route53.get_hosted_zone(Id=self.hosted_zone_id)["HostedZone"]["Name"]
+        changes = []
+        for lease in leases:
+            for ip in lease.ipv6s:
+                if any(
+                    [
+                        not lease.hostname,
+                        not self._fits_in_zone(ip=ip, zone_name=zone_name),
+                    ]
+                ):
+                    continue
+                changes.append(
+                    self._dns_change(ip=ip, hosts=[self._dns_safe_name(lease.hostname) + self.forward_lookup_suffix])
+                )
+        if changes:
+            return route53.change_resource_record_sets(HostedZoneId=self.hosted_zone_id, ChangeBatch={"Changes": changes})
+
+    def _dns_safe_name(self, name):
+        return re.sub(r"\s", "-", name)
+
+    def _ip_to_ptr(self, ip: str):
+        partitions = ip.split("::")
+        expanded = partitions[0].split(":")
+        host_groups = []
+        if len(partitions) == 2:
+            host_groups = partitions[1].split(":")
+        for _ in range(8 - len(expanded) + len(host_groups)):
+            expanded.append("0000")
+        expanded.extend(host_groups)
+        expanded = [group.rjust(4, "0") for group in expanded]
+        return ".".join(reversed(list("".join(expanded)))) + ".ip6.arpa."
+
+    def _fits_in_zone(self, ip: str, zone_name: str):
+        ptr_nibbles = list(reversed(self._ip_to_ptr(ip).split(".")))
+        zone_nibbles = list(reversed(zone_name.split(".")))
+        for idx, zone_nibble in enumerate(zone_nibbles):
+            if zone_nibble != ptr_nibbles[idx]:
+                return False
+        return True
+
+
+    def _dns_change(self, ip: str, hosts, ttl=120):
+        return {
+            "Action": "UPSERT",
+            "ResourceRecordSet": {
+                "Name": self._ip_to_ptr(ip),
+                "Type": "PTR",
+                "TTL": ttl,
+                "ResourceRecords": [{"Value": host} for host in hosts],
+            },
+        }
 
 
 def connect(host: str, username: str, password: str):
@@ -166,4 +276,13 @@ if __name__ == "__main__":
     logging.info("Updating sapslaj.xyz zone with leases")
     updater = Route53Updater(hosted_zone_id="Z00048261CEI1B6JY63KT", suffix=".sapslaj.xyz")
     updater.update(leases)
+
+    logging.info("Updating 24.172.in-addr.arpa zone with leases")
+    updater = Route53IPv4PTRUpdater(hosted_zone_id="Z00206652RDLR1KV5OQ39", forward_lookup_suffix=".sapslaj.xyz")
+    updater.update(leases)
+
+    logging.info("Updating 2.2.0.e.0.7.4.0.1.0.0.2.ip6.arpa zone with leases")
+    updater = Route53IPv6PTRUpdater(hosted_zone_id="Z00734311E53TPLAI5AXC", forward_lookup_suffix=".sapslaj.xyz")
+    updater.update(leases)
+
     logging.info("Complete")

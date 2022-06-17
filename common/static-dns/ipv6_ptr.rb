@@ -17,5 +17,8 @@ until expanded.size + host_groups.size == 8
   expanded.append("0")
 end
 expanded.append(*host_groups)
+expanded.map! do |group|
+  group.rjust(4, "0")
+end
 
-puts(expanded.join("").reverse.split("").join("."))
+puts(expanded.join("").reverse.split("").join(".") + ".ip6.arpa.")
