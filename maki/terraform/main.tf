@@ -39,7 +39,7 @@ module "vm" {
   cpus   = 4
   memory = 4
 
-  cloudinit         = local.libvirt_platform.cloudinit.base
+  cloudinit = local.libvirt_platform.cloudinit.base
   network_interfaces = {
     vlan4 = local.libvirt_platform.networks.br0_vlan4
     vlan5 = local.libvirt_platform.networks.br0_vlan5
