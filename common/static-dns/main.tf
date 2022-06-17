@@ -21,8 +21,8 @@ data "aws_route53_zone" "xyz" {
   name = "sapslaj.xyz."
 }
 
-locals {
-  xyz_static = {
+module "xyz_static" {
+  for_each = {
     rem = {
       a        = "172.24.4.2"
       aaaa     = "2001:470:e022:4::2"
@@ -57,44 +57,14 @@ locals {
       a = "172.24.2.6"
     }
   }
-}
+  source = "./modules/record_set"
 
-resource "aws_route53_record" "xyz_static_a" {
-  for_each = { for name, config in local.xyz_static : name => try(config.a) if contains(keys(config), "a") }
-
-  zone_id = data.aws_route53_zone.xyz.zone_id
-  name    = each.key
-  type    = "A"
-  ttl     = "120"
-  records = [each.value]
-}
-
-resource "aws_route53_record" "xyz_static_aaaa" {
-  for_each = { for name, config in local.xyz_static : name => try(config.aaaa) if contains(keys(config), "aaaa") }
-
-  zone_id = data.aws_route53_zone.xyz.zone_id
-  name    = each.key
-  type    = "AAAA"
-  ttl     = "120"
-  records = [each.value]
-}
-
-resource "aws_route53_record" "xyz_static_ipv4_ptr" {
-  for_each = { for name, config in local.xyz_static : name => try(config.a) if contains(keys(config), "a") }
-
-  zone_id = aws_route53_zone.rdns_ipv4.zone_id
-  name    = join(".", reverse(split(".", replace(each.value, "172.24.", ""))))
-  type    = "PTR"
-  ttl     = "120"
-  records = ["${each.key}.sapslaj.xyz"]
-}
-
-resource "aws_route53_record" "xyz_static_ipv6_ptr" {
-  for_each = { for name, config in local.xyz_static : name => try(config.ipv6_ptr) if contains(keys(config), "ipv6_ptr") }
-
-  zone_id = aws_route53_zone.rdns_ipv6.zone_id
-  name    = each.value
-  type    = "PTR"
-  ttl     = "120"
-  records = ["${each.key}.sapslaj.xyz"]
+  name              = lookup(each.value, "name", each.key)
+  zone_id           = data.aws_route53_zone.xyz.zone_id
+  ipv4_rdns_zone_id = aws_route53_zone.rdns_ipv4.zone_id
+  ipv6_rdns_zone_id = aws_route53_zone.rdns_ipv6.zone_id
+  v4                = try(each.value.v4, each.value.a, null)
+  v6                = try(each.value.v6, each.value.aaaa, null)
+  ttl               = lookup(each.value, "ttl", null)
+  rdns_suffix       = lookup(each.value, "rdns_suffix", ".sapslaj.xyz")
 }
