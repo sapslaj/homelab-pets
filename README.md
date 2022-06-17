@@ -18,7 +18,7 @@ print server, Steam Link
 
 ### rem/ram
 
-_(only rem exists for now)_ AdGuard Home DNS
+AdGuard Home DNS
 
 ### tohru
 
@@ -27,3 +27,7 @@ GitHub Actions CI
 ### zerotwo
 
 k3s
+
+- LibreNMS
+- Prometheus
+- Loki
