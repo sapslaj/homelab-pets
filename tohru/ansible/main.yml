@@ -6,6 +6,7 @@
         force_apt_get: true
         name:
           - acl
+          - python-is-python3
           - python3-pip
           - python3-venv
           - unzip
