@@ -9,7 +9,6 @@ module "prometheus_ingress_dns" {
   for_each = toset([
     "alertmanager",
     "prometheus",
-    "syslog",
   ])
 
   name = each.key
@@ -186,11 +185,4 @@ resource "helm_release" "promtail" {
       }]
     }
   })]
-}
-
-module "syslog_promtail" {
-  source = "./modules/syslog_promtail"
-
-  namespace        = "monitoring"
-  create_namespace = false
 }

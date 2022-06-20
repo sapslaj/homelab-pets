@@ -56,3 +56,6 @@
     - role: sapslaj.plex
       vars:
         plex_media_dir: /mnt/exos/Media
+    - role: sapslaj.syslog_promtail
+      vars:
+        syslog_promtail_volumes_dir: /var/docker/volumes/syslog-promtail

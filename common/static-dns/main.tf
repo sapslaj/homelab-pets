@@ -79,3 +79,15 @@ module "xyz_static" {
   ttl               = lookup(each.value, "ttl", null)
   rdns_suffix       = lookup(each.value, "rdns_suffix", ".sapslaj.xyz")
 }
+
+resource "aws_route53_record" "xyz_cname" {
+  for_each = {
+    "syslog.sapslaj.xyz" = "maki.sapslaj.xyz"
+  }
+
+  zone_id = data.aws_route53_zone.xyz.zone_id
+  name    = each.key
+  type    = "CNAME"
+  ttl     = 300
+  records = [each.value]
+}
