@@ -24,22 +24,33 @@ data "aws_route53_zone" "xyz" {
 module "xyz_static" {
   for_each = {
     rem = {
-      a        = "172.24.4.2"
-      aaaa     = "2001:470:e022:4::2"
-      ipv6_ptr = "2.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.4.0.0.0.2.2.0.e.0.7.4.0.1.0.0.2.ip6.arpa."
+      a    = "172.24.4.2"
+      aaaa = "2001:470:e022:4::2"
     }
     ram = {
-      a        = "172.24.4.3"
-      aaaa     = "2001:470:e022:4::3"
-      ipv6_ptr = "3.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.4.0.0.0.2.2.0.e.0.7.4.0.1.0.0.2.ip6.arpa."
+      a    = "172.24.4.3"
+      aaaa = "2001:470:e022:4::3"
     }
     aqua = {
-      a        = "172.24.4.10"
-      aaaa     = "2001:470:e022:4::a"
-      ipv6_ptr = "a.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.4.0.0.0.2.2.0.e.0.7.4.0.1.0.0.2.ip6.arpa."
+      a    = "172.24.4.10"
+      aaaa = "2001:470:e022:4::a"
     }
     yor = {
-      a = "172.24.0.0"
+      v4 = [
+        "172.24.0.0",
+        "172.24.1.1",
+        "172.24.2.1",
+        "172.24.3.1",
+        "172.24.4.1",
+        "172.24.5.1",
+      ]
+      v6 = [
+        "2001:470:e022:1::1",
+        "2001:470:e022:2::1",
+        "2001:470:e022:3::1",
+        "2001:470:e022:4::1",
+        "2001:470:e022:5::1",
+      ]
     }
     daki = {
       a = "172.24.2.2"
@@ -63,8 +74,8 @@ module "xyz_static" {
   zone_id           = data.aws_route53_zone.xyz.zone_id
   ipv4_rdns_zone_id = aws_route53_zone.rdns_ipv4.zone_id
   ipv6_rdns_zone_id = aws_route53_zone.rdns_ipv6.zone_id
-  v4                = try(each.value.v4, each.value.a, null)
-  v6                = try(each.value.v6, each.value.aaaa, null)
+  v4                = try(each.value.v4, [each.value.a], null)
+  v6                = try(each.value.v6, [each.value.aaaa], null)
   ttl               = lookup(each.value, "ttl", null)
   rdns_suffix       = lookup(each.value, "rdns_suffix", ".sapslaj.xyz")
 }

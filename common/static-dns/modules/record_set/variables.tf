@@ -22,15 +22,15 @@ variable "ipv6_rdns_zone_id" {
 }
 
 variable "v4" {
-  type     = string
-  default  = null
-  nullable = true
+  type     = list(string)
+  default  = []
+  nullable = false
 }
 
 variable "v6" {
-  type     = string
-  default  = null
-  nullable = true
+  type     = list(string)
+  default  = []
+  nullable = false
 }
 
 variable "ttl" {
