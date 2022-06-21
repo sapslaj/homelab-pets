@@ -115,15 +115,13 @@ class Route53IPv4PTRUpdater:
         zone_name = route53.get_hosted_zone(Id=self.hosted_zone_id)["HostedZone"]["Name"]
         changes = []
         for lease in leases:
-            if any(
-                [
-                    not lease.hostname,
-                    not self._fits_in_zone(ip=lease.ip, zone_name=zone_name),
-                ]
-            ):
+            hostname = lease.hostname
+            if not hostname:
+                hostname = "ip-" + lease.ip.replace(".", "-")
+            if not self._fits_in_zone(ip=lease.ip, zone_name=zone_name):
                 continue
             changes.append(
-                self._dns_change(ip=lease.ip, hosts=[self._dns_safe_name(lease.hostname) + self.forward_lookup_suffix])
+                self._dns_change(ip=lease.ip, hosts=[self._dns_safe_name(hostname) + self.forward_lookup_suffix])
             )
         if changes:
             return route53.change_resource_record_sets(HostedZoneId=self.hosted_zone_id, ChangeBatch={"Changes": changes})
@@ -164,16 +162,14 @@ class Route53IPv6PTRUpdater:
         zone_name = route53.get_hosted_zone(Id=self.hosted_zone_id)["HostedZone"]["Name"]
         changes = []
         for lease in leases:
+            hostname = lease.hostname
+            if not hostname:
+                hostname = "ip-" + lease.ip.replace(".", "-")
             for ip in lease.ipv6s:
-                if any(
-                    [
-                        not lease.hostname,
-                        not self._fits_in_zone(ip=ip, zone_name=zone_name),
-                    ]
-                ):
+                if not self._fits_in_zone(ip=lease.ip, zone_name=zone_name):
                     continue
                 changes.append(
-                    self._dns_change(ip=ip, hosts=[self._dns_safe_name(lease.hostname) + self.forward_lookup_suffix])
+                    self._dns_change(ip=ip, hosts=[self._dns_safe_name(hostname) + self.forward_lookup_suffix])
                 )
         if changes:
             return route53.change_resource_record_sets(HostedZoneId=self.hosted_zone_id, ChangeBatch={"Changes": changes})
@@ -259,7 +255,6 @@ if __name__ == "__main__":
         if lease.pool in {"LAN_Internal"}:
             return lease.hostname in {"homeassistant", "darkness", "playboy"}
 
-    leases = list(filter(lease_filter, leases))
     for lease in leases:
         logging.info(
             " ".join(
@@ -273,16 +268,18 @@ if __name__ == "__main__":
             )
         )
 
-    logging.info("Updating sapslaj.xyz zone with leases")
-    updater = Route53Updater(hosted_zone_id="Z00048261CEI1B6JY63KT", suffix=".sapslaj.xyz")
-    updater.update(leases)
-
     logging.info("Updating 24.172.in-addr.arpa zone with leases")
     updater = Route53IPv4PTRUpdater(hosted_zone_id="Z00206652RDLR1KV5OQ39", forward_lookup_suffix=".sapslaj.xyz")
     updater.update(leases)
 
     logging.info("Updating 2.2.0.e.0.7.4.0.1.0.0.2.ip6.arpa zone with leases")
     updater = Route53IPv6PTRUpdater(hosted_zone_id="Z00734311E53TPLAI5AXC", forward_lookup_suffix=".sapslaj.xyz")
+    updater.update(leases)
+
+    leases = list(filter(lease_filter, leases))
+
+    logging.info("Updating sapslaj.xyz zone with leases")
+    updater = Route53Updater(hosted_zone_id="Z00048261CEI1B6JY63KT", suffix=".sapslaj.xyz")
     updater.update(leases)
 
     logging.info("Complete")
