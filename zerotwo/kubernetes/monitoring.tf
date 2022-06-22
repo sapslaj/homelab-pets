@@ -51,6 +51,7 @@ resource "helm_release" "prometheus" {
         static_configs = [{
           targets = [
             "aqua.sapslaj.xyz:9100",
+            "eris.sapslaj.xyz:9100",
             "maki.sapslaj.xyz:9100",
             "playboy.sapslaj.xyz:9100",
             "ram.sapslaj.xyz:9100",
