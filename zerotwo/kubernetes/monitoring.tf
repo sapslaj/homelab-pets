@@ -102,7 +102,8 @@ resource "helm_release" "prometheus" {
         }]
       },
       {
-        job_name = "librenms"
+        job_name        = "librenms"
+        scrape_interval = "5m"
         static_configs = [{
           targets = [
             "librenms-prometheus-pushgateway.librenms.svc.cluster.local:9091",
