@@ -47,6 +47,8 @@ module "oxidized" {
   config_files = {
     "routers.db" = join("\n", [
       "yor.sapslaj.xyz:vyatta",
+      "daki.sapslaj.xyz:routeros",
+      "taiga.sapslaj.xyz:routeros",
     ])
   }
 }

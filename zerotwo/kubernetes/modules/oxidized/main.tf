@@ -108,7 +108,6 @@ resource "kubernetes_deployment_v1" "this" {
           image = "oxidized/oxidized:latest"
           args = [
             "oxidized",
-            "-d",
           ]
 
           volume_mount {
@@ -140,6 +139,11 @@ resource "kubernetes_deployment_v1" "this" {
           env {
             name  = "OXIDIZED_LOGS"
             value = "/logs"
+          }
+
+          env {
+            name = "CONFIG_HASH"
+            value = md5(jsonencode(kubernetes_config_map_v1.config.data))
           }
         }
       }
