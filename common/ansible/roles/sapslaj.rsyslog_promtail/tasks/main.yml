@@ -1,0 +1,11 @@
+- name: Is rsyslog installed
+  stat:
+    path: /etc/rsyslog.d
+  register: rsyslog_d
+- when: rsyslog_d.stat.exists
+  block:
+    - copy:
+        src: rsyslog-promtail.conf
+        dest: /etc/rsyslog.d/promtail.conf
+      notify:
+        - restart rsyslog service
