@@ -51,7 +51,6 @@
         qbittorrent_data_dir: /mnt/exos/Media
     - role: sapslaj.pvr
       vars:
-        pvr_volumes_dir: /mnt/exos/volumes/pvr
         pvr_data_dir: /mnt/exos/Media
     - role: sapslaj.plex
       vars:
