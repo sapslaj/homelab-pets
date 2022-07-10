@@ -31,7 +31,7 @@ locals {
 
 module "vm" {
   source  = "sapslaj/standalone-instance/libvirt"
-  version = "0.1.0"
+  version = "~> 0.3"
 
   base_volume_id = local.libvirt_platform.ubuntu_20_04_qcow2_id
 
@@ -45,6 +45,7 @@ module "vm" {
     vlan5 = local.libvirt_platform.networks.br0_vlan5
   }
   root_volume = {
-    size = 30
+    attachment = "file"
+    size       = 30
   }
 }

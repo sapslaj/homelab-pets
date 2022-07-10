@@ -35,7 +35,7 @@ locals {
 
 module "vm" {
   source  = "sapslaj/standalone-instance/libvirt"
-  version = "0.2.0"
+  version = "~> 0.3"
 
   base_volume_id = local.libvirt_platform.ubuntu_20_04_qcow2_id
 
@@ -47,6 +47,7 @@ module "vm" {
   cloudinit_network = local.cloudinit_network
   network_interface = local.libvirt_platform.networks.br0_vlan4
   root_volume = {
-    size = 16
+    attachment = "file"
+    size       = 16
   }
 }

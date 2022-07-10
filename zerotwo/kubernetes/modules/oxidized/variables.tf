@@ -28,12 +28,12 @@ variable "config_files" {
 }
 
 variable "enable_ingress" {
-  type = bool
+  type    = bool
   default = false
 }
 
 variable "ingress_hosts" {
-  type = list(string)
+  type    = list(string)
   default = []
 }
 

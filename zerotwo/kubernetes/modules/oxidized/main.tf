@@ -142,7 +142,7 @@ resource "kubernetes_deployment_v1" "this" {
           }
 
           env {
-            name = "CONFIG_HASH"
+            name  = "CONFIG_HASH"
             value = md5(jsonencode(kubernetes_config_map_v1.config.data))
           }
         }
