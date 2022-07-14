@@ -102,6 +102,14 @@ resource "helm_release" "prometheus" {
         }]
       },
       {
+        job_name = "shellyht"
+        static_configs = [{
+          targets = [
+            "darkness.sapslaj.xyz:33333",
+          ]
+        }]
+      },
+      {
         job_name        = "librenms"
         scrape_interval = "5m"
         static_configs = [{
