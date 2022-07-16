@@ -1,0 +1,3 @@
+#!/bin/bash
+set -euxo pipefail
+rclone sync -v -P "{{ rclone_job.src }}" "{{ rclone_job.dest }}"

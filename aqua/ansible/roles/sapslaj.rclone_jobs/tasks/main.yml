@@ -1,0 +1,12 @@
+- name: config directories
+  file:
+    path: /usr/local/libexec/rclone
+    state: directory
+- name: copy systemd unit
+  copy:
+    src: rclone-sync@.service
+    dest: /etc/systemd/system/rclone-sync@.service
+- include_tasks: script.yml
+  loop: '{{ rclone_jobs }}'
+  loop_control:
+    loop_var: rclone_job

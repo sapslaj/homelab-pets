@@ -1,0 +1,5 @@
+- name: create rclone sync script - {{ rclone_job.name }}
+  template:
+    src: rclone-sync.sh.j2
+    dest: /usr/local/libexec/rclone/rclone-sync-{{ rclone_job.name }}.sh
+    mode: a+x
