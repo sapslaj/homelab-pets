@@ -207,6 +207,10 @@ resource "helm_release" "promtail" {
   chart      = "promtail"
 
   values = [yamlencode({
+    podAnnotations = {
+      "prometheus.io/scrape" = "true"
+      "prometheus.io/port" = "3101"
+    }
     config = {
       clients = [{
         url = "http://loki:3100/loki/api/v1/push"
