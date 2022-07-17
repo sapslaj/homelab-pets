@@ -15,3 +15,5 @@
       - 9338:8080
     command:
       - --enable_load_reader=true
+    healthcheck:
+      test: [NONE]
