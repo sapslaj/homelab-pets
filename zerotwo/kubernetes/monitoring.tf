@@ -178,6 +178,12 @@ resource "helm_release" "loki" {
   chart      = "loki"
 
   values = [yamlencode({
+    podAnnotations = {
+      "prometheus.io/port" = "3100"
+    }
+    extraArgs = {
+      "reporting.enabled" = "false"
+    }
     ingress = {
       enabled = true
       hosts = [{
