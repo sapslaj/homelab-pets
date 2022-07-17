@@ -146,6 +146,18 @@ resource "helm_release" "prometheus" {
         }
       }
     }
+    serverFiles = {
+      "alerting_rules.yml" = {
+        groups = flatten(
+          [
+            for f in fileset(path.module, "prometheus_files/alert_rules/*.yml") :
+            yamldecode(
+              file(f)
+            )["groups"]
+          ]
+        )
+      }
+    }
   })]
 }
 
