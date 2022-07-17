@@ -209,7 +209,7 @@ resource "helm_release" "promtail" {
   values = [yamlencode({
     podAnnotations = {
       "prometheus.io/scrape" = "true"
-      "prometheus.io/port" = "3101"
+      "prometheus.io/port"   = "3101"
     }
     config = {
       clients = [{

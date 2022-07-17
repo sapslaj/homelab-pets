@@ -8,8 +8,8 @@ resource "kubernetes_namespace_v1" "this" {
 }
 
 locals {
-  labels    = var.labels
   namespace = var.create_namespace ? kubernetes_namespace_v1.this[0].metadata[0].name : var.namespace
+  labels    = var.labels
   app_labels = merge(local.labels, {
     "librenms.sapslaj.com/component" = "app"
   })
