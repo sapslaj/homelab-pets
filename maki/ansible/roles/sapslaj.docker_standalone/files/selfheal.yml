@@ -14,6 +14,8 @@
     image: gcr.io/google-containers/cadvisor
     restart_policy: unless-stopped
     privileged: yes
+    network_mode: host
+    pid_mode: host
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:ro
@@ -21,9 +23,8 @@
       - /var/lib/docker/:/var/lib/docker:ro
     devices:
       - /dev/kmsg
-    ports:
-      - 9338:8080
     command:
+      - --port=9338
       - --enable_load_reader=true
     healthcheck:
       test: [NONE]
