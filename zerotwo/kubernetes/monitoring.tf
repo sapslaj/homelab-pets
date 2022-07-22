@@ -9,6 +9,7 @@ module "prometheus_ingress_dns" {
   for_each = toset([
     "alertmanager",
     "prometheus",
+    "shelly-ht-report",
   ])
 
   name = each.key
@@ -159,6 +160,16 @@ resource "helm_release" "prometheus" {
       }
     }
   })]
+}
+
+module "shelly_ht_exporter" {
+  source = "./modules/shelly_ht_exporter"
+
+  namespace = kubernetes_namespace_v1.monitoring.metadata[0].name
+  enable_ingress = true
+  ingress_hosts = [
+    "shelly-ht-report.sapslaj.xyz",
+  ]
 }
 
 module "loki_ingress_dns" {
