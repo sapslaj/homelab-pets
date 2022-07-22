@@ -103,14 +103,6 @@ resource "helm_release" "prometheus" {
         }]
       },
       {
-        job_name = "shellyht"
-        static_configs = [{
-          targets = [
-            "darkness.sapslaj.xyz:33333",
-          ]
-        }]
-      },
-      {
         job_name        = "librenms"
         scrape_interval = "5m"
         static_configs = [{
@@ -165,7 +157,7 @@ resource "helm_release" "prometheus" {
 module "shelly_ht_exporter" {
   source = "./modules/shelly_ht_exporter"
 
-  namespace = kubernetes_namespace_v1.monitoring.metadata[0].name
+  namespace      = kubernetes_namespace_v1.monitoring.metadata[0].name
   enable_ingress = true
   ingress_hosts = [
     "shelly-ht-report.sapslaj.xyz",
