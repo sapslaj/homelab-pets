@@ -66,3 +66,7 @@
     volumes:
       - '{{ pvr_volumes_dir }}/lidarr-config:/config'
       - '{{ pvr_data_dir }}:/data'
+- name: copy selfheal task list for pvr
+  copy:
+    src: selfheal.yml
+    dest: /etc/selfheal/tasks/pvr.yml

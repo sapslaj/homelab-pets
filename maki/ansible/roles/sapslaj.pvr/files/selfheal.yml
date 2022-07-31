@@ -1,0 +1,73 @@
+- name: jackett checks
+  shell: |
+    set -euxo pipefail
+    fixed=0
+    jackett_cookiejar="/tmp/selfheal-jackett.cookie"
+    jackett="localhost:9117"
+    restart() {
+      docker restart jackett
+      sleep 30
+      fixed=1
+    }
+    cleanup() {
+      rm -f "$jackett_cookiejar"
+    }
+    jackett_api() {
+      curl --cookie "$jackett_cookiejar" --cookie-jar "$jackett_cookiejar" "$@"
+    }
+    jackett_login() {
+      jackett_api $jackett/UI/Login
+    }
+    jackett_test_indexer() {
+      jackett_api $jackett/api/v2.0/indexers/internetarchive/test -X POST
+    }
+    [[ "$(docker inspect jackett)" == *'"Status": "running"'* ]] || {
+      docker start jackett
+      sleep 30
+    }
+    vpn_ip="$(docker exec jackett curl -s api.ipify.org)"
+    [ "$?" == "0" ] || restart
+    [ "$(curl api.ipify.org)" != "$vpn_ip" ] || restart
+    jackett_login
+    if ! jackett_test_indexer; then
+      restart
+      jackett_login
+      jackett_test_indexer
+      check="$?"
+      if [ "$check" == "0" ]; then
+        fixed=1
+      else
+        echo "result:failed"
+        cleanup
+        exit $check
+      fi
+    fi
+    cleanup
+    if [ "$fixed" = 0 ]; then
+      echo "result:ok"
+    else
+      echo "result:fixed"
+    fi
+  args:
+    executable: /bin/bash
+  register: jackett_container_fix
+  changed_when: '"result:fixed" in jackett_container_fix.stdout_lines'
+- name: servarr checks
+  shell: |
+    set -euxo pipefail
+    fixed=0
+    for app in sonarr radarr lidarr; do
+      [[ "$(docker inspect $app)" == *'"Status": "running"'* ]] || {
+        docker start "$app"
+        fixed=1
+      }
+    done
+    if [ "$fixed" = 0 ]; then
+      echo "result:ok"
+    else
+      echo "result:fixed"
+    fi
+  args:
+    executable: /bin/bash
+  register: servarr_container_fix
+  changed_when: '"result:fixed" in servarr_container_fix.stdout_lines'
