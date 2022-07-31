@@ -1,0 +1,16 @@
+- name: nordvpn_container checks
+  shell: |
+    set -x
+    fail() {
+      docker restart vpn
+      echo "result:fixed"
+      exit 0
+    }
+    vpn_ip="$(docker exec vpn curl -s api.ipify.org)"
+    [ "$?" == "0" ] || fail
+    [ "$(curl -s api.ipify.org)" != "$vpn_ip" ] || fail
+    echo "result:ok"
+  args:
+    executable: /bin/bash
+  register: vpn_container_fix
+  changed_when: '"result:fixed" in vpn_container_fix.stdout_lines'

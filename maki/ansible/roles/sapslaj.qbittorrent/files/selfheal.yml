@@ -1,0 +1,27 @@
+- name: qbittorrent checks
+  shell: |
+    set -x
+    fail() {
+      docker restart qbittorrent
+      echo "result:fixed"
+      exit 0
+    }
+    [[ "$(docker inspect qbittorrent)" == *'"Status": "running"'* ]] || docker start qbittorrent
+    vpn_ip="$(docker exec qbittorrent curl -s api.ipify.org)"
+    [ "$?" == "0" ] || fail
+    [ "$(curl api.ipify.org)" != "$vpn_ip" ] || fail
+    curl -s localhost:8080 -o /dev/null || {
+      docker restart qbittorrent
+      sleep 60
+      curl -s localhost:8080 -o /dev/null
+      final_check="$?"
+      if [ "$final_check" == "0" ]; then
+        echo "result:fixed"
+      fi
+      exit $final_check
+    }
+    echo "result:ok"
+  args:
+    executable: /bin/bash
+  register: qbittorrent_container_fix
+  changed_when: '"result:fixed" in qbittorrent_container_fix.stdout_lines'

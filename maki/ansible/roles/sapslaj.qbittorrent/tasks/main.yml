@@ -4,6 +4,7 @@
     image: lscr.io/linuxserver/qbittorrent:latest
     restart_policy: unless-stopped
     network_mode: container:{{ qbittorrent_vpn_container }}
+    memory: 1536M
     env:
       PUID: '0'
       PGID: '0'
@@ -11,3 +12,7 @@
     volumes:
       - '{{ qbittorrent_config_dir }}:/config'
       - '{{ qbittorrent_data_dir }}:/data'
+- name: copy selfheal task list for qbittorrent
+  copy:
+    src: selfheal.yml
+    dest: /etc/selfheal/tasks/qbittorrent.yml
