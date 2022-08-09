@@ -1,6 +1,6 @@
 - name: jackett checks
   shell: |
-    set -euxo pipefail
+    set -uxo pipefail
     fixed=0
     jackett_cookiejar="/tmp/selfheal-jackett.cookie"
     jackett="localhost:9117"
