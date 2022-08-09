@@ -45,6 +45,8 @@
           - '[::]:9117:9117'
           - 0.0.0.0:8080:8080 # qBittorrent
           - '[::]:8080:8080'
+          - 0.0.0.0:8191:8191 # FlairSolverr
+          - '[::]:8191:8191'
     - role: sapslaj.qbittorrent
       vars:
         qbittorrent_config_dir: /mnt/exos/volumes/qbittorrent-config
