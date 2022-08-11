@@ -1,0 +1,10 @@
+groups:
+  - name: shelly-ht
+    rules:
+      - alert: ShellyHTNotReported
+        expr: (time() - shellyht_last_report) > 3600
+        labels:
+          severity: warning
+        annotations:
+          summary: Shelly H&T sensor hasn't reported in over an hour
+          description: The sensor hasn't reported values in over an hour. Check sensor battery level or power supply and configuration.
