@@ -2,8 +2,6 @@
   docker_container:
     name: qbittorrent
     image: lscr.io/linuxserver/qbittorrent:latest
-    entrypoint:
-      - /usr/bin/qbittorrent-nox
     restart_policy: unless-stopped
     network_mode: container:{{ qbittorrent_vpn_container }}
     memory: 1536M
