@@ -1,0 +1,50 @@
+- name: Add nodesource GPG key
+  apt_key:
+    url: https://deb.nodesource.com/gpgkey/nodesource.gpg.key
+    state: present
+
+- name: Add nodesource repo for node
+  apt_repository:
+    repo: deb https://deb.nodesource.com/node_16.x buster main
+    update_cache: yes
+
+- name: install node and deps
+  apt:
+    state: present
+    update_cache: yes
+    name:
+      - nodejs
+      - git
+      - make
+      - g++
+      - gcc
+
+- name: create /opt/zigbee2mqtt
+  file:
+    path: /opt/zigbee2mqtt
+    state: directory
+
+# - name: zigbee2mqtt repo
+#   git:
+#     repo: https://github.com/Koenkk/zigbee2mqtt.git
+#     dest: /opt/zigbee2mqtt
+#     version: 1.28.0
+
+- name: install packages
+  npm:
+    path: /opt/zigbee2mqtt
+    ci: true
+
+- name: copy zigbee2mqtt systemd unit
+  copy:
+    src: zigbee2mqtt.service
+    dest: /etc/systemd/system/zigbee2mqtt.service
+  notify:
+    - restart zigbee2mqtt service
+
+- name: enable zigbee2mqtt systemd unit
+  systemd:
+    name: zigbee2mqtt.service
+    state: started
+    enabled: yes
+    daemon_reload: yes

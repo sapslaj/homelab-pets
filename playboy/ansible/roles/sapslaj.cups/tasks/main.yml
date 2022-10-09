@@ -1,0 +1,14 @@
+- name: install cups
+  apt:
+    name: cups
+    state: present
+  notify:
+    - update cups permissions
+- name: remove cups-filters from modules-load
+  file:
+    path: /etc/modules-load.d/cups-filters.conf
+    state: absent
+- name: Make sure systemd-modules-load service is working
+  systemd:
+    name: systemd-modules-load.service
+    state: started
