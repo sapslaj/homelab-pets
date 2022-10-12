@@ -15,6 +15,16 @@ module "prometheus_ingress_dns" {
   name = each.key
 }
 
+resource "random_password" "hass_token" {
+  length = 1
+
+  lifecycle {
+    ignore_changes = [
+      length,
+    ]
+  }
+}
+
 resource "helm_release" "prometheus" {
   name = "prometheus"
 
@@ -121,6 +131,16 @@ resource "helm_release" "prometheus" {
           action = "labeldrop"
         }]
       },
+      {
+        job_name = "homeassistant"
+        metrics_path = "/api/prometheus"
+        bearer_token = random_password.hass_token.result
+        static_configs = [{
+          targets = [
+            "homeassistant.sapslaj.xyz:8123",
+          ]
+        }]
+      }
     ])
     alertmanagerFiles = {
       "alertmanager.yml" = {
