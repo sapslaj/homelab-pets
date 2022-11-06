@@ -207,3 +207,42 @@ groups:
           node_systemd_unit_state{state="failed", name!="fwupd-refresh.service", name!="fwupd.service"} > 0
         labels:
           severity: warning
+      - alert: NodeRAIDDegraded
+        annotations:
+          description: RAID array '{{ $labels.device }}' on {{ $labels.instance }} is in degraded state due to one or more disks failures. Number of spare drives is insufficient to fix issue automatically.
+          summary: RAID Array is degraded
+        expr: |
+          node_md_disks_required{job="node",device!=""} - ignoring (state) (node_md_disks{state="active",job="node",device!=""}) > 0
+        for: 15m
+        labels:
+          severity: critical
+      - alert: NodeRAIDDiskFailure
+        annotations:
+          description: At least one device in RAID array on {{ $labels.instance }} failed. Array '{{ $labels.device }}' needs attention and possibly a disk swap.
+          summary: Failed device in RAID array
+        expr: |
+          node_md_disks{state="failed",job="node",device!=""} > 0
+        labels:
+          severity: warning
+      - alert: NodeFileDescriptorLimit
+        annotations:
+          description: File descriptors limit at {{ $labels.instance }} is currently at {{ printf "%.2f" $value }}%.
+          summary: Kernel is predicted to exhaust file descriptors limit soon.
+        expr: |
+          (
+            node_filefd_allocated{job="node"} * 100 / node_filefd_maximum{job="node"} > 70
+          )
+        for: 15m
+        labels:
+          severity: warning
+      - alert: NodeFileDescriptorLimit
+        annotations:
+          description: File descriptors limit at {{ $labels.instance }} is currently at {{ printf "%.2f" $value }}%.
+          summary: Kernel is predicted to exhaust file descriptors limit soon.
+        expr: |
+          (
+            node_filefd_allocated{job="node"} * 100 / node_filefd_maximum{job="node"} > 90
+          )
+        for: 15m
+        labels:
+          severity: critical
