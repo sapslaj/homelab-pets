@@ -12,6 +12,7 @@
       - attr
       - quota
       - software-properties-common
+      - smartmontools
 - name: copy du_exporter
   copy:
     src: storage/du_exporter
