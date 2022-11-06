@@ -212,7 +212,7 @@ groups:
           description: RAID array '{{ $labels.device }}' on {{ $labels.instance }} is in degraded state due to one or more disks failures. Number of spare drives is insufficient to fix issue automatically.
           summary: RAID Array is degraded
         expr: |
-          node_md_disks_required{job="node",device!=""} - ignoring (state) (node_md_disks{state="active",job="node",device!=""}) > 0
+          node_md_disks_required{device!=""} - ignoring (state) (node_md_disks{state="active",device!=""}) > 0
         for: 15m
         labels:
           severity: critical
@@ -221,7 +221,7 @@ groups:
           description: At least one device in RAID array on {{ $labels.instance }} failed. Array '{{ $labels.device }}' needs attention and possibly a disk swap.
           summary: Failed device in RAID array
         expr: |
-          node_md_disks{state="failed",job="node",device!=""} > 0
+          node_md_disks{state="failed",device!=""} > 0
         labels:
           severity: warning
       - alert: NodeFileDescriptorLimit
@@ -230,7 +230,7 @@ groups:
           summary: Kernel is predicted to exhaust file descriptors limit soon.
         expr: |
           (
-            node_filefd_allocated{job="node"} * 100 / node_filefd_maximum{job="node"} > 70
+            node_filefd_allocated{} * 100 / node_filefd_maximum{} > 70
           )
         for: 15m
         labels:
@@ -241,7 +241,7 @@ groups:
           summary: Kernel is predicted to exhaust file descriptors limit soon.
         expr: |
           (
-            node_filefd_allocated{job="node"} * 100 / node_filefd_maximum{job="node"} > 90
+            node_filefd_allocated{} * 100 / node_filefd_maximum{} > 90
           )
         for: 15m
         labels:
