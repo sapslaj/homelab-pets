@@ -11,6 +11,10 @@
   roles:
     - role: cloudalchemy.node_exporter
       when: inventory_hostname not in ["zerotwo.sapslaj.xyz"]
+    - role: cloudalchemy.process_exporter
+      when: inventory_hostname not in ["zerotwo.sapslaj.xyz"]
+      vars:
+        process_exporter_version: latest
     - role: patrickjahns.promtail
     - role: sapslaj.rsyslog_promtail
 
