@@ -6,6 +6,16 @@ ram.sapslaj.xyz
 rem.sapslaj.xyz
 tohru.sapslaj.xyz
 zerotwo.sapslaj.xyz
+ichigo.sapslaj.xyz
+
+[bare_hosts]
+aqua.sapslaj.xyz
+eris.sapslaj.xyz
+maki.sapslaj.xyz
+playboy.sapslaj.xyz
+ram.sapslaj.xyz
+rem.sapslaj.xyz
+tohru.sapslaj.xyz
 
 [qemu_guests]
 maki.sapslaj.xyz

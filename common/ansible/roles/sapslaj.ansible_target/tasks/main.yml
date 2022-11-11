@@ -21,7 +21,7 @@
       - ansible
       - build-essential
       - python3-apt
-  when: ansible_distribution == "Debian" and ansible_distribution_release == "bullseye"
+  when: ansible_distribution_release in ["bullseye", "jammy"]
 
 - name: install packages needed for Ansible management (Other/Older Debian)
   apt:
@@ -31,7 +31,7 @@
       - ansible
       - build-essential
       - python-apt
-  when: ansible_distribution in ["Debian", "Ubuntu", "Linux Mint", "OSMC"] and ansible_distribution_release != "bullseye"
+  when: ansible_distribution_release in ["buster", "focal", "bionic"]
 
 - name: install packages needed for Ansible management (Red Hat - dnf)
   dnf:

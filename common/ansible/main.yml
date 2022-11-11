@@ -9,14 +9,18 @@
 - hosts: all
   become: true
   roles:
+    - role: patrickjahns.promtail
+    - role: sapslaj.rsyslog_promtail
+
+- hosts: bare_hosts
+  become: true
+  roles:
     - role: cloudalchemy.node_exporter
       when: inventory_hostname not in ["zerotwo.sapslaj.xyz"]
     - role: cloudalchemy.process_exporter
       when: inventory_hostname not in ["zerotwo.sapslaj.xyz"]
       vars:
         process_exporter_version: latest
-    - role: patrickjahns.promtail
-    - role: sapslaj.rsyslog_promtail
 
 - hosts: qemu_guests
   become: true
