@@ -26,7 +26,9 @@ resource "random_password" "hass_token" {
 }
 
 resource "helm_release" "prometheus" {
-  name = "prometheus"
+  name      = "prometheus"
+  namespace = kubernetes_namespace_v1.monitoring.metadata[0].name
+  version   = "15.18.0"
 
   repository = "https://prometheus-community.github.io/helm-charts"
   chart      = "prometheus"
@@ -37,6 +39,18 @@ resource "helm_release" "prometheus" {
         enabled = true
         hosts   = ["alertmanager.sapslaj.xyz"]
       }
+      persistentVolume = {
+        enabled      = true
+        accessModes  = ["ReadWriteMany"]
+        storageClass = "nfs"
+      }
+    }
+    pushgateway = {
+      persistentVolume = {
+        enabled      = true
+        accessModes  = ["ReadWriteMany"]
+        storageClass = "nfs"
+      }
     }
     server = {
       retention = "400d"
@@ -46,6 +60,11 @@ resource "helm_release" "prometheus" {
       }
       statefulSet = {
         enabled = true
+      }
+      persistentVolume = {
+        enabled      = true
+        accessModes  = ["ReadWriteMany"]
+        storageClass = "nfs"
       }
     }
     extraScrapeConfigs = yamlencode([
@@ -132,7 +151,7 @@ resource "helm_release" "prometheus" {
         }]
       },
       {
-        job_name = "homeassistant"
+        job_name     = "homeassistant"
         metrics_path = "/api/prometheus"
         bearer_token = random_password.hass_token.result
         static_configs = [{
