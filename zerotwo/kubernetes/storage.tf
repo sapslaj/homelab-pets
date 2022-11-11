@@ -1,3 +1,9 @@
+resource "kubernetes_namespace_v1" "storage" {
+  metadata {
+    name = "storage"
+  }
+}
+
 resource "helm_release" "nfs_provisioner" {
   name = "nfs-provisioner"
 
@@ -14,4 +20,12 @@ resource "helm_release" "nfs_provisioner" {
       accessModes = "ReadWriteMany"
     }
   })]
+}
+
+resource "helm_release" "longhorn" {
+  name      = "longhorn"
+  namespace = kubernetes_namespace_v1.storage.metadata[0].name
+
+  repository = "https://charts.longhorn.io"
+  chart      = "longhorn"
 }
