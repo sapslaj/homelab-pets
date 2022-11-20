@@ -36,6 +36,7 @@ resource "helm_release" "kube2iam" {
 
   repository = "https://jtblin.github.io/kube2iam/"
   chart      = "kube2iam"
+  version    = "2.6.0"
 
   values = [yamlencode({
     aws = {
@@ -46,12 +47,21 @@ resource "helm_release" "kube2iam" {
     rbac = {
       create = true
     }
+    updateStrategy = "RollingUpdate"
     # probes disabled due to not being able to disable IMDS checking in kube2iam currently
     livenessProbe = {
       enabled = false
     }
     readinessProbe = {
       enabled = false
+    }
+    extraArgs = {
+      log-level = "debug"
+      debug     = true
+    }
+    host = {
+      iptables  = true
+      interface = "cni0"
     }
   })]
 }
