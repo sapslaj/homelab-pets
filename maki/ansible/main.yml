@@ -38,6 +38,7 @@
       636234356138306338323433333066386330
   roles:
     - role: sapslaj.docker_standalone
+    - role: sapslaj.syncthing
     - role: sapslaj.nordvpn_container
       vars:
         vpn_container_ports:
