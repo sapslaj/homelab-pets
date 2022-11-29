@@ -1,6 +1,9 @@
 - hosts: all
   become: true
   handlers:
+    - name: systemd reload
+      systemd:
+        daemon_reload: yes
     - name: restart NetworkManager
       systemd:
         name: NetworkManager.service

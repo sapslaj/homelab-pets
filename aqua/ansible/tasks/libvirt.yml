@@ -81,3 +81,21 @@
   copy:
     src: libvirt/virt-backup-config.yml
     dest: /etc/virt-backup/config.yml
+- name: copy virt-backup-backup service
+  copy:
+    src: libvirt/virt-backup-backup.service
+    dest: /etc/systemd/system/virt-backup-backup.service
+  notify:
+    - systemd reload
+- name: copy virt-backup-backup service
+  copy:
+    src: libvirt/virt-backup-backup.timer
+    dest: /etc/systemd/system/virt-backup-backup.timer
+  notify:
+    - systemd reload
+- meta: flush_handlers
+- name: enable virt-backup-backup timer
+  systemd:
+    name: virt-backup-backup.timer
+    state: started
+    enabled: true
