@@ -35,7 +35,7 @@ locals {
 
 module "vm" {
   source  = "sapslaj/standalone-instance/libvirt"
-  version = "~> 0.3"
+  version = "~> 0.4"
 
   base_volume_id = local.libvirt_platform.ubuntu_20_04_qcow2_id
 
