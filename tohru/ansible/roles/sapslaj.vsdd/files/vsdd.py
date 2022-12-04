@@ -253,7 +253,7 @@ if __name__ == "__main__":
         if lease.pool in {"LAN_Servers", "LAN_Management"}:
             return lease.hostname not in {"aqua"}
         if lease.pool in {"LAN_Internal"}:
-            return lease.hostname in {"homeassistant", "darkness", "playboy"}
+            return lease.hostname in {"homeassistant", "darkness", "playboy", "k3sdev", "steamdeck", "megumin"}
 
     for lease in leases:
         logging.info(
