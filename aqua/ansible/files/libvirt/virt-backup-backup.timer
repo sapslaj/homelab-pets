@@ -2,7 +2,7 @@
 Description=virt-backup backup
 
 [Timer]
-OnCalendar=daily
+OnCalendar=Mon *-*-* 00:00:00
 
 [Install]
 WantedBy=timers.target
