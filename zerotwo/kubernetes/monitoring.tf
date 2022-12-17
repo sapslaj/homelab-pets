@@ -72,7 +72,7 @@ resource "helm_release" "prometheus" {
         job_name = "prometheus_remote"
         static_configs = [{
           targets = [
-            "prometheus.direct.sapslaj.cloud:9090",
+            # "prometheus.direct.sapslaj.cloud:9090",
           ]
         }]
       },
