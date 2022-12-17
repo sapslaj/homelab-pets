@@ -58,6 +58,11 @@
     - role: sapslaj.plex
       vars:
         plex_media_dir: /mnt/exos/Media
+    - role: sapslaj.jellyfin
+      vars:
+        jellyfin_media_dir: /mnt/exos/Media
+        jellyfin_config_dir: /mnt/exos/jellyfin-config
+        jellyfin_cache_dir: /mnt/exos/jellyfin-cache
     - role: sapslaj.syslog_promtail
       vars:
         syslog_promtail_volumes_dir: /var/docker/volumes/syslog-promtail

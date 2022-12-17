@@ -1,0 +1,10 @@
+- name: jellyfin container
+  docker_container:
+    name: jellyfin
+    image: jellyfin/jellyfin:latest
+    restart_policy: unless-stopped
+    network_mode: host
+    volumes:
+      - '{{ jellyfin_cache_dir }}:/cache'
+      - '{{ jellyfin_config_dir }}:/config'
+      - '{{ jellyfin_media_dir }}:/data/media:ro'
