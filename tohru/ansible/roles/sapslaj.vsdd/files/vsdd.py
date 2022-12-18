@@ -74,15 +74,26 @@ class Route53Updater:
 
     def update(self, leases):
         route53 = boto3.client("route53")
-        changes = []
+        hostname_leases = {}
         for lease in leases:
             if not lease.hostname:
                 continue
-            changes.append(self._ipv4_record(lease))
-            if lease.ipv6s:
-                changes.append(self._ipv6_record(lease))
-        if changes:
-            return route53.change_resource_record_sets(HostedZoneId=self.hosted_zone_id, ChangeBatch={"Changes": changes})
+            if not lease.hostname in hostname_leases:
+                hostname_leases[lease.hostname] = []
+            hostname_leases[lease.hostname].append(lease)
+        changes = []
+        for hostname, leases in hostname_leases.items():
+            ipv4 = self._ipv4_record(hostname, leases)
+            if ipv4:
+                changes.append(ipv4)
+            ipv6 = self._ipv6_record(hostname, leases)
+            if ipv6:
+                changes.append(ipv6)
+        for change in changes:
+            try:
+                route53.change_resource_record_sets(HostedZoneId=self.hosted_zone_id, ChangeBatch={"Changes": [change]})
+            except route53.exceptions.InvalidChangeBatch as e:
+                logging.error(e)
 
     def _dns_safe_name(self, name):
         return re.sub(r"\s", "-", name)
@@ -98,11 +109,15 @@ class Route53Updater:
             },
         }
 
-    def _ipv4_record(self, lease):
-        return self._dns_change(name=lease.hostname, addresses=[lease.ip], suffix=self.suffix, record_type="A")
+    def _ipv4_record(self, hostname, leases):
+        addresses = [lease.ip for lease in leases]
+        if addresses:
+            return self._dns_change(name=lease.hostname, addresses=addresses, suffix=self.suffix, record_type="A")
 
-    def _ipv6_record(self, lease):
-        return self._dns_change(name=lease.hostname, addresses=lease.ipv6s, suffix=self.suffix, record_type="AAAA")
+    def _ipv6_record(self, hostname, leases):
+        addresses = [ip for lease in leases for ip in lease.ipv6s]
+        if addresses:
+            return self._dns_change(name=lease.hostname, addresses=addresses, suffix=self.suffix, record_type="AAAA")
 
 
 class Route53IPv4PTRUpdater:
