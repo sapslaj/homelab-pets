@@ -1,0 +1,13 @@
+- name: restart rsync-backup service
+  systemd:
+    name: rsync-backup.service
+    state: restarted
+    daemon_reload: yes
+  ignore_errors: '{{ ansible_check_mode }}'
+
+- name: restart rsync-backup timer
+  systemd:
+    name: rsync-backup.timer
+    state: restarted
+    daemon_reload: yes
+  ignore_errors: '{{ ansible_check_mode }}'

@@ -16,9 +16,7 @@
   become: true
   roles:
     - role: cloudalchemy.node_exporter
-      when: inventory_hostname not in ["zerotwo.sapslaj.xyz"]
     - role: cloudalchemy.process_exporter
-      when: inventory_hostname not in ["zerotwo.sapslaj.xyz"]
       vars:
         process_exporter_version: latest
 
@@ -26,3 +24,25 @@
   become: true
   roles:
     - role: sapslaj.qemu_guest
+
+- hosts: k3s
+  become: true
+  roles:
+    - role: sapslaj.rsync_backup
+      vars:
+        rsync_backup_timer:
+          on_calendar: hourly
+        rsync_backup_jobs:
+          - src: /var/lib/rancher/k3s
+            dest: /mnt/exos/volumes/{{ ansible_hostname }}/k3s-data
+
+- hosts: docker_standalone
+  become: true
+  roles:
+    - role: sapslaj.rsync_backup
+      vars:
+        rsync_backup_timer:
+          on_calendar: hourly
+        rsync_backup_jobs:
+          - src: /var/docker/volumes
+            dest: /mnt/exos/volumes/{{ ansible_hostname }}/docker-volumes

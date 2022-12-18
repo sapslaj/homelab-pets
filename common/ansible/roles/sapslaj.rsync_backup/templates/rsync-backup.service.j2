@@ -1,0 +1,16 @@
+[Unit]
+Description=rsync backup
+
+[Service]
+Type=oneshot
+{% for job in rsync_backup_jobs %}
+{% if job.parameters is defined %}
+{% set parameters = job.parameters %}
+{% else %}
+{% set parameters = "--recursive --verbose --human-readable --update --partial --progress" %}
+{% endif %}
+{% if (job.remote is defined and not job.remote) or ("@" not in job.dest and ":" not in job.dest) %}
+ExecStart=/usr/bin/mkdir -p "{{ job.dest }}"
+{% endif %}
+ExecStart=/usr/bin/rsync {{ parameters }} "{{ job.src }}" "{{ job.dest }}"
+{% endfor %}
