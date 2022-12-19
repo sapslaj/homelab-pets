@@ -1,0 +1,10 @@
+- name: install NFS packages
+  apt:
+    name:
+      - nfs-common
+- name: mount exos
+  mount:
+    src: 172.24.4.10:/mnt/exos
+    path: /mnt/exos
+    fstype: nfs4
+    state: mounted

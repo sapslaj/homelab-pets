@@ -28,6 +28,7 @@
 - hosts: k3s
   become: true
   roles:
+    - role: sapslaj.nas_client
     - role: sapslaj.rsync_backup
       vars:
         rsync_backup_timer:
@@ -39,6 +40,7 @@
 - hosts: docker_standalone
   become: true
   roles:
+    - role: sapslaj.nas_client
     - role: sapslaj.rsync_backup
       vars:
         rsync_backup_timer:
