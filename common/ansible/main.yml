@@ -34,8 +34,9 @@
         rsync_backup_timer:
           on_calendar: hourly
         rsync_backup_jobs:
-          - src: /var/lib/rancher/k3s
-            dest: /mnt/exos/volumes/{{ ansible_hostname }}/k3s-data
+          - src: /var/lib/rancher/k3s/
+            dest: /mnt/exos/volumes/{{ ansible_hostname }}/k3s-data/
+            additional_parameters: --exclude agent/
 
 - hosts: docker_standalone
   become: true

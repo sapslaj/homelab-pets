@@ -6,5 +6,6 @@ rsync_backup_timer: {}
   # on_calendar:
 rsync_backup_jobs: []
   # - src: /tmp/source
-  #   destination: /tmp/destination
-  #   parameters: --archive
+  #   dest: /tmp/destination
+  #   default_parameters: --archive --verbose --human-readable --update --partial --progress
+  #   additional_parameters: --exclude node_modules
