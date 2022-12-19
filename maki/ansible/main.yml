@@ -6,55 +6,11 @@
         name: apparmor.service
         enabled: no
         state: stopped
-    - name: install NFS packages
-      apt:
-        name:
-          - nfs-common
-    - name: mount exos
-      mount:
-        src: 172.24.4.10:/mnt/exos
-        path: /mnt/exos
-        fstype: nfs4
-        state: mounted
 
 - hosts: all
   become: true
-  vars:
-    nordvpn_username: !vault |
-      $ANSIBLE_VAULT;1.1;AES256
-      36323230333766663662313966373266383262396363393362616134333835623930353935323431
-      6436346132373162366266613666663035646332353031370a336437656233663263383332633737
-      31336663356163326434653861663035663233633538353665666662376164373164356438643461
-      3438373163343239350a613930303438643030353738616439303235306138623432633963353361
-      31613263653539336331363639636239613263623634386464373261626433323731
-    nordvpn_password: !vault |
-      $ANSIBLE_VAULT;1.1;AES256
-      36646337386665653163303138363964633363313766303633343130316438336434623666653264
-      6132373831353038663466346564303336363237646366350a613861316533306261653734373631
-      66663231626438303233613166386635303861376331623231613863363330306361346239626161
-      6334396265333035660a346662346465623636366230626133333136623131316366333561636366
-      66376133316662636565666534613734656237623234316466373439663461393861313561643735
-      39376634623134373536333937383134376534633364636135363761333530393761393662363936
-      636234356138306338323433333066386330
   roles:
-    - role: sapslaj.docker_standalone
     - role: sapslaj.syncthing
-    - role: sapslaj.nordvpn_container
-      vars:
-        vpn_container_ports:
-          - 0.0.0.0:9117:9117 # Jackett
-          - '[::]:9117:9117'
-          - 0.0.0.0:8080:8080 # qBittorrent
-          - '[::]:8080:8080'
-          - 0.0.0.0:8191:8191 # FlairSolverr
-          - '[::]:8191:8191'
-    - role: sapslaj.qbittorrent
-      vars:
-        qbittorrent_config_dir: /mnt/exos/volumes/qbittorrent-config
-        qbittorrent_data_dir: /mnt/exos/Media
-    - role: sapslaj.pvr
-      vars:
-        pvr_data_dir: /mnt/exos/Media
     - role: sapslaj.plex
       vars:
         plex_media_dir: /mnt/exos/Media

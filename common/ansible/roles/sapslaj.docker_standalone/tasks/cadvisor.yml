@@ -1,7 +1,7 @@
 - name: cAdvisor - create cadvisor container
   docker_container:
     name: cadvisor
-    image: gcr.io/google-containers/cadvisor
+    image: '{{ cadvisor_image }}'
     restart_policy: unless-stopped
     privileged: yes
     network_mode: host

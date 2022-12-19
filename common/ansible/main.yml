@@ -41,6 +41,7 @@
 - hosts: docker_standalone
   become: true
   roles:
+    - role: sapslaj.docker_standalone
     - role: sapslaj.nas_client
     - role: sapslaj.rsync_backup
       vars:

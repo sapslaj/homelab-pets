@@ -33,6 +33,33 @@ VM inside [aqua](#aqua).
 
 #### Uses
 
+##### Syncthing
+
+General purpose file syncing hub. Backup destination for portable devices. Needs host networking.
+
+##### Media servers
+
+Need host networking for DLNA to work right
+
+- Plex
+- Jellyfin
+
+##### network syslog
+
+Needs host networking because UDP in containers is still painful.
+
+This is used for network devices (routers, switches, etc) that can't natively run Promtail or another Loki client but can send logs to a network syslog server.
+
+- Syslog-NG listens on 6601/tcp and 5514/udp
+- Silently converts to RFC5424 before sending to Promtail sidecar
+- Promtail sidecar forwards to Loki
+
+### eris
+
+Raspberry Pi 4 running Raspbian
+
+#### Uses
+
 ##### PVR
 
 need to do complicated container networking to make appropriate traffic flow through VPN container
@@ -74,27 +101,6 @@ need to do complicated container networking to make appropriate traffic flow thr
                            |            |
                            +------------+
 ```
-
-##### Syncthing
-
-General purpose file syncing hub. Backup destination for portable devices. Needs host networking.
-
-##### Media servers
-
-Need host networking for DLNA to work right
-
-- Plex
-- Jellyfin
-
-##### network syslog
-
-Needs host networking because UDP in containers is still painful.
-
-This is used for network devices (routers, switches, etc) that can't natively run Promtail or another Loki client but can send logs to a network syslog server.
-
-- Syslog-NG listens on 6601/tcp and 5514/udp
-- Silently converts to RFC5424 before sending to Promtail sidecar
-- Promtail sidecar forwards to Loki
 
 ### playboy
 
