@@ -1,56 +1,13 @@
 - hosts: all
   become: true
-  vars:
-    tcp_shim_ports:
-      - 80
-      - 443
-      - 6601
-    udp_shim_ports:
-      - 5514
-  handlers:
-    - name: restart ipv6-tcp-shim
-      systemd:
-        name: ipv6-tcp-shim@{{ item }}.service
-        state: restarted
-        daemon_reload: yes
-      with_items: '{{ tcp_shim_ports }}'
-    - name: restart ipv6-udp-shim
-      systemd:
-        name: ipv6-tcp-shim@{{ item }}.service
-        state: restarted
-        daemon_reload: yes
-      with_items: '{{ udp_shim_ports }}'
-  tasks:
-    - name: Install socat
-      apt:
-        name:
-          - socat
-    - name: Copy ipv6-tcp-shim.service
-      copy:
-        src: ipv6-tcp-shim@.service
-        dest: /etc/systemd/system/ipv6-tcp-shim@.service
-      notify:
-        - restart ipv6-tcp-shim
-    - name: Copy ipv6-udp-shim.service
-      copy:
-        src: ipv6-udp-shim@.service
-        dest: /etc/systemd/system/ipv6-udp-shim@.service
-      notify:
-        - restart ipv6-udp-shim
-    - meta: flush_handlers
-    - name: Start ipv6-tcp-shim
-      systemd:
-        name: ipv6-tcp-shim@{{ item }}.service
-        enabled: yes
-        state: started
-      with_items: '{{ tcp_shim_ports }}'
-    - name: Start ipv6-udp-shim
-      systemd:
-        name: ipv6-udp-shim@{{ item }}.service
-        enabled: yes
-        state: started
-      with_items: '{{ udp_shim_ports }}'
-    - name: copy selfheal task list for docker_standalone
-      copy:
-        src: selfheal.yml
-        dest: /etc/selfheal/tasks/ipv6_shim.yml
+  roles:
+    - role: sapslaj.ipv6_shim
+      vars:
+        ipv6_shim_tcp_ports:
+          - port: 80
+          - port: 443
+          - port: 6601
+            state: absent
+        ipv6_shim_udp_ports:
+          - port: 5514
+            state: absent
