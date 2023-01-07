@@ -21,6 +21,9 @@
 
 - import_tasks: install.yml
   become: true
+  when:
+    ( not __process_exporter_is_installed.stat.exists ) or
+    ( __process_exporter_current_version_output.stdout_lines[0].split(" ")[2] != process_exporter_version )
   tags:
     - process_exporter_install
 

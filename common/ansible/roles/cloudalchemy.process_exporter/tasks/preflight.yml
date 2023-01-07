@@ -17,6 +17,26 @@
     that:
       - "':' in process_exporter_web_listen_address"
 
+- name: Check if process_exporter is installed
+  stat:
+    path: /usr/local/bin/process_exporter
+  register: __process_exporter_is_installed
+  check_mode: false
+  tags:
+    - process_exporter_install
+
+- name: Gather currently installed process_exporter version (if any)
+  command: /usr/local/bin/process_exporter --version
+  args:
+    warn: false
+  changed_when: false
+  register: __process_exporter_current_version_output
+  check_mode: false
+  when: __process_exporter_is_installed.stat.exists
+  tags:
+    - process_exporter_install
+    - skip_ansible_lint
+
 - block:
     - name: Get latest release
       uri:
