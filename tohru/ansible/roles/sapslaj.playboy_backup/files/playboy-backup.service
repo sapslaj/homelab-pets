@@ -1,0 +1,18 @@
+[Unit]
+Description=Playboy Backup
+After=network.target
+StartLimitIntervalSec=30min
+StartLimitBurst=3
+
+[Service]
+Type=oneshot
+User=ci
+Group=ci
+ExecStart=/usr/sbin/playboy-backup.sh
+StandardOutput=journal
+Restart=on-failure
+RestartSec=5min
+WatchdogSec=30
+
+[Install]
+WantedBy=multi-user.target

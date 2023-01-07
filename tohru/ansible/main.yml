@@ -31,6 +31,7 @@
   roles:
     - role: sapslaj.cloudflare_ddns_update
     - role: sapslaj.vsdd
+    - role: sapslaj.playboy_backup
 
 # - hosts: all
 #   become: true

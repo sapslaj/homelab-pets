@@ -1,0 +1,22 @@
+- name: copy script
+  copy:
+    src: playboy-backup.sh
+    dest: /usr/sbin/playboy-backup.sh
+    mode: a+x
+- name: copy service unit
+  copy:
+    src: playboy-backup.service
+    dest: /etc/systemd/system/playboy-backup.service
+  notify:
+    - restart playboy-backup service
+- name: copy timer unit
+  copy:
+    src: playboy-backup.timer
+    dest: /etc/systemd/system/playboy-backup.timer
+  notify:
+    - restart playboy-backup timer
+- name: start playboy-backup timer
+  systemd:
+    name: playboy-backup.timer
+    state: started
+    enabled: true

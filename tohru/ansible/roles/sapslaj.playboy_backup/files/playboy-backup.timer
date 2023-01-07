@@ -1,0 +1,10 @@
+[Unit]
+Description=Playboy Backup
+
+[Timer]
+OnCalendar=hourly
+RandomizedDelaySec=1800
+FixedRandomDelay=true
+
+[Install]
+WantedBy=timers.target
