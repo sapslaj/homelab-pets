@@ -4,6 +4,7 @@
     image: jellyfin/jellyfin:latest
     restart_policy: unless-stopped
     network_mode: host
+    memory: 1536M
     volumes:
       - '{{ jellyfin_cache_dir }}:/cache'
       - '{{ jellyfin_config_dir }}:/config'

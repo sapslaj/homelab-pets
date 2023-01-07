@@ -4,6 +4,7 @@
     image: lscr.io/linuxserver/plex
     restart_policy: unless-stopped
     network_mode: host
+    memory: 1024M
     env:
       TZ: America/New_York
     volumes:
