@@ -33,6 +33,8 @@
       vars:
         rsync_backup_timer:
           on_calendar: hourly
+          randomized_delay_sec: 1800
+          fixed_random_delay: true
         rsync_backup_jobs:
           - src: /var/lib/rancher/k3s/
             dest: /mnt/exos/volumes/{{ ansible_hostname }}/k3s-data/
@@ -47,6 +49,8 @@
       vars:
         rsync_backup_timer:
           on_calendar: hourly
+          randomized_delay_sec: 1800
+          fixed_random_delay: true
         rsync_backup_jobs:
           - src: /var/docker/volumes
             dest: /mnt/exos/volumes/{{ ansible_hostname }}/docker-volumes

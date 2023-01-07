@@ -18,6 +18,12 @@ OnUnitActiveSec={{ rsync_backup_timer.on_unit_active_sec }}
 {% if rsync_backup_timer.on_calendar is defined %}
 OnCalendar={{ rsync_backup_timer.on_calendar }}
 {% endif %}
+{% if rsync_backup_timer.randomized_delay_sec is defined %}
+RandomizedDelaySec={{ rsync_backup_timer.randomized_delay_sec }}
+{% endif %}
+{% if rsync_backup_timer.fixed_random_delay is defined %}
+FixedRandomDelay={{ rsync_backup_timer.fixed_random_delay | lower }}
+{% endif %}
 
 [Install]
 WantedBy=timers.target
