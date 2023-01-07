@@ -12,6 +12,11 @@
     - role: patrickjahns.promtail
     - role: sapslaj.rsyslog_promtail
 
+- hosts: nas_clients
+  become: true
+  roles:
+    - role: sapslaj.nas_client
+
 - hosts: bare_hosts
   become: true
   roles:
@@ -30,7 +35,6 @@
 - hosts: k3s
   become: true
   roles:
-    - role: sapslaj.nas_client
     - role: sapslaj.rsync_backup
       vars:
         rsync_backup_timer:
@@ -46,7 +50,6 @@
   become: true
   roles:
     - role: sapslaj.docker_standalone
-    - role: sapslaj.nas_client
     - role: sapslaj.rsync_backup
       vars:
         rsync_backup_timer:
