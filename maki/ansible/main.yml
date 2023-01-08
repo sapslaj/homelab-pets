@@ -11,6 +11,7 @@
   become: true
   roles:
     - role: sapslaj.syncthing
+    - role: sapslaj.morbius
     - role: sapslaj.plex
       vars:
         plex_media_dir: /mnt/exos/Media

@@ -1,0 +1,92 @@
+server:
+  netflowv5:
+    enable: true
+  netflowv9:
+    enable: true
+  sflow:
+    enable: true
+  http:
+    enable: true
+    port: 9269
+transport:
+  dispatch_method: worker_pool
+  parallelize_destinations: true
+  worker_count: 2
+  message_buffer: 16
+enrichers:
+  addr_type:
+    morbing: enabled
+  proto_names:
+    morbing: enabled
+  rdns:
+    enable_cache: true
+    cache_size: 2048
+  maxmind_db:
+    enable_cache: true
+    cache_size: 2048
+    locale: en
+    database_paths:
+      - /var/morbius/mmdb/GeoLite2-ASN.mmdb
+      - /var/morbius/mmdb/GeoLite2-City.mmdb
+    enabled_field_groups:
+      - asn
+      - city
+destinations:
+  prometheus:
+    visibility_timeout: 15m
+    count_bytes: true
+    count_packets: true
+    count_flows: true
+    observe_flow_duration: false
+    metric_labels:
+      - dst_addr
+      # - dst_port
+      - src_addr
+      # - src_port
+      - ethernet_type_name
+      - protocol_name
+    export_ip_info: true
+    ip_info_labels:
+      - addr
+      - addr_type
+      - hostname
+      - asn_org
+      - asn
+      - average_income
+      - city_confidence
+      - city_name
+      - connection_type
+      - continent_code
+      - continent_name
+      - country_code
+      - country_confidence
+      - country_eu
+      - country_name
+      - domain
+      - ip_risk
+      - ip_user_type
+      - is_anonymous_proxy
+      - is_anonymous_vpn
+      - is_anonymous
+      - is_hosting_provider
+      - is_legitimate_proxy
+      - is_public_proxy
+      - is_residential_proxy
+      - is_satellite_provider
+      - is_tor_exit_node
+      - isp
+      - loc_accuracy
+      - loc_lat
+      - loc_long
+      - loc_metro_code
+      - loc_postal_code
+      - loc_postal_confidence
+      - loc_tz
+      - organization
+      - population_density
+      - registered_country_code
+      - registered_country_eu
+      - registered_country_name
+      - represented_country_code
+      - represented_country_name
+      - static_ip_score
