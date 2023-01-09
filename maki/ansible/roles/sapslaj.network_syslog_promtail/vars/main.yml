@@ -1,0 +1,15 @@
+promtail_config:
+  server:
+    http_listen_port: 9080
+
+  clients:
+    - url: '{{ network_syslog_promtail_push_url }}'
+
+  scrape_configs:
+    - job_name: '{{ network_syslog_promtail_labels["job"] | default("syslog") }}'
+      syslog:
+        listen_address: 0.0.0.0:1514
+        idle_timeout: 60s
+        label_structured_data: yes
+        labels: '{{ network_syslog_promtail_labels }}'
+      relabel_configs: '{{ network_syslog_promtail_relabel_configs }}'

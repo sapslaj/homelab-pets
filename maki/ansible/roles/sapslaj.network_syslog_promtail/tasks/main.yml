@@ -3,12 +3,12 @@
     path: '{{ item }}'
     state: directory
   with_items:
-    - '{{ syslog_promtail_volumes_dir }}/syslog-ng-config'
-    - '{{ syslog_promtail_volumes_dir }}/promtail-config'
+    - '{{ network_syslog_promtail_volumes_dir }}/syslog-ng-config'
+    - '{{ network_syslog_promtail_volumes_dir }}/promtail-config'
 - name: syslog-ng config
-  copy:
-    src: syslog-ng.conf
-    dest: '{{ syslog_promtail_volumes_dir }}/syslog-ng-config/syslog-ng.conf'
+  template:
+    src: syslog-ng.conf.j2
+    dest: '{{ network_syslog_promtail_volumes_dir }}/syslog-ng-config/syslog-ng.conf'
   register: syslog_ng_config
 - name: syslog-ng container
   docker_container:
@@ -25,11 +25,11 @@
       - /config/log/current
       - /config/log/debug.log
     volumes:
-      - '{{ syslog_promtail_volumes_dir }}/syslog-ng-config:/config'
+      - '{{ network_syslog_promtail_volumes_dir }}/syslog-ng-config:/config'
 - name: promtail config
-  copy:
-    src: promtail.yaml
-    dest: '{{ syslog_promtail_volumes_dir }}/promtail-config/promtail.yaml'
+  template:
+    src: promtail.yaml.j2
+    dest: '{{ network_syslog_promtail_volumes_dir }}/promtail-config/promtail.yaml'
   register: promtail_config
 - name: promtail container
   docker_container:
@@ -42,4 +42,4 @@
     command:
       - -config.file=/etc/promtail/promtail.yaml
     volumes:
-      - '{{ syslog_promtail_volumes_dir }}/promtail-config:/etc/promtail'
+      - '{{ network_syslog_promtail_volumes_dir }}/promtail-config:/etc/promtail'

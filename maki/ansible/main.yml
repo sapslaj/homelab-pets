@@ -18,6 +18,9 @@
     - role: sapslaj.jellyfin
       vars:
         jellyfin_media_dir: /mnt/exos/Media
-    - role: sapslaj.syslog_promtail
+    - role: sapslaj.network_syslog_promtail
       vars:
-        syslog_promtail_volumes_dir: /var/docker/volumes/syslog-promtail
+        network_syslog_promtail_volumes_dir: /var/docker/volumes/syslog-promtail
+        network_syslog_promtail_push_url: http://loki.sapslaj.xyz/loki/api/v1/push
+        network_syslog_promtail_labels:
+          job: network-syslog

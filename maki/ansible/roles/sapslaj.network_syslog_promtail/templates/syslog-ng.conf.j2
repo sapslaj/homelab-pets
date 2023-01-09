@@ -6,19 +6,15 @@ source s_local {
 };
 
 source s_network_tcp {
-  syslog(ip("::") ip-protocol(6) transport(tcp) port(6601));
+  syslog(ip("::") ip-protocol(6) transport(tcp) port({{ network_syslog_promtail_tcp_port }}));
 };
 
 source s_network_udp {
-  syslog(ip("::") ip-protocol(6) transport(udp) port(5514));
+  syslog(ip("::") ip-protocol(6) transport(udp) port({{ network_syslog_promtail_udp_port }}));
 };
 
 destination d_promtail {
   syslog("localhost" transport("tcp") port("1514"));
-};
-
-destination d_local_debug {
-  file("/config/log/debug.log");
 };
 
 log {
@@ -28,9 +24,15 @@ log {
   destination(d_promtail);
 };
 
+{% if network_syslog_promtail_debug | default(false) %}
+destination d_local_debug {
+  file("/config/log/debug.log");
+};
+
 log {
   source(s_local);
   source(s_network_tcp);
   source(s_network_udp);
   destination(d_local_debug);
 };
+{% endif %}
