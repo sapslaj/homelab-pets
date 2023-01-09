@@ -24,3 +24,12 @@
         network_syslog_promtail_push_url: http://loki.sapslaj.xyz/loki/api/v1/push
         network_syslog_promtail_labels:
           job: network-syslog
+        network_syslog_promtail_relabel_configs:
+          - source_labels: [__syslog_message_hostname]
+            target_label: hostname
+          - source_labels: [__syslog_message_severity]
+            target_label: syslog_severity
+          - source_labels: [__syslog_message_facility]
+            target_label: syslog_facility
+          - source_labels: [__syslog_message_app_name]
+            target_label: syslog_app_name
