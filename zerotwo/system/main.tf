@@ -37,12 +37,12 @@ module "vm" {
 
   name   = "zerotwo"
   cpus   = 4
-  memory = 6
+  memory = 3
 
   cloudinit         = local.libvirt_platform.cloudinit.base
   network_interface = local.libvirt_platform.networks.br0_vlan4
   root_volume = {
     attachment = "file"
-    size       = 30
+    size       = 100
   }
 }
