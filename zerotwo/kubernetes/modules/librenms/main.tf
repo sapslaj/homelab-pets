@@ -8,8 +8,9 @@ resource "kubernetes_namespace_v1" "this" {
 }
 
 locals {
-  namespace = var.create_namespace ? kubernetes_namespace_v1.this[0].metadata[0].name : var.namespace
-  labels    = var.labels
+  namespace                 = var.create_namespace ? kubernetes_namespace_v1.this[0].metadata[0].name : var.namespace
+  service_monitor_namespace = coalesce(var.service_monitor_namespace, local.namespace)
+  labels                    = var.labels
   app_labels = merge(local.labels, {
     "librenms.sapslaj.com/component" = "app"
   })
@@ -206,6 +207,7 @@ resource "kubernetes_deployment_v1" "pushgateway" {
           image = "prom/pushgateway:latest"
 
           port {
+            name           = "http"
             container_port = 9091
           }
         }
@@ -239,7 +241,47 @@ resource "kubernetes_service_v1" "pushgateway" {
     selector = kubernetes_deployment_v1.pushgateway.spec[0].template[0].metadata[0].labels
 
     port {
+      name = "http"
       port = 9091
+    }
+  }
+}
+
+resource "kubernetes_manifest" "pushgateway_service_monitor" {
+  count = var.enable_service_monitor ? 1 : 0
+
+  manifest = {
+    apiVersion = "monitoring.coreos.com/v1"
+    kind       = "ServiceMonitor"
+    metadata = {
+      name      = "librenms-prometheus-pushgateway"
+      namespace = local.service_monitor_namespace
+      labels    = local.pushgateway_labels
+    }
+    spec = {
+      selector = {
+        matchLabels = kubernetes_service_v1.pushgateway.spec[0].selector
+      }
+      namespaceSelector = {
+        matchNames = [local.namespace]
+      }
+      endpoints = [{
+        port = "http"
+        metricRelabelings = [
+          {
+            sourceLabels = ["exported_instance"]
+            targetLabel  = "instance"
+          },
+          {
+            sourceLabels = ["exported_job"]
+            targetLabel  = "job"
+          },
+          {
+            regex  = "exported_(instance|job)"
+            action = "labeldrop"
+          }
+        ]
+      }]
     }
   }
 }

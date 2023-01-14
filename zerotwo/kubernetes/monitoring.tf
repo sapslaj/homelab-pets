@@ -10,6 +10,7 @@ module "prometheus_ingress_dns" {
     "alertmanager",
     "prometheus",
     "shelly-ht-report",
+    "victoria-metrics",
   ])
 
   name = each.key
@@ -22,6 +23,17 @@ resource "random_password" "hass_token" {
     ignore_changes = [
       length,
     ]
+  }
+}
+
+resource "kubernetes_secret_v1" "hass_token" {
+  metadata {
+    name      = "hass-token"
+    namespace = kubernetes_namespace_v1.monitoring.metadata[0].name
+  }
+
+  data = {
+    HASS_TOKEN = random_password.hass_token.result
   }
 }
 
@@ -193,6 +205,233 @@ resource "helm_release" "prometheus" {
   })]
 }
 
+resource "helm_release" "prometheus_operator_crds" {
+  name      = "prometheus-operator-crds"
+  namespace = kubernetes_namespace_v1.monitoring.metadata[0].name
+
+  repository = "https://prometheus-community.github.io/helm-charts"
+  chart      = "prometheus-operator-crds"
+}
+
+resource "helm_release" "victoria_metrics" {
+  name      = "victoria-metrics"
+  namespace = kubernetes_namespace_v1.monitoring.metadata[0].name
+
+  repository = "https://victoriametrics.github.io/helm-charts"
+  chart      = "victoria-metrics-k8s-stack"
+
+  values = [
+    yamlencode({
+      fullnameOverride = "victoria-metrics"
+    }),
+    yamlencode({
+      victoria-metrics-operator = {
+        rbac = {
+          pspEnabled = false
+        }
+        operator = {
+          disable_prometheus_converter = false
+        }
+      }
+    }),
+    yamlencode({
+      vmsingle = {
+        spec = {
+          retentionPeriod = "100y"
+          storage = {
+            accessModes      = ["ReadWriteMany"]
+            storageClassName = "nfs"
+          }
+        }
+        ingress = {
+          enabled = true
+          hosts   = ["victoria-metrics.sapslaj.xyz"]
+        }
+      }
+    }),
+    yamlencode({
+      grafana = {
+        enabled = false
+      }
+    }),
+    yamlencode({
+      prometheus-node-exporter = {
+        service = {
+          # TODO: consolidate with node-exporter from prometheus installation
+          port       = 9099
+          targetPort = 9099
+        }
+      }
+    }),
+    yamlencode({
+      alertmanager = {
+        config = {
+          route = {
+            receiver = "opsgenie"
+            group_by = [
+              "alertname",
+              "instance",
+            ]
+          }
+          receivers = [{
+            name = "opsgenie"
+            opsgenie_configs = [{
+              api_key = "d947cc27-398b-462d-bc15-fc9176f1641e"
+            }]
+          }]
+        }
+      }
+    }),
+  ]
+}
+
+resource "kubernetes_manifest" "static_scrape_node_exporter" {
+  manifest = {
+    apiVersion = "operator.victoriametrics.com/v1beta1"
+    kind       = "VMStaticScrape"
+    metadata = {
+      name      = "node-exporter"
+      namespace = kubernetes_namespace_v1.monitoring.metadata[0].name
+    }
+    spec = {
+      jobName = "node_exporter"
+      targetEndpoints = [{
+        targets = [
+          "aqua.sapslaj.xyz:9100",
+          "eris.sapslaj.xyz:9100",
+          "maki.sapslaj.xyz:9100",
+          "playboy.sapslaj.xyz:9100",
+          "ram.sapslaj.xyz:9100",
+          "rem.sapslaj.xyz:9100",
+          "tohru.sapslaj.xyz:9100",
+        ]
+      }]
+    }
+  }
+}
+
+resource "kubernetes_manifest" "static_scrape_standalone_docker" {
+  manifest = {
+    apiVersion = "operator.victoriametrics.com/v1beta1"
+    kind       = "VMStaticScrape"
+    metadata = {
+      name      = "standalone-docker"
+      namespace = kubernetes_namespace_v1.monitoring.metadata[0].name
+    }
+    spec = {
+      jobName = "standalone_docker"
+      targetEndpoints = [{
+        targets = [
+          "maki.sapslaj.xyz:9323",
+          "eris.sapslaj.xyz:9323",
+        ]
+      }]
+    }
+  }
+}
+
+resource "kubernetes_manifest" "static_scrape_standalone_docker_cadvisor" {
+  manifest = {
+    apiVersion = "operator.victoriametrics.com/v1beta1"
+    kind       = "VMStaticScrape"
+    metadata = {
+      name      = "standalone-docker-cadvisor"
+      namespace = kubernetes_namespace_v1.monitoring.metadata[0].name
+    }
+    spec = {
+      jobName = "standalone_docker"
+      targetEndpoints = [{
+        targets = [
+          "maki.sapslaj.xyz:9338",
+          "eris.sapslaj.xyz:9338",
+        ]
+      }]
+    }
+  }
+}
+
+resource "kubernetes_manifest" "static_scrape_du" {
+  manifest = {
+    apiVersion = "operator.victoriametrics.com/v1beta1"
+    kind       = "VMStaticScrape"
+    metadata = {
+      name      = "du"
+      namespace = kubernetes_namespace_v1.monitoring.metadata[0].name
+    }
+    spec = {
+      jobName = "du"
+      targetEndpoints = [{
+        targets = [
+          "aqua.sapslaj.xyz:9477",
+        ]
+      }]
+    }
+  }
+}
+
+resource "kubernetes_manifest" "static_scrape_libvirt" {
+  manifest = {
+    apiVersion = "operator.victoriametrics.com/v1beta1"
+    kind       = "VMStaticScrape"
+    metadata = {
+      name      = "libvirt"
+      namespace = kubernetes_namespace_v1.monitoring.metadata[0].name
+    }
+    spec = {
+      jobName = "libvirt"
+      targetEndpoints = [{
+        targets = [
+          "aqua.sapslaj.xyz:9177",
+        ]
+      }]
+    }
+  }
+}
+
+resource "kubernetes_manifest" "static_scrape_adguard" {
+  manifest = {
+    apiVersion = "operator.victoriametrics.com/v1beta1"
+    kind       = "VMStaticScrape"
+    metadata = {
+      name      = "adguard"
+      namespace = kubernetes_namespace_v1.monitoring.metadata[0].name
+    }
+    spec = {
+      jobName = "adguard"
+      targetEndpoints = [{
+        targets = [
+          "rem.sapslaj.xyz:9617",
+          "ram.sapslaj.xyz:9617",
+        ]
+      }]
+    }
+  }
+}
+
+resource "kubernetes_manifest" "static_scrape_homeassistant" {
+  manifest = {
+    apiVersion = "operator.victoriametrics.com/v1beta1"
+    kind       = "VMStaticScrape"
+    metadata = {
+      name      = "homeassistant"
+      namespace = kubernetes_namespace_v1.monitoring.metadata[0].name
+    }
+    spec = {
+      jobName = "homeassistant"
+      targetEndpoints = [{
+        path = "/api/prometheus"
+        bearerTokenSecret = {
+          name = kubernetes_secret_v1.hass_token.metadata[0].name
+          key  = "HASS_TOKEN"
+        }
+        targets = [
+          "homeassistant.sapslaj.xyz:8123",
+        ]
+      }]
+    }
+  }
+}
+
 module "shelly_ht_exporter" {
   source = "./modules/shelly_ht_exporter"
 
@@ -201,6 +440,7 @@ module "shelly_ht_exporter" {
   ingress_hosts = [
     "shelly-ht-report.sapslaj.xyz",
   ]
+  enable_service_monitor = true
 }
 
 module "loki_ingress_dns" {

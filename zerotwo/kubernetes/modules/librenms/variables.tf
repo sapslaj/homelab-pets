@@ -21,3 +21,14 @@ variable "ingress_hosts" {
   type    = list(string)
   default = []
 }
+
+variable "enable_service_monitor" {
+  type    = bool
+  default = false
+}
+
+variable "service_monitor_namespace" {
+  type     = string
+  default  = null
+  nullable = true
+}

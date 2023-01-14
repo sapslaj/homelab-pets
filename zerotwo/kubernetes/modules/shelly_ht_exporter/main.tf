@@ -9,6 +9,7 @@ locals {
     "prometheus.io/scrape" = "true"
     "prometheus.io/port"   = tostring(local.port)
   })
+  service_monitor_namespace = coalesce(var.service_monitor_namespace, local.namespace)
 }
 
 resource "kubernetes_deployment_v1" "this" {
@@ -63,7 +64,33 @@ resource "kubernetes_service_v1" "this" {
     selector = kubernetes_deployment_v1.this.spec[0].template[0].metadata[0].labels
 
     port {
+      name = "http"
       port = local.port
+    }
+  }
+}
+
+resource "kubernetes_manifest" "service_monitor" {
+  count = var.enable_service_monitor ? 1 : 0
+
+  manifest = {
+    apiVersion = "monitoring.coreos.com/v1"
+    kind       = "ServiceMonitor"
+    metadata = {
+      name      = "shelly-ht-exporter"
+      namespace = local.service_monitor_namespace
+      labels    = local.labels
+    }
+    spec = {
+      selector = {
+        matchLabels = kubernetes_service_v1.this.spec[0].selector
+      }
+      namespaceSelector = {
+        matchNames = [local.namespace]
+      }
+      endpoints = [{
+        port = "http"
+      }]
     }
   }
 }
