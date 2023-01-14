@@ -10,10 +10,10 @@
     vpn_ip="$(docker exec qbittorrent curl -s api.ipify.org)"
     [ "$?" == "0" ] || fail
     [ "$(curl api.ipify.org)" != "$vpn_ip" ] || fail
-    curl -s localhost:8080 -o /dev/null || {
+    curl -m 300 -s localhost:8080 -o /dev/null || curl -m 300 -s localhost:8080 -o /dev/null || {
       docker restart qbittorrent
       sleep 60
-      curl -s localhost:8080 -o /dev/null
+      curl -m 300 -s localhost:8080 -o /dev/null || curl -m 300 -s localhost:8080 -o /dev/null
       final_check="$?"
       if [ "$final_check" == "0" ]; then
         echo "result:fixed"
