@@ -65,6 +65,10 @@ resource "helm_release" "prometheus" {
       }
     }
     server = {
+      extraFlags = [
+        "web.enable-lifecycle",
+        "web.enable-admin-api",
+      ]
       retention = "400d"
       ingress = {
         enabled = true
