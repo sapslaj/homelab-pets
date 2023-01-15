@@ -458,27 +458,68 @@ resource "helm_release" "loki" {
 
   repository = "https://grafana.github.io/helm-charts"
   chart      = "loki"
+  version    = "3.10.0"
 
-  values = [yamlencode({
-    podAnnotations = {
-      "prometheus.io/port" = "3100"
-    }
-    extraArgs = {
-      "reporting.enabled" = "false"
-    }
-    ingress = {
-      enabled = true
-      hosts = [{
-        host  = "loki.sapslaj.xyz"
-        paths = ["/"]
-      }]
-    }
-    persistence = {
-      enabled          = true
-      accessModes      = ["ReadWriteMany"]
-      storageClassName = "nfs"
-    }
-  })]
+  values = [
+    yamlencode({
+      loki = {
+        auth_enabled = false
+        commonConfig = {
+          replication_factor = 1
+        }
+        storage = {
+          type = "filesystem"
+        }
+        analytics = {
+          reporting_enabled = false
+        }
+      }
+    }),
+    yamlencode({
+      singleBinary = {
+        podAnnotations = {
+          "prometheus.io/scrape" = "true"
+          "prometheus.io/port"   = "3100"
+        }
+        resources = {
+          limits = {
+            memory = "2G"
+          }
+        }
+        affinity = null
+        persistence = {
+          storageClass = "nfs"
+        }
+      }
+    }),
+    yamlencode({
+      ingress = {
+        enabled = true
+        hosts   = ["loki.sapslaj.xyz"]
+      }
+    }),
+    yamlencode({
+      test = {
+        enabled = false
+      }
+    }),
+    yamlencode({
+      monitoring = {
+        dashboards = {
+          enabled = false
+        }
+        selfMonitoring = {
+          enabled = false
+          grafanaAgent = {
+            installOperator = false
+          }
+        }
+        lokiCanary = {
+          enabled = false
+        }
+      }
+    }),
+  ]
 }
 
 resource "helm_release" "promtail" {
@@ -487,16 +528,26 @@ resource "helm_release" "promtail" {
 
   repository = "https://grafana.github.io/helm-charts"
   chart      = "promtail"
+  version    = "6.8.1"
 
-  values = [yamlencode({
-    podAnnotations = {
-      "prometheus.io/scrape" = "true"
-      "prometheus.io/port"   = "3101"
-    }
-    config = {
-      clients = [{
-        url = "http://loki:3100/loki/api/v1/push"
-      }]
-    }
-  })]
+  values = [
+    yamlencode({
+      podAnnotations = {
+        "prometheus.io/scrape" = "true"
+        "prometheus.io/port"   = "3101"
+      }
+    }),
+    yamlencode({
+      serviceMonitor = {
+        enabled = true
+      }
+    }),
+    yamlencode({
+      config = {
+        clients = [{
+          url = "http://loki:3100/loki/api/v1/push"
+        }]
+      }
+    })
+  ]
 }
