@@ -242,6 +242,9 @@ resource "helm_release" "victoria_metrics" {
       vmsingle = {
         spec = {
           retentionPeriod = "100y"
+          extraArgs = {
+            "search.maxConcurrentRequests" = "4"
+          }
           storage = {
             accessModes      = ["ReadWriteMany"]
             storageClassName = "nfs"
