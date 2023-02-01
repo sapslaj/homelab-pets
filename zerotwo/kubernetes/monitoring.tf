@@ -406,6 +406,7 @@ resource "kubernetes_manifest" "static_scrape_qbittorrent" {
     spec = {
       jobName = "qbittorrent"
       targetEndpoints = [{
+        scrapeTimeout = "1m"
         targets = [
           "eris.sapslaj.xyz:9365",
         ]
