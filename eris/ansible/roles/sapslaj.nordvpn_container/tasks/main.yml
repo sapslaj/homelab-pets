@@ -10,7 +10,14 @@
       PRIVATE_KEY: '{{ nordvpn_private_key | trim }}'
       NET_LOCAL: '{{ vpn_container_net_local | trim }}'
       NET6_LOCAL: '{{ vpn_container_net6_local | trim }}'
+
 - name: copy selfheal task list for nordvpn_container
   copy:
     src: selfheal.yml
     dest: /etc/selfheal/tasks/nordvpn_container.yml
+  when: vpn_container_selfheal_enabled
+- name: remove selfheal task for nordvpn_container
+  file:
+    path: /etc/selfheal/tasks/nordvpn_container.yml
+    state: absent
+  when: not vpn_container_selfheal_enabled

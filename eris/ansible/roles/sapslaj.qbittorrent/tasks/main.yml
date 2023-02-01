@@ -14,7 +14,14 @@
     volumes:
       - '{{ qbittorrent_config_dir }}:/config'
       - '{{ qbittorrent_data_dir }}:/data'
+
 - name: copy selfheal task list for qbittorrent
   copy:
     src: selfheal.yml
     dest: /etc/selfheal/tasks/qbittorrent.yml
+  when: qbittorrent_selfheal_enabled
+- name: remove selfheal task for qbittorrent
+  file:
+    path: /etc/selfheal/tasks/qbittorrent.yml
+    state: absent
+  when: not qbittorrent_selfheal_enabled
