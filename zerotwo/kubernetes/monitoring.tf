@@ -395,6 +395,25 @@ resource "kubernetes_manifest" "static_scrape_libvirt" {
   }
 }
 
+resource "kubernetes_manifest" "static_scrape_qbittorrent" {
+  manifest = {
+    apiVersion = "operator.victoriametrics.com/v1beta1"
+    kind       = "VMStaticScrape"
+    metadata = {
+      name      = "qbittorrent"
+      namespace = kubernetes_namespace_v1.monitoring.metadata[0].name
+    }
+    spec = {
+      jobName = "qbittorrent"
+      targetEndpoints = [{
+        targets = [
+          "eris.sapslaj.xyz:9365",
+        ]
+      }]
+    }
+  }
+}
+
 resource "kubernetes_manifest" "static_scrape_adguard" {
   manifest = {
     apiVersion = "operator.victoriametrics.com/v1beta1"
