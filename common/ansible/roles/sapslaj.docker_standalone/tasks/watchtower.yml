@@ -5,5 +5,10 @@
     restart_policy: unless-stopped
     env:
       WATCHTOWER_POLL_INTERVAL: '86400' # One Day
+      WATCHTOWER_HTTP_API_METRICS: 'true'
+      WATCHTOWER_HTTP_API_TOKEN: '{{ watchtower_http_api_token }}'
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - 0.0.0.0:{{ watchtower_port }}:8080
+      - '[::]:{{ watchtower_port }}:8080'

@@ -37,6 +37,18 @@ resource "kubernetes_secret_v1" "hass_token" {
   }
 }
 
+resource "kubernetes_secret_v1" "watchtower_token" {
+  metadata {
+    name      = "watchtower-token"
+    namespace = kubernetes_namespace_v1.monitoring.metadata[0].name
+  }
+
+  data = {
+    # TODO: consider generating a better token
+    WATCHTOWER_HTTP_API_TOKEN = "adminadmin"
+  }
+}
+
 resource "helm_release" "prometheus" {
   name      = "prometheus"
   namespace = kubernetes_namespace_v1.monitoring.metadata[0].name
@@ -351,6 +363,31 @@ resource "kubernetes_manifest" "static_scrape_standalone_docker_cadvisor" {
         targets = [
           "maki.sapslaj.xyz:9338",
           "eris.sapslaj.xyz:9338",
+        ]
+      }]
+    }
+  }
+}
+
+resource "kubernetes_manifest" "static_scrape_standalone_docker_watchtower" {
+  manifest = {
+    apiVersion = "operator.victoriametrics.com/v1beta1"
+    kind       = "VMStaticScrape"
+    metadata = {
+      name      = "standalone-docker-watchtower"
+      namespace = kubernetes_namespace_v1.monitoring.metadata[0].name
+    }
+    spec = {
+      jobName = "standalone_docker"
+      targetEndpoints = [{
+        path = "/v1/metrics"
+        bearerTokenSecret = {
+          name = kubernetes_secret_v1.watchtower_token.metadata[0].name
+          key  = "WATCHTOWER_HTTP_API_TOKEN"
+        }
+        targets = [
+          "maki.sapslaj.xyz:9420",
+          "eris.sapslaj.xyz:9420",
         ]
       }]
     }
