@@ -18,6 +18,3 @@
       - --enable_load_reader=true
     healthcheck:
       test: [NONE]
-    labels:
-      # Disable watchtower because it keeps trying to update to a bad version
-      com.centurylinklabs.watchtower.enable: 'false'

@@ -2,29 +2,10 @@
     name: docker.service
     state: started
 - docker_container:
+    comparisons:
+      '*': ignore
     name: watchtower
-    image: containrrr/watchtower
-    restart_policy: unless-stopped
-    env:
-      WATCHTOWER_POLL_INTERVAL: '86400' # One Day
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
 - docker_container:
+    comparisons:
+      '*': ignore
     name: cadvisor
-    image: gcr.io/google-containers/cadvisor
-    restart_policy: unless-stopped
-    privileged: yes
-    network_mode: host
-    pid_mode: host
-    volumes:
-      - /:/rootfs:ro
-      - /var/run:/var/run:rw
-      - /sys:/sys:ro
-      - /var/lib/docker/:/var/lib/docker:ro
-    devices:
-      - /dev/kmsg
-    command:
-      - --port=9338
-      - --enable_load_reader=true
-    healthcheck:
-      test: [NONE]
