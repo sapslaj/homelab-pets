@@ -26,6 +26,10 @@
         qbittorrent_selfheal_enabled: true
         qbittorrent_config_dir: /mnt/exos/volumes/qbittorrent-config
         qbittorrent_data_dir: /mnt/exos/Media
+        qbittorrent_env:
+          PUID: '0'
+          PGID: '0'
+          TZ: America/New_York
     - role: sapslaj.pvr
       vars:
         pvr_selfheal_enabled: false
