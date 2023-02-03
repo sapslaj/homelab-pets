@@ -14,7 +14,6 @@
       echo "result:fixed"
       exit 0
     }
-    [[ "$(docker inspect qbittorrent)" == *'"Status": "running"'* ]] || docker start qbittorrent
     vpn_ip="$(docker exec qbittorrent curl -s api.ipify.org)"
     [ "$?" == "0" ] || fail
     [ "$(curl api.ipify.org)" != "$vpn_ip" ] || fail
