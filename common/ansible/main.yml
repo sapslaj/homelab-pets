@@ -9,7 +9,7 @@
 - hosts: all
   become: true
   roles:
-    - role: patrickjahns.promtail
+    # - role: patrickjahns.promtail
     - role: sapslaj.rsyslog_promtail
 
 - hosts: nas_clients
