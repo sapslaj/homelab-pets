@@ -251,6 +251,13 @@ resource "helm_release" "victoria_metrics" {
       }
     }),
     yamlencode({
+      defaultRules = {
+        rules = {
+          kubeScheduler = false
+        }
+      }
+    }),
+    yamlencode({
       vmsingle = {
         spec = {
           retentionPeriod = "100y"
@@ -291,17 +298,113 @@ resource "helm_release" "victoria_metrics" {
               "alertname",
               "instance",
             ]
+            routes = [
+              {
+                receiver = "empty"
+                matchers = ["alertname=~\"Watchdog\""]
+              },
+              {
+                receiver = "empty"
+                matchers = ["alertname=ConfigurationReloadFailure", "container=vmsingle"]
+              }
+            ]
           }
-          receivers = [{
-            name = "opsgenie"
-            opsgenie_configs = [{
-              api_key = "d947cc27-398b-462d-bc15-fc9176f1641e"
-            }]
-          }]
+          receivers = [
+            {
+              name = "empty"
+            },
+            {
+              name = "opsgenie"
+              opsgenie_configs = [{
+                api_key = "d947cc27-398b-462d-bc15-fc9176f1641e"
+              }]
+            },
+          ]
+          inhibit_rules = [
+            {
+              target_matchers = ["severity=~\"warning|info\""]
+              source_matchers = ["severity=critical"]
+              equal = [
+                "cluster",
+                "namespace",
+                "alertname",
+              ]
+            },
+            {
+              target_matchers = ["severity=info"]
+              source_matchers = ["severity=warning"]
+              equal = [
+                "cluster",
+                "namespace",
+                "alertname",
+              ]
+            },
+            {
+              target_matchers = ["severity=info"]
+              source_matchers = ["alertname=InfoInhibitor"]
+              equal = [
+                "cluster",
+                "namespace",
+              ]
+            },
+            {
+              target_matchers = ["alertname=ProbeFlaky"]
+              source_matchers = ["alertname=ProbeFailed"]
+              equal = [
+                "job",
+                "instance",
+              ]
+            },
+            {
+              target_matchers = ["alertname=ProbeFailed"]
+              source_matchers = ["alertname=HttpStatusCode"]
+              equal = [
+                "job",
+                "instance",
+              ]
+            },
+          ]
         }
       }
     }),
+    yamlencode({
+      kubeControllerManager = {
+        enabled = false
+      }
+    }),
+    yamlencode({
+      kubeScheduler = {
+        enabled = false
+      }
+    }),
   ]
+}
+
+locals {
+  alert_rule_groups = flatten(
+    [
+      for f in fileset(path.module, "prometheus_files/alert_rules/*.yml") :
+      yamldecode(
+        file(f)
+      )["groups"]
+    ]
+  )
+}
+
+resource "kubernetes_manifest" "alert_group" {
+  for_each = { for group in local.alert_rule_groups : group.name => group }
+
+  manifest = {
+    apiVersion = "operator.victoriametrics.com/v1beta1"
+    kind       = "VMRule"
+    metadata = {
+      name      = each.key
+      namespace = kubernetes_namespace_v1.monitoring.metadata[0].name
+    }
+    spec = {
+      groups = [each.value]
+    }
+  }
 }
 
 resource "kubernetes_manifest" "static_scrape_node_exporter" {
@@ -443,7 +546,7 @@ resource "kubernetes_manifest" "static_scrape_qbittorrent" {
     spec = {
       jobName = "qbittorrent"
       targetEndpoints = [{
-        scrapeTimeout = "1m"
+        scrapeTimeout = "5m"
         targets = [
           "eris.sapslaj.xyz:9365",
         ]
