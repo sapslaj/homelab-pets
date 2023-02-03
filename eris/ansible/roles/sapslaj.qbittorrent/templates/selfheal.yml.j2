@@ -6,7 +6,7 @@
     name: qbittorrent
     network_mode: container:{{ qbittorrent_vpn_container }}
 
-- name: qbittorrent checks
+- name: qbittorrent networking checks
   shell: |
     set -x
     fail() {
@@ -18,6 +18,14 @@
     vpn_ip="$(docker exec qbittorrent curl -s api.ipify.org)"
     [ "$?" == "0" ] || fail
     [ "$(curl api.ipify.org)" != "$vpn_ip" ] || fail
+    echo "result:ok"
+  args:
+    executable: /bin/bash
+  register: qbittorrent_networking_fix
+  changed_when: '"result:fixed" in qbittorrent_networking_fix.stdout_lines'
+
+- name: qbittorrent app checks
+  shell: |
     curl -m 300 -s localhost:8080 -o /dev/null || curl -m 300 -s localhost:8080 -o /dev/null || {
       docker restart qbittorrent
       sleep 60
@@ -31,5 +39,5 @@
     echo "result:ok"
   args:
     executable: /bin/bash
-  register: qbittorrent_container_fix
-  changed_when: '"result:fixed" in qbittorrent_container_fix.stdout_lines'
+  register: qbittorrent_app_fix
+  changed_when: '"result:fixed" in qbittorrent_app_fix.stdout_lines'
