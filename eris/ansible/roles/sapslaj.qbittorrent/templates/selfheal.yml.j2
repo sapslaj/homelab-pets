@@ -24,20 +24,20 @@
   register: qbittorrent_networking_fix
   changed_when: '"result:fixed" in qbittorrent_networking_fix.stdout_lines'
 
-- name: qbittorrent app checks
-  shell: |
-    curl -m 300 -s localhost:8080 -o /dev/null || curl -m 300 -s localhost:8080 -o /dev/null || {
-      docker restart qbittorrent
-      sleep 60
-      curl -m 300 -s localhost:8080 -o /dev/null || curl -m 300 -s localhost:8080 -o /dev/null
-      final_check="$?"
-      if [ "$final_check" == "0" ]; then
-        echo "result:fixed"
-      fi
-      exit $final_check
-    }
-    echo "result:ok"
-  args:
-    executable: /bin/bash
-  register: qbittorrent_app_fix
-  changed_when: '"result:fixed" in qbittorrent_app_fix.stdout_lines'
+# - name: qbittorrent app checks
+#   shell: |
+#     curl -m 300 -s localhost:8080 -o /dev/null || curl -m 300 -s localhost:8080 -o /dev/null || {
+#       docker restart qbittorrent
+#       sleep 60
+#       curl -m 300 -s localhost:8080 -o /dev/null || curl -m 300 -s localhost:8080 -o /dev/null
+#       final_check="$?"
+#       if [ "$final_check" == "0" ]; then
+#         echo "result:fixed"
+#       fi
+#       exit $final_check
+#     }
+#     echo "result:ok"
+#   args:
+#     executable: /bin/bash
+#   register: qbittorrent_app_fix
+#   changed_when: '"result:fixed" in qbittorrent_app_fix.stdout_lines'
