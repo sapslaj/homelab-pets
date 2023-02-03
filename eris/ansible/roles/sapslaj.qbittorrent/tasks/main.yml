@@ -26,8 +26,8 @@
       - '[::]:{{ qbittorrent_exporter_port }}:8000'
 
 - name: copy selfheal task list for qbittorrent
-  copy:
-    src: selfheal.yml
+  template:
+    src: selfheal.yml.j2
     dest: /etc/selfheal/tasks/qbittorrent.yml
   when: qbittorrent_selfheal_enabled
 - name: remove selfheal task for qbittorrent

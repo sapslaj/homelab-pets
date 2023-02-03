@@ -23,7 +23,7 @@
           - '[::]:8191:8191'
     - role: sapslaj.qbittorrent
       vars:
-        qbittorrent_selfheal_enabled: false
+        qbittorrent_selfheal_enabled: true
         qbittorrent_config_dir: /mnt/exos/volumes/qbittorrent-config
         qbittorrent_data_dir: /mnt/exos/Media
     - role: sapslaj.pvr

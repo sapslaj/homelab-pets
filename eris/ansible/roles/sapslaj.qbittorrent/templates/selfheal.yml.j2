@@ -1,3 +1,11 @@
+- name: qbittorrent container
+  docker_container:
+    comparisons:
+      '*': ignore
+      network_mode: strict
+    name: qbittorrent
+    network_mode: container:{{ qbittorrent_vpn_container }}
+
 - name: qbittorrent checks
   shell: |
     set -x
