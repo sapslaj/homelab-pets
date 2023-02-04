@@ -1,0 +1,4 @@
+cadvisor_default_args:
+  - --port=9338
+  - --docker_only=true
+  - --enable_load_reader=true

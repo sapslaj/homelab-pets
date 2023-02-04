@@ -1,3 +1,4 @@
-cadvisor_image: gcr.io/cadvisor/cadvisor:v0.46.0 # latest is not actually latest :(
-watchtower_port: 9420
+cadvisor_args: []
+cadvisor_image: gcr.io/cadvisor/cadvisor:v0.47.0 # latest is not actually latest :(
 watchtower_http_api_token: adminadmin
+watchtower_port: 9420
