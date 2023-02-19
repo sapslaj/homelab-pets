@@ -306,7 +306,7 @@ resource "helm_release" "victoria_metrics" {
             routes = [
               {
                 receiver = "empty"
-                matchers = ["alertname=~\"Watchdog|CPUThrottlingHigh\""]
+                matchers = ["alertname=~\"Watchdog|CPUThrottlingHigh|KubeClientCertificateExpiration\""]
               },
               {
                 receiver = "empty"
