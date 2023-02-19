@@ -10,7 +10,9 @@ module "prometheus_ingress_dns" {
     "alertmanager",
     "prometheus",
     "shelly-ht-report",
-    "victoria-metrics",
+    "vm-vmsingle",
+    "vm-vmalert",
+    "vm-vmagent",
   ])
 
   name = each.key
@@ -60,8 +62,8 @@ resource "helm_release" "prometheus" {
   values = [yamlencode({
     alertmanager = {
       ingress = {
-        enabled = true
-        hosts   = ["alertmanager.sapslaj.xyz"]
+        enabled = false
+        # hosts   = ["alertmanager.sapslaj.xyz"]
       }
       persistentVolume = {
         enabled      = true
@@ -271,7 +273,7 @@ resource "helm_release" "victoria_metrics" {
         }
         ingress = {
           enabled = true
-          hosts   = ["victoria-metrics.sapslaj.xyz"]
+          hosts   = ["vm-vmsingle.sapslaj.xyz"]
         }
       }
     }),
@@ -291,6 +293,9 @@ resource "helm_release" "victoria_metrics" {
     }),
     yamlencode({
       alertmanager = {
+        spec = {
+          externalURL = "https://alertmanager.sapslaj.xyz"
+        }
         config = {
           route = {
             receiver = "opsgenie"
@@ -364,6 +369,31 @@ resource "helm_release" "victoria_metrics" {
               ]
             },
           ]
+        }
+        ingress = {
+          enabled = true
+          hosts   = ["alertmanager.sapslaj.xyz"]
+        }
+      }
+    }),
+    yamlencode({
+      vmalert = {
+        spec = {
+          extraArgs = {
+            "external.url" = "https://vm-vmalert.sapslaj.xyz"
+          }
+        }
+        ingress = {
+          enabled = true
+          hosts = ["vm-vmalert.sapslaj.xyz"]
+        }
+      }
+    }),
+    yamlencode({
+      vmagent = {
+        ingress = {
+          enabled = true
+          hosts = ["vm-vmagent.sapslaj.xyz"]
         }
       }
     }),
