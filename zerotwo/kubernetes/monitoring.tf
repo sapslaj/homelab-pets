@@ -306,12 +306,12 @@ resource "helm_release" "victoria_metrics" {
             routes = [
               {
                 receiver = "empty"
-                matchers = ["alertname=~\"Watchdog\""]
+                matchers = ["alertname=~\"Watchdog|CPUThrottlingHigh\""]
               },
               {
                 receiver = "empty"
                 matchers = ["alertname=ConfigurationReloadFailure", "container=vmsingle"]
-              }
+              },
             ]
           }
           receivers = [
