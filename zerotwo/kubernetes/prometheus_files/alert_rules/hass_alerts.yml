@@ -1,0 +1,11 @@
+groups:
+  - name: hass-alerts
+    rules:
+      - alert: WaterLeakDetected
+        expr: hass_binary_sensor_state{entity=~".*water_leak"} > 0
+        labels:
+          severity: error
+        annotations:
+          summary: Water leak detected by leak sensor
+          friendly_name: '{{ $labels.friendly_name }}'
+          entity: '{{ $labels.entity }}'
