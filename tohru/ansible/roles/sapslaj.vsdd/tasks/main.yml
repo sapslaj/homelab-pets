@@ -1,12 +1,12 @@
-- name: install libs
-  pip:
-    name:
-      - boto3
-      - netmiko
-- name: copy script
+- name: remove old script
+  file:
+    path: /usr/sbin/vsdd.py
+    state: absent
+- name: copy program
   copy:
-    src: vsdd.py
-    dest: /usr/sbin/vsdd.py
+    src: vsdd
+    dest: /usr/sbin/vsdd
+    mode: a+x
 - name: copy service unit
   template:
     src: vsdd.service.j2

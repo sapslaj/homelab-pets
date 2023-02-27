@@ -11,7 +11,7 @@ Environment=VYOS_USERNAME=vsdd
 Environment=VYOS_PASSWORD='{{ vsdd_vyos_password | trim }}'
 Environment=AWS_ACCESS_KEY_ID='{{ vsdd_aws_access_key_id | trim }}'
 Environment=AWS_SECRET_ACCESS_KEY='{{ vsdd_aws_secret_access_key | trim }}'
-ExecStart=/usr/bin/python3 /usr/sbin/vsdd.py
+ExecStart=/usr/sbin/vsdd
 StandardOutput=journal
 Restart=on-failure
 RestartSec=5min
