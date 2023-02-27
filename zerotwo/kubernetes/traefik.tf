@@ -1,3 +1,9 @@
+resource "kubernetes_namespace_v1" "ingress" {
+  metadata {
+    name = "ingress"
+  }
+}
+
 data "aws_iam_policy_document" "traefik" {
   statement {
     actions   = ["route53:*"]
@@ -15,43 +21,99 @@ resource "aws_iam_role" "traefik" {
   }
 }
 
-resource "kubernetes_manifest" "traefik_config" {
-  manifest = {
-    apiVersion = "helm.cattle.io/v1"
-    kind       = "HelmChartConfig"
-    metadata = {
-      name      = "traefik"
-      namespace = "kube-system"
+resource "helm_release" "traefik" {
+  name      = "traefik"
+  namespace = kubernetes_namespace_v1.ingress.metadata[0].name
+
+  repository = "https://traefik.github.io/charts"
+  chart      = "traefik"
+  version    = "20.2.0"
+
+  values = [yamlencode({
+    deployment = {
+      podAnnotations = {
+        "iam.amazonaws.com/role" = aws_iam_role.traefik.arn
+      }
+      initContainers = [
+        {
+          name    = "volume-permissions"
+          image   = "busybox:1.31.1"
+          command = ["sh", "-c", "touch /data/acme.json && chmod -Rv 600 /data/* && chown 65532:65532 /data/acme.json"]
+          volumeMounts = [{
+            name      = "traefik-data"
+            mountPath = "/data"
+          }]
+        }
+      ]
     }
-    spec = {
-      valuesContent = yamlencode({
-        deployment = {
-          podAnnotations = {
-            "iam.amazonaws.com/role" = aws_iam_role.traefik.arn
-          }
-        }
-        ports = {
-          websecure = {
-            tls = {
-              enabled      = true
-              certResolver = "letsencrypt"
-              domains = [{
-                name = "sapslaj.xyz"
-                sans = ["*.sapslaj.xyz"]
-              }]
-            }
-          }
-        }
-        persistence = {
+    ingressRoute = {
+      dashboard = {
+        enabled = false
+      }
+    }
+    providers = {
+      kubernetesCRD = {
+        allowCrossNamespace       = true
+        allowExternalNameServices = true
+        allowEmptyServices        = true
+      }
+      kubernetesIngress = {
+        allowExternalNameServices = true
+        allowEmptyServices        = true
+        publishedService = {
           enabled = true
-          name    = "traefik-data"
-          size    = "1Gi"
         }
-        additionalArguments = [
-          "--certificatesresolvers.letsencrypt.acme.dnschallenge.provider=route53",
-          "--certificatesresolvers.letsencrypt.acme.storage=/data/acme.json",
-        ]
-      })
+      }
     }
-  }
+    logs = {
+      general = {
+        format = "json"
+        level  = "INFO"
+      }
+      access = {
+        enabled = true
+        format  = "json"
+      }
+    }
+    metrics = {
+      service = {
+        enabled = true
+      }
+      # serviceMonitor = {}
+    }
+    globalArguments = []
+    additionalArguments = [
+      "--certificatesresolvers.letsencrypt.acme.dnschallenge.provider=route53",
+      "--certificatesresolvers.letsencrypt.acme.storage=/data/acme.json",
+      "--providers.kubernetescrd.allowCrossNamespace=true",
+    ]
+    ports = {
+      # web = {
+      #   redirectTo = "websecure"
+      # }
+      websecure = {
+        tls = {
+          enabled      = true
+          certResolver = "letsencrypt"
+          domains = [{
+            name = "sapslaj.xyz"
+            sans = ["*.sapslaj.xyz"]
+          }]
+        }
+      }
+    }
+    service = {
+      spec = {
+        externalTrafficPolicy = "Local"
+      }
+      ipFamilyPolicy = "PreferDualStack"
+    }
+    persistence = {
+      enabled      = true
+      name         = "traefik-data"
+      size         = "1Gi"
+      storageClass = "nfs"
+      accessMode   = "ReadWriteMany"
+    }
+  })]
 }
