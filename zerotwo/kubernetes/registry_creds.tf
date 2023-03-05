@@ -30,4 +30,8 @@ module "ghcr_creds" {
   source = "./modules/ghcr_creds"
 
   auth = random_password.ghcr_creds.result
+  namespaces = [
+    "default",
+    "kube-system",
+  ]
 }

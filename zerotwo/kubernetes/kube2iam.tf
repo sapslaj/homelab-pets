@@ -34,15 +34,28 @@ resource "helm_release" "kube2iam" {
   name      = "kube2iam"
   namespace = "kube-system"
 
-  repository = "https://jtblin.github.io/kube2iam/"
-  chart      = "kube2iam"
-  version    = "2.6.0"
+  # repository = "https://jtblin.github.io/kube2iam/"
+  # chart      = "kube2iam"
+  # version    = "2.6.0"
+  chart = "${path.module}/charts/kube2iam"
 
   values = [yamlencode({
+    extraArgs = {
+      log-level      = "debug"
+      debug          = true
+      metadata-proxy = false
+    }
+    host = {
+      iptables  = true
+      interface = "cni0"
+    }
+    image = {
+      repository  = "ghcr.io/sapslaj/kube2iam"
+      tag         = "amd64-dbde9f0"
+      pullSecrets = [module.ghcr_creds.name]
+    }
     aws = {
-      access_key = aws_iam_access_key.kube2iam.id
-      secret_key = aws_iam_access_key.kube2iam.secret
-      region     = "us-east-1"
+      region = "us-east-1"
     }
     rbac = {
       create = true
@@ -55,13 +68,15 @@ resource "helm_release" "kube2iam" {
     readinessProbe = {
       enabled = false
     }
-    extraArgs = {
-      log-level = "debug"
-      debug     = true
-    }
-    host = {
-      iptables  = true
-      interface = "cni0"
-    }
   })]
+
+  set {
+    name  = "aws.access_key"
+    value = aws_iam_access_key.kube2iam.id
+  }
+
+  set {
+    name  = "aws.secret_key"
+    value = aws_iam_access_key.kube2iam.secret
+  }
 }
