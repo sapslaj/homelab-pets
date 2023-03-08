@@ -58,6 +58,13 @@ resource "kubernetes_deployment_v1" "this" {
         container {
           name  = "zonepop"
           image = "ghcr.io/sapslaj/zonepop:latest"
+          command = [
+            "/bin/zonepop",
+            "-interval",
+            var.interval,
+            "-config-file",
+            "/etc/zonepop/config.lua",
+          ]
 
           volume_mount {
             name       = "config"

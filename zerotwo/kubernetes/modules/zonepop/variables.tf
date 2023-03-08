@@ -39,3 +39,8 @@ variable "labels" {
   type    = map(string)
   default = {}
 }
+
+variable "interval" {
+  type    = string
+  default = "1m"
+}
