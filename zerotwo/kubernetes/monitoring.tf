@@ -8,6 +8,7 @@ module "prometheus_ingress_dns" {
   source = "./modules/ingress_dns"
   for_each = toset([
     "alertmanager",
+    "blackbox-exporter",
     "prometheus",
     "shelly-ht-report",
     "vm-vmsingle",
@@ -385,7 +386,7 @@ resource "helm_release" "victoria_metrics" {
         }
         ingress = {
           enabled = true
-          hosts = ["vm-vmalert.sapslaj.xyz"]
+          hosts   = ["vm-vmalert.sapslaj.xyz"]
         }
       }
     }),
@@ -393,7 +394,7 @@ resource "helm_release" "victoria_metrics" {
       vmagent = {
         ingress = {
           enabled = true
-          hosts = ["vm-vmagent.sapslaj.xyz"]
+          hosts   = ["vm-vmagent.sapslaj.xyz"]
         }
       }
     }),
@@ -628,6 +629,158 @@ resource "kubernetes_manifest" "static_scrape_homeassistant" {
       }]
     }
   }
+}
+
+resource "helm_release" "blackbox_exporter" {
+  name      = "blackbox-exporter"
+  namespace = kubernetes_namespace_v1.monitoring.metadata[0].name
+
+  repository = "https://prometheus-community.github.io/helm-charts"
+  chart      = "prometheus-blackbox-exporter"
+  version    = "7.6.1"
+
+  values = [
+    yamlencode({
+      config = {
+        modules = {
+          http_2xx = {
+            prober = "http"
+            http = {
+              # HACK: k3s + IPv6 = unhappy
+              preferred_ip_protocol = "ip4"
+            }
+          }
+          http_2xx_nosslverify = {
+            prober = "http"
+            http = {
+              tls_config = {
+                insecure_skip_verify = true
+              }
+
+              # HACK: k3s + IPv6 = unhappy
+              preferred_ip_protocol = "ip4"
+            }
+          }
+          http_post_2xx = {
+            prober = "http"
+            http = {
+              method = "POST"
+
+              # HACK: k3s + IPv6 = unhappy
+              preferred_ip_protocol = "ip4"
+            }
+          }
+          tcp_connect = {
+            prober = "tcp"
+            tcp = {
+              # HACK: k3s + IPv6 = unhappy
+              preferred_ip_protocol = "ip4"
+            }
+          }
+          icmp = {
+            prober = "icmp"
+            icmp = {
+              # HACK: k3s + IPv6 = unhappy
+              preferred_ip_protocol = "ip4"
+            }
+          }
+          ssh_banner = {
+            prober = "tcp"
+            tcp = {
+              query_response = [
+                {
+                  expect = "^SSH-2.0-"
+                },
+                {
+                  send = "SSH-2.0-blackbox-ssh-check"
+                },
+              ]
+
+              # HACK: k3s + IPv6 = unhappy
+              preferred_ip_protocol = "ip4"
+            }
+          }
+        }
+      }
+    }),
+    yamlencode({
+      ingress = {
+        enabled = true
+        hosts = [{
+          host = "blackbox-exporter.sapslaj.xyz"
+          paths = [{
+            path     = "/"
+            pathType = "ImplementationSpecific"
+          }]
+        }]
+      }
+    }),
+    yamlencode({
+      serviceMonitor = {
+        selfMonitor = {
+          enabled = true
+        }
+        enabled = true
+        targets = [
+          {
+            name   = "unifi-webui"
+            url    = "https://unifi.sapslaj.com:8443"
+            module = "http_2xx"
+          },
+          {
+            name   = "omada-webui"
+            url    = "https://omada.direct.sapslaj.cloud:8043"
+            module = "http_2xx_nosslverify"
+          },
+          {
+            name   = "yor-ssh"
+            url    = "yor.sapslaj.xyz:22"
+            module = "ssh_banner"
+          },
+          {
+            name   = "daki-ssh"
+            url    = "daki.sapslaj.xyz:22"
+            module = "ssh_banner"
+          },
+          {
+            name   = "taiga-ssh"
+            url    = "taiga.sapslaj.xyz:22"
+            module = "ssh_banner"
+          },
+          {
+            name   = "homeassistant-webui"
+            url    = "http://homeassistant.sapslaj.xyz:8123"
+            module = "http_2xx"
+          },
+          {
+            name   = "plex-tcp"
+            url    = "maki.sapslaj.xyz:32400"
+            module = "tcp_connect"
+          },
+          {
+            name   = "jellyfin-webui"
+            url    = "http://maki.sapslaj.xyz:8096"
+            module = "http_2xx_nosslverify"
+          },
+          {
+            name   = "grafana"
+            url    = "https://grafana.sapslaj.cloud"
+            module = "http_2xx"
+          },
+          {
+            name   = "aqualist"
+            url    = "https://aqualist.sapslaj.com"
+            module = "http_2xx"
+          },
+          {
+            name   = "google-https"
+            url    = "https://www.google.com"
+            module = "http_2xx"
+          },
+        ]
+      }
+    }),
+  ]
 }
 
 module "shelly_ht_exporter" {
