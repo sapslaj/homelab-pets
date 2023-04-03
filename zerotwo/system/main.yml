@@ -2,6 +2,8 @@
   become: true
   roles:
     - role: sapslaj.k3s_master
+      vars:
+        k3s_extra_server_args: --disable traefik
 
 - hosts: k3s_node
   become: true
