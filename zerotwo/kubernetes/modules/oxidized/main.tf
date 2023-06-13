@@ -105,7 +105,7 @@ resource "kubernetes_deployment_v1" "this" {
 
         container {
           name  = "oxidized"
-          image = "oxidized/oxidized:latest"
+          image = "oxidized/oxidized:0.29.0"
           args = [
             "oxidized",
           ]
