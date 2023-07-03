@@ -22,5 +22,16 @@
     - kubernetes.core.k8s_drain:
         state: uncordon
         name: '{{ item | regex_replace("(.+?)\..*", "\1") }}'
-      with_items: '{{ groups["all"] }}'
+      with_items: '{{ groups["k3s_node"] }}'
 
+- hosts: localhost
+  tasks:
+    - wait_for:
+        timeout: 300
+
+- hosts: localhost
+  tasks:
+    - kubernetes.core.k8s_drain:
+        state: uncordon
+        name: '{{ item | regex_replace("(.+?)\..*", "\1") }}'
+      with_items: '{{ groups["k3s_master"] }}'
