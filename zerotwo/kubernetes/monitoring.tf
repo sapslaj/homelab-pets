@@ -263,6 +263,16 @@ resource "helm_release" "victoria_metrics" {
     yamlencode({
       vmsingle = {
         spec = {
+          resources = {
+            limits = {
+              cpu = "1200m"
+              memory = "1500Mi"
+            }
+            requests = {
+              cpu = "150m"
+              memory = "500Mi"
+            }
+          }
           retentionPeriod = "100y"
           extraArgs = {
             "search.maxConcurrentRequests" = "4"
@@ -392,6 +402,16 @@ resource "helm_release" "victoria_metrics" {
     }),
     yamlencode({
       vmagent = {
+        spec = {
+          limits = {
+            cpu = "100m"
+            memory = "25Mi"
+          }
+          requests = {
+            cpu = "100m"
+            memory = "25Mi"
+          }
+        }
         ingress = {
           enabled = true
           hosts   = ["vm-vmagent.sapslaj.xyz"]
