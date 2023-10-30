@@ -266,7 +266,7 @@ resource "helm_release" "victoria_metrics" {
         spec = {
           resources = {
             limits = {
-              cpu = "1200m"
+              cpu = "2"
               memory = "1500Mi"
             }
             requests = {
@@ -405,7 +405,7 @@ resource "helm_release" "victoria_metrics" {
       vmagent = {
         spec = {
           limits = {
-            cpu = "100m"
+            cpu = "2"
             memory = "25Mi"
           }
           requests = {
