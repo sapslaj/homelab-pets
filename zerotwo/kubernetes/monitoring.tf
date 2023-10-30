@@ -238,6 +238,7 @@ resource "helm_release" "victoria_metrics" {
 
   repository = "https://victoriametrics.github.io/helm-charts"
   chart      = "victoria-metrics-k8s-stack"
+  version    = "0.14.3"
 
   values = [
     yamlencode({
