@@ -1,5 +1,15 @@
 - hosts: all
   become: true
+  tasks:
+    - name: disable AppArmor # Yes. I know. Don't @ me
+      systemd:
+        name: apparmor.service
+        enabled: no
+        state: stopped
+
+# PVR stack
+- hosts: all
+  become: true
   vars:
     nordvpn_private_key: !vault |
       $ANSIBLE_VAULT;1.1;AES256
@@ -34,3 +44,46 @@
       vars:
         pvr_selfheal_enabled: false
         pvr_data_dir: /mnt/exos/Media
+
+# Media server stack
+- hosts: all
+  become: true
+  roles:
+    - role: sapslaj.plex
+      vars:
+        plex_media_dir: /mnt/exos/Media
+    - role: sapslaj.jellyfin
+      vars:
+        jellyfin_media_dir: /mnt/exos/Media
+
+# network syslog collector
+- hosts: all
+  become: true
+  roles:
+    - role: sapslaj.network_syslog_promtail
+      vars:
+        network_syslog_promtail_volumes_dir: /var/docker/volumes/syslog-promtail
+        network_syslog_promtail_push_url: http://loki.sapslaj.xyz/loki/api/v1/push
+        network_syslog_promtail_labels:
+          job: network-syslog
+        network_syslog_promtail_relabel_configs:
+          - source_labels: [__syslog_message_hostname]
+            target_label: hostname
+          - source_labels: [__syslog_message_severity]
+            target_label: syslog_severity
+          - source_labels: [__syslog_message_facility]
+            target_label: syslog_facility
+          - source_labels: [__syslog_message_app_name]
+            target_label: syslog_app_name
+
+# Syncthing
+- hosts: all
+  become: true
+  roles:
+    - role: sapslaj.syncthing
+
+# Morbius
+- hosts: all
+  become: true
+  roles:
+    - role: sapslaj.morbius
