@@ -82,7 +82,7 @@ module "xyz_static" {
 
 resource "aws_route53_record" "xyz_cname" {
   for_each = {
-    "syslog.sapslaj.xyz" = "maki.sapslaj.xyz"
+    "syslog.sapslaj.xyz" = "koyuki.sapslaj.xyz"
   }
 
   zone_id = data.aws_route53_zone.xyz.zone_id
