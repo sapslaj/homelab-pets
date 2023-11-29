@@ -484,6 +484,25 @@ resource "kubernetes_manifest" "static_scrape_homeassistant" {
   }
 }
 
+resource "kubernetes_manifest" "static_scrape_morbius" {
+  manifest = {
+    apiVersion = "operator.victoriametrics.com/v1beta1"
+    kind       = "VMStaticScrape"
+    metadata = {
+      name      = "morbius"
+      namespace = kubernetes_namespace_v1.monitoring.metadata[0].name
+    }
+    spec = {
+      jobName = "morbius"
+      targetEndpoints = [{
+        targets = [
+          "koyuki.sapslaj.xyz:9269",
+        ]
+      }]
+    }
+  }
+}
+
 resource "helm_release" "blackbox_exporter" {
   name      = "blackbox-exporter"
   namespace = kubernetes_namespace_v1.monitoring.metadata[0].name
