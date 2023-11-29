@@ -306,6 +306,7 @@ resource "kubernetes_manifest" "static_scrape_node_exporter" {
           "ram.sapslaj.xyz:9100",
           "rem.sapslaj.xyz:9100",
           "tohru.sapslaj.xyz:9100",
+          "koyuki.sapslaj.xyz:9100",
         ]
       }]
     }
@@ -326,6 +327,7 @@ resource "kubernetes_manifest" "static_scrape_standalone_docker" {
         targets = [
           "maki.sapslaj.xyz:9323",
           "eris.sapslaj.xyz:9323",
+          "koyuki.sapslaj.xyz:9323",
         ]
       }]
     }
@@ -346,6 +348,7 @@ resource "kubernetes_manifest" "static_scrape_standalone_docker_cadvisor" {
         targets = [
           "maki.sapslaj.xyz:9338",
           "eris.sapslaj.xyz:9338",
+          "koyuki.sapslaj.xyz:9338",
         ]
       }]
     }
@@ -371,6 +374,7 @@ resource "kubernetes_manifest" "static_scrape_standalone_docker_watchtower" {
         targets = [
           "maki.sapslaj.xyz:9420",
           "eris.sapslaj.xyz:9420",
+          "koyuki.sapslaj.xyz:9420",
         ]
       }]
     }
@@ -429,7 +433,7 @@ resource "kubernetes_manifest" "static_scrape_qbittorrent" {
         interval      = "10m"
         scrapeTimeout = "10m"
         targets = [
-          "eris.sapslaj.xyz:9365",
+          "koyuki.sapslaj.xyz:9365",
         ]
       }]
     }
