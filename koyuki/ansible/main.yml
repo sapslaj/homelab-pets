@@ -1,0 +1,36 @@
+- hosts: all
+  become: true
+  vars:
+    nordvpn_private_key: !vault |
+      $ANSIBLE_VAULT;1.1;AES256
+      36373431656364383738636265363432636532613034343931316466356538303765303165366439
+      3338343739663935633535386330666130363135663134330a393931326161653965366266613164
+      35333261656366396261666634626266616637626162353131323837646232633964396134616138
+      3230343564303563390a386437633231336361653432663330343561323663626230313332366236
+      65616234636633393664646631336330666234643562336534383362623132363733363135356561
+      3839373631663336383764316238376334373133336130303465
+  roles:
+    - role: sapslaj.nordvpn_container
+      vars:
+        vpn_container_selfheal_enabled: false
+        vpn_container_net6_local: 2600:1f18:1a9:7200::/56,2001:470:e022::/48,fe80::/10
+        vpn_container_ports:
+          - 0.0.0.0:9117:9117 # Jackett
+          - '[::]:9117:9117'
+          - 0.0.0.0:8080:8080 # qBittorrent
+          - '[::]:8080:8080'
+          - 0.0.0.0:8191:8191 # FlairSolverr
+          - '[::]:8191:8191'
+    - role: sapslaj.qbittorrent
+      vars:
+        qbittorrent_selfheal_enabled: true
+        qbittorrent_config_dir: /mnt/exos/volumes/qbittorrent-config
+        qbittorrent_data_dir: /mnt/exos/Media
+        qbittorrent_env:
+          PUID: '0'
+          PGID: '0'
+          TZ: America/New_York
+    - role: sapslaj.pvr
+      vars:
+        pvr_selfheal_enabled: false
+        pvr_data_dir: /mnt/exos/Media
