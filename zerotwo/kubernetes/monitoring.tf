@@ -298,6 +298,7 @@ resource "kubernetes_manifest" "static_scrape_node_exporter" {
     spec = {
       jobName = "node_exporter"
       targetEndpoints = [{
+        interval = "15s"
         targets = [
           "aqua.sapslaj.xyz:9100",
           "eris.sapslaj.xyz:9100",
