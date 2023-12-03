@@ -21,11 +21,3 @@ resource "helm_release" "nfs_provisioner" {
     }
   })]
 }
-
-resource "helm_release" "longhorn" {
-  name      = "longhorn"
-  namespace = kubernetes_namespace_v1.storage.metadata[0].name
-
-  repository = "https://charts.longhorn.io"
-  chart      = "longhorn"
-}
