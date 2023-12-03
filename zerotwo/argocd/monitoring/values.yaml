@@ -1,0 +1,131 @@
+victoria-metrics-k8s-stack:
+  nameOverride: victoria-metrics
+  fullnameOverride: victoria-metrics
+  argocdReleaseOverride: victoria-metrics
+  victoria-metrics-operator:
+    nameOverride: victoria-metrics-operator
+    fullnameOverride: victoria-metrics-operator
+    rbac:
+      pspEnabled: false
+    operator:
+      disable_prometheus_converter: false
+  defaultRules:
+    rules:
+      kubeScheduler: false
+  vmsingle:
+    spec:
+      resources:
+        limits:
+          cpu: '2'
+          memory: 1500Mi
+        requests:
+          cpu: 100m
+          memory: 500Mi
+      retentionPeriod: 100y
+      extraArgs:
+        search.maxConcurrentRequests: '4'
+      storage:
+        accessModes:
+          - ReadWriteMany
+        storageClassName: nfs
+    ingress:
+      enabled: true
+      hosts:
+        - vm-vmsingle.sapslaj.xyz
+  grafana:
+    enabled: false
+  prometheus-node-exporter:
+    nameOverride: victoria-metrics-node-exporter
+    fullnameOverride: victoria-metrics-node-exporter
+  alertmanager:
+    spec:
+      externalURL: https://alertmanager.sapslaj.xyz
+    config:
+      route:
+        receiver: opsgenie
+        group_by:
+          - alertname
+          - instance
+        routes:
+          - receiver: empty
+            matchers:
+              - alertname=~"Watchdog|CPUThrottlingHigh|KubeClientCertificateExpiration"
+          - receiver: empty
+            matchers:
+              - alertname=ConfigurationReloadFailure
+              - container=vmsingle
+        receivers:
+          - name: empty
+          - name: opsgenie
+            opsgenie_configs:
+              - api_key: d947cc27-398b-462d-bc15-fc9176f1641e
+        inhibit_rules:
+          - target_matchers:
+              - severity=~"warning|info"
+            source_matchers:
+              - severity=critical
+            equal:
+              - cluster
+              - namespace
+              - alertname
+          - target_matchers:
+              - severity=info
+            source_matchers:
+              - severity=warning
+            equal:
+              - cluster
+              - namespace
+              - alertname
+          - target_matchers:
+              - severity=info
+            source_matchers:
+              - alertname=InfoInhibitor
+            equal:
+              - cluster
+              - namespace
+          - target_matchers:
+              - alertname=ProbeFlaky
+            source_matchers:
+              - alertname=ProbeFailed
+            equal:
+              - job
+              - instance
+          - target_matchers:
+              - alertname=ProbeFailed
+            source_matchers:
+              - alertname=HttpStatusCode
+            equal:
+              - job
+              - instance
+    ingress:
+      enabled: true
+      hosts:
+        - alertmanager.sapslaj.xyz
+  vmalert:
+    spec:
+      extraArgs:
+        external.url: https://vm-vmalert.sapslaj.xyz
+    ingress:
+      enabled: true
+      hosts:
+        - vm-vmalert.sapslaj.xyz
+  vmagent:
+    spec:
+      resources:
+        limits:
+          cpu: '2'
+          memory: 100Mi
+        requests:
+          cpu: 100m
+          memory: 25Mi
+    ingress:
+      enabled: true
+      hosts:
+        - vm-vmagent.sapslaj.xyz
+  kube-state-metrics:
+    nameOverride: victoria-metrics-kube-state-metrics
+    fullnameOverride: victoria-metrics-kube-state-metrics
+  kubeControllerManager:
+    enabled: false
+  kubeScheduler:
+    enabled: false
