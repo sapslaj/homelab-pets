@@ -1,0 +1,8 @@
+# reference: https://github.com/argoproj/argo-cd/blob/d836ec393d32b7d1040abfb76e59b57201e2ee57/docs/operator-manual/argocd-cmd-params-cm.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-cmd-params-cm
+data:
+  server.disable.auth: 'true'
+  server.insecure: 'true'
