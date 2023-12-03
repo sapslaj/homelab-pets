@@ -6,6 +6,15 @@
       APT::Install-Suggests "0";
   when: ansible_distribution in ["Debian", "Ubuntu", "Linux Mint", "OSMC"]
 
+- name: make apt stop installing snap (Ubuntu)
+  copy:
+    dest: /etc/apt/preferences.d/nosnap.pref
+    content: |
+      Package: snapd
+      Pin: release a=*
+      Pin-Priority: -10
+  when: ansible_distribution in ["Ubuntu", "Linux Mint"]
+
 - name: update apt cache (Debian)
   apt:
     force_apt_get: true
