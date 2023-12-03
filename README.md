@@ -27,6 +27,10 @@ HAOS VM running inside [aqua](#aqua). Due to my negligence the current name of t
 
 Home Assistant is deployed as a VM instead of on a dedicated Rasberry Pi or similar SBC because it is much easier to do backups of VM disks than it is to do physical disks, especially when access to the underlying OS is somewhat limited as is the case with HAOS. It was never designed with infra-as-code in mind and is hard to shoehorn it in, so for my own sanity I treat it more or less as a black box managed service and just back up the VM disk.
 
+### koyuki
+
+Physical server running Ubuntu
+
 #### Uses
 
 ##### Syncthing
@@ -49,12 +53,6 @@ This is used for network devices (routers, switches, etc) that can't natively ru
 - Syslog-NG listens on 6601/tcp and 5514/udp
 - Silently converts to RFC5424 before sending to Promtail sidecar
 - Promtail sidecar forwards to Loki
-
-### eris
-
-Raspberry Pi 4 running Raspbian
-
-#### Uses
 
 ##### PVR
 
