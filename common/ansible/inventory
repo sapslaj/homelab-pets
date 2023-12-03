@@ -1,6 +1,5 @@
 aqua.sapslaj.xyz
 eris.sapslaj.xyz
-maki.sapslaj.xyz
 playboy.sapslaj.xyz
 ram.sapslaj.xyz
 rem.sapslaj.xyz
@@ -11,7 +10,6 @@ koyuki.sapslaj.xyz
 
 [nas_clients]
 eris.sapslaj.xyz
-maki.sapslaj.xyz
 tohru.sapslaj.xyz
 zerotwo.sapslaj.xyz
 ichigo.sapslaj.xyz
@@ -20,7 +18,6 @@ koyuki.sapslaj.xyz
 [bare_hosts]
 aqua.sapslaj.xyz
 eris.sapslaj.xyz
-maki.sapslaj.xyz
 playboy.sapslaj.xyz
 ram.sapslaj.xyz
 rem.sapslaj.xyz
@@ -28,7 +25,6 @@ tohru.sapslaj.xyz
 koyuki.sapslaj.xyz
 
 [qemu_guests]
-maki.sapslaj.xyz
 rem.sapslaj.xyz
 tohru.sapslaj.xyz
 zerotwo.sapslaj.xyz
@@ -38,6 +34,5 @@ zerotwo.sapslaj.xyz
 ichigo.sapslaj.xyz
 
 [docker_standalone]
-maki.sapslaj.xyz
 eris.sapslaj.xyz
 koyuki.sapslaj.xyz
