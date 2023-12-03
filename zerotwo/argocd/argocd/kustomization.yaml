@@ -7,7 +7,7 @@ resources:
   - argocd.yaml
   - servicemonitors.yaml
   - ingress.yaml
-  # - apps.yaml
+  - apps.yaml
 
 patches:
   - path: argocd-cm.yaml
