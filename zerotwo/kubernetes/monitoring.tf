@@ -301,7 +301,6 @@ resource "kubernetes_manifest" "static_scrape_node_exporter" {
         targets = [
           "aqua.sapslaj.xyz:9100",
           "eris.sapslaj.xyz:9100",
-          "maki.sapslaj.xyz:9100",
           "playboy.sapslaj.xyz:9100",
           "ram.sapslaj.xyz:9100",
           "rem.sapslaj.xyz:9100",
@@ -325,7 +324,6 @@ resource "kubernetes_manifest" "static_scrape_standalone_docker" {
       jobName = "standalone_docker"
       targetEndpoints = [{
         targets = [
-          "maki.sapslaj.xyz:9323",
           "eris.sapslaj.xyz:9323",
           "koyuki.sapslaj.xyz:9323",
         ]
@@ -346,7 +344,6 @@ resource "kubernetes_manifest" "static_scrape_standalone_docker_cadvisor" {
       jobName = "standalone_docker"
       targetEndpoints = [{
         targets = [
-          "maki.sapslaj.xyz:9338",
           "eris.sapslaj.xyz:9338",
           "koyuki.sapslaj.xyz:9338",
         ]
@@ -372,7 +369,6 @@ resource "kubernetes_manifest" "static_scrape_standalone_docker_watchtower" {
           key  = "WATCHTOWER_HTTP_API_TOKEN"
         }
         targets = [
-          "maki.sapslaj.xyz:9420",
           "eris.sapslaj.xyz:9420",
           "koyuki.sapslaj.xyz:9420",
         ]
@@ -626,12 +622,11 @@ resource "helm_release" "blackbox_exporter" {
           },
           {
             name   = "plex-tcp"
-            url    = "maki.sapslaj.xyz:32400"
             module = "tcp_connect"
           },
           {
             name   = "jellyfin-webui"
-            url    = "http://maki.sapslaj.xyz:8096"
+            url    = "http://koyukkoyukii.sapslaj.xyz:8096"
             module = "http_2xx_nosslverify"
           },
           {
