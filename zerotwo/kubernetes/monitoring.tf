@@ -66,7 +66,7 @@ resource "helm_release" "victoria_metrics" {
 
   repository = "https://victoriametrics.github.io/helm-charts"
   chart      = "victoria-metrics-k8s-stack"
-  version    = "0.18.5"
+  version    = "0.18.11"
 
   values = [
     yamlencode({
@@ -94,11 +94,11 @@ resource "helm_release" "victoria_metrics" {
         spec = {
           resources = {
             limits = {
-              cpu = "2"
+              cpu    = "2"
               memory = "1500Mi"
             }
             requests = {
-              cpu = "150m"
+              cpu    = "150m"
               memory = "500Mi"
             }
           }
@@ -233,11 +233,11 @@ resource "helm_release" "victoria_metrics" {
       vmagent = {
         spec = {
           limits = {
-            cpu = "2"
+            cpu    = "2"
             memory = "25Mi"
           }
           requests = {
-            cpu = "100m"
+            cpu    = "100m"
             memory = "25Mi"
           }
         }
