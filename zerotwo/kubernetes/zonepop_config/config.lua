@@ -40,7 +40,7 @@ return {
             log.info("endpoint is in LAN_Servers", log_labels)
             return true
           elseif endpoint.source_properties.dhcp_pool == "LAN_Internal" then
-            local allowed_hostnames = {"homeassistant", "darkness", "playboy", "k3sdev", "steamdeck", "megumin", "yuuka"}
+            local allowed_hostnames = {"homeassistant", "darkness", "playboy", "k3sdev", "steamdeck", "megumin", "silverwolf"}
             for _, v in pairs(allowed_hostnames) do
               if v == endpoint.hostname then
                 log.info("endpoint is in LAN_Internal and is an allowed hostname", log_labels)
