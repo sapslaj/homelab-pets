@@ -1,0 +1,10 @@
+[Unit]
+Description=photography-rebuild
+
+[Timer]
+OnCalendar=daily
+RandomizedDelaySec=1800
+FixedRandomDelay=true
+
+[Install]
+WantedBy=timers.target

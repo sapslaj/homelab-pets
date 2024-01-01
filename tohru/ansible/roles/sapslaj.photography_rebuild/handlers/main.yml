@@ -1,0 +1,10 @@
+- name: restart photography-rebuild service
+  systemd:
+    name: photography-rebuild.service
+    state: restarted
+    daemon_reload: yes
+- name: restart photography-rebuild timer
+  systemd:
+    name: photography-rebuild.timer
+    state: restarted
+    daemon_reload: yes
