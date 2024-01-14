@@ -32,6 +32,7 @@ providers:
       maybe-finance: *ghorg
       n64decomp: *ghorg
       netbootxyz: *ghorg
+      OpenBoardView: *ghorg
       opentofu: *ghorg
       rclone: *ghorg
       ruffle-rs: *ghorg
