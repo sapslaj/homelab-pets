@@ -24,6 +24,7 @@ providers:
           /.*/:
             enabled: true
             actions: *actions
+      ange-yaghi: *ghorg
       dolphin-emu: *ghorg
       maybe-finance: *ghorg
       n64decomp: *ghorg
