@@ -34,5 +34,6 @@ providers:
             enabled: true
             clone_scheme: ssh
             actions: *actions
+      sm64pc: *ghorg
       tachiyomi: *ghorg
       yuzu-emu: *ghorg
