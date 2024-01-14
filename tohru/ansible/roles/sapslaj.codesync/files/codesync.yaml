@@ -27,6 +27,7 @@ providers:
       alacritty: *ghorg
       ange-yaghi: *ghorg
       dolphin-emu: *ghorg
+      hashicorp: *ghorg
       maybe-finance: *ghorg
       n64decomp: *ghorg
       netbootxyz: *ghorg
