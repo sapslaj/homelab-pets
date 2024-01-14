@@ -32,6 +32,7 @@
     - role: sapslaj.cloudflare_ddns_update
     - role: sapslaj.playboy_backup
     - role: sapslaj.photography_rebuild
+    - role: sapslaj.codesync
 
 # - hosts: all
 #   become: true

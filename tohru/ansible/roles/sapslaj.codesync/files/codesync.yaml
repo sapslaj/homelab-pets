@@ -1,0 +1,35 @@
+version: 0.8
+src_dir: /mnt/exos/archive/codesync
+concurrency: 1
+
+providers:
+  github.com:
+    orgs:
+      /.*/:
+        repos:
+          /.*/:
+            enabled: true
+            actions:
+              active:
+                - pull
+                - clone
+              archived:
+                - pull
+                - clone
+              orphaned:
+                - raise
+      sapslaj:
+        enabled: true
+        repos:
+          /.*/:
+            enabled: true
+            clone_scheme: ssh
+            actions:
+              active:
+                - pull
+                - clone
+              archived:
+                - pull
+                - clone
+              orphaned:
+                - raise

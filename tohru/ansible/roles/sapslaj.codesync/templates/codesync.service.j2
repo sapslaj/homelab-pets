@@ -1,0 +1,17 @@
+[Unit]
+Description=codesync
+After=network.target
+StartLimitIntervalSec=30min
+StartLimitBurst=3
+
+[Service]
+Type=oneshot
+Environment=GITHUB_TOKEN='{{ github_token | trim }}'
+ExecStart=/usr/local/bin/codesync --config-file /etc/codesync.yaml
+StandardOutput=journal
+Restart=on-failure
+RestartSec=60min
+WatchdogSec=30
+
+[Install]
+WantedBy=multi-user.target
