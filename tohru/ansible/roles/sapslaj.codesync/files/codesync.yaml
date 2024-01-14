@@ -3,35 +3,32 @@ src_dir: /mnt/exos/archive/codesync
 concurrency: 1
 
 providers:
+  generic:
+    repos:
+      /.*/:
+        enabled: true
+        actions: &actions
+          active:
+            - pull
+            - clone
+          archived:
+            - pull
+            - clone
+          orphaned:
+            - raise
   github.com:
     orgs:
-      /.*/:
+      /.*/: &ghorg
+        enabled: true
         repos:
           /.*/:
             enabled: true
-            actions:
-              active:
-                - pull
-                - clone
-              archived:
-                - pull
-                - clone
-              orphaned:
-                - raise
-      maybe-finance:
-        enabled: true
+            actions: *actions
+      maybe-finance: *ghorg
       sapslaj:
         enabled: true
         repos:
           /.*/:
             enabled: true
             clone_scheme: ssh
-            actions:
-              active:
-                - pull
-                - clone
-              archived:
-                - pull
-                - clone
-              orphaned:
-                - raise
+            actions: *actions
