@@ -21,9 +21,9 @@
   become: true
   roles:
     - role: prometheus.prometheus.node_exporter
-    - role: cloudalchemy.process_exporter
-      vars:
-        process_exporter_version: 0.7.10
+    # - role: cloudalchemy.process_exporter
+    #   vars:
+    #     process_exporter_version: 0.7.10
 
 - hosts: qemu_guests
   become: true
