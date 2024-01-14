@@ -18,6 +18,8 @@ providers:
                 - clone
               orphaned:
                 - raise
+      maybe-finance:
+        enabled: true
       sapslaj:
         enabled: true
         repos:
