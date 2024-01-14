@@ -35,6 +35,11 @@ providers:
       netbootxyz: *ghorg
       OpenBoardView: *ghorg
       opentofu: *ghorg
+      Prakxo:
+        repos:
+          ac-decomp:
+            enabled: true
+            actions: *actions
       rclone: *ghorg
       ruffle-rs: *ghorg
       sapslaj:
