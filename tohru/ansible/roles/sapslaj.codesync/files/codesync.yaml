@@ -32,3 +32,4 @@ providers:
             enabled: true
             clone_scheme: ssh
             actions: *actions
+      tachiyomi: *ghorg
