@@ -35,3 +35,4 @@ providers:
             clone_scheme: ssh
             actions: *actions
       tachiyomi: *ghorg
+      yuzu-emu: *ghorg
