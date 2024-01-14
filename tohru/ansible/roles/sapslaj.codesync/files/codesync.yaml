@@ -43,6 +43,7 @@ providers:
             actions: *actions
       sm64pc: *ghorg
       tachiyomi: *ghorg
+      wabarc: *ghorg
       ytdl-org: *ghorg
       ytdlp: *ghorg
       yuzu-emu: *ghorg
