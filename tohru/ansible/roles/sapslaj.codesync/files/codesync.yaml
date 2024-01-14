@@ -31,6 +31,7 @@ providers:
       n64decomp: *ghorg
       opentofu: *ghorg
       rclone: *ghorg
+      ruffle-rs: *ghorg
       sapslaj:
         enabled: true
         repos:
