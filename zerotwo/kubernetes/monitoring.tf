@@ -622,11 +622,12 @@ resource "helm_release" "blackbox_exporter" {
           },
           {
             name   = "plex-tcp"
+            url    = "koyuki.sapslaj.xyz:32400"
             module = "tcp_connect"
           },
           {
             name   = "jellyfin-webui"
-            url    = "http://koyukkoyukii.sapslaj.xyz:8096"
+            url    = "http://koyuki.sapslaj.xyz:8096"
             module = "http_2xx_nosslverify"
           },
           {
