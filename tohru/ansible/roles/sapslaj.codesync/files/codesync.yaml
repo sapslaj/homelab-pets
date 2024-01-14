@@ -38,3 +38,4 @@ providers:
       sm64pc: *ghorg
       tachiyomi: *ghorg
       yuzu-emu: *ghorg
+      zeldaret: *ghorg
