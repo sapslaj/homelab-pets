@@ -30,6 +30,7 @@ providers:
       maybe-finance: *ghorg
       n64decomp: *ghorg
       opentofu: *ghorg
+      rclone: *ghorg
       sapslaj:
         enabled: true
         repos:
