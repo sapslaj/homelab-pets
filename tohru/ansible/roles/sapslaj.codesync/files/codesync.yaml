@@ -29,6 +29,7 @@ providers:
       dolphin-emu: *ghorg
       maybe-finance: *ghorg
       n64decomp: *ghorg
+      netbootxyz: *ghorg
       opentofu: *ghorg
       rclone: *ghorg
       ruffle-rs: *ghorg
