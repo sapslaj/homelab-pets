@@ -30,6 +30,7 @@ providers:
       hashicorp: *ghorg
       internetarchive: *ghorg
       maybe-finance: *ghorg
+      medplum: *ghorg
       n64decomp: *ghorg
       netbootxyz: *ghorg
       OpenBoardView: *ghorg
