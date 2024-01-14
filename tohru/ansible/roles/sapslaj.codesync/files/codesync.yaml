@@ -28,6 +28,7 @@ providers:
       dolphin-emu: *ghorg
       maybe-finance: *ghorg
       n64decomp: *ghorg
+      opentofu: *ghorg
       sapslaj:
         enabled: true
         repos:
