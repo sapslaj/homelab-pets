@@ -25,6 +25,7 @@ providers:
             enabled: true
             actions: *actions
       maybe-finance: *ghorg
+      n64decomp: *ghorg
       sapslaj:
         enabled: true
         repos:
