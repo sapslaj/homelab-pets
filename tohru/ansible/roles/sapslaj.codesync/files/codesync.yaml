@@ -25,16 +25,25 @@ providers:
             enabled: true
             actions: *actions
       alacritty: *ghorg
+      ansible: *ghorg
+      ansible-community: *ghorg
       ange-yaghi: *ghorg
       dolphin-emu: *ghorg
+      elastic: *ghorg
       hashicorp: *ghorg
+      helm: *ghorg
       internetarchive: *ghorg
+      kubernetes-csi: *ghorg
+      kubernetes-sigs: *ghorg
+      kubernetes: *ghorg
       maybe-finance: *ghorg
       medplum: *ghorg
       n64decomp: *ghorg
       netbootxyz: *ghorg
       OpenBoardView: *ghorg
       opentofu: *ghorg
+      prometheus: *ghorg
+      prometheus-community: *ghorg
       Prakxo:
         repos:
           ac-decomp:
@@ -51,6 +60,7 @@ providers:
             actions: *actions
       sm64pc: *ghorg
       tachiyomi: *ghorg
+      VictoriaMetrics: *ghorg
       wabarc: *ghorg
       ytdl-org: *ghorg
       ytdlp: *ghorg
