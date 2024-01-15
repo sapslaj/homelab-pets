@@ -20,6 +20,8 @@ return {
         forward_zone_id = "Z00048261CEI1B6JY63KT",
         ipv4_reverse_zone_id = "Z00206652RDLR1KV5OQ39",
         ipv6_reverse_zone_id = "Z00734311E53TPLAI5AXC",
+        clean_ipv4_reverse_zone = true,
+        clean_ipv6_reverse_zone = true,
         forward_lookup_filter = function(endpoint)
           local log_labels = {
             filter_direction = "forward",
