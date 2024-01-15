@@ -25,9 +25,9 @@ providers:
             enabled: true
             actions: *actions
       alacritty: *ghorg
+      ange-yaghi: *ghorg
       ansible: *ghorg
       ansible-community: *ghorg
-      ange-yaghi: *ghorg
       dolphin-emu: *ghorg
       elastic: *ghorg
       hashicorp: *ghorg
@@ -36,6 +36,14 @@ providers:
       kubernetes-csi: *ghorg
       kubernetes-sigs: *ghorg
       kubernetes: *ghorg
+      lambertjamesd:
+        enabled: true
+        repos:
+          /.*/:
+            enabled: true
+            actions: *actions
+          portal64:
+            enabled: false
       maybe-finance: *ghorg
       medplum: *ghorg
       n64decomp: *ghorg
