@@ -12,6 +12,10 @@
 - hosts: all
   become: true
   tasks:
+    - name: copy zone
+      copy:
+        src: coredns/sapslaj.xyz.zone
+        dest: /etc/coredns/sapslaj.xyz.zone
     - name: add vsdd user
       user:
         name: vsdd

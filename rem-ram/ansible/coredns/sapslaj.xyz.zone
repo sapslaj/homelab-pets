@@ -1,0 +1,20 @@
+$ORIGIN sapslaj.xyz.
+$TTL 300
+sapslaj.xyz. IN SOA ns-1060.awsdns-04.org. awsdns-hostmaster.amazon.com. 1 7200 900 1209600 8640
+sapslaj.xyz. 172800 IN NS ns-1060.awsdns-04.org.
+sapslaj.xyz. 172800 IN NS ns-1955.awsdns-52.co.uk.
+sapslaj.xyz. 172800 IN NS ns-335.awsdns-41.com.
+sapslaj.xyz. 172800 IN NS ns-605.awsdns-11.net.
+
+alertmanager IN CNAME zerotwo.sapslaj.xyz.
+argocd IN CNAME zerotwo.sapslaj.xyz.
+blackbox-exporter IN CNAME zerotwo.sapslaj.xyz.
+librenms IN CNAME zerotwo.sapslaj.xyz.
+loki IN CNAME zerotwo.sapslaj.xyz.
+oxidized IN CNAME zerotwo.sapslaj.xyz.
+prometheus IN CNAME zerotwo.sapslaj.xyz.
+shelly-ht-report IN CNAME zerotwo.sapslaj.xyz.
+syslog IN CNAME koyuki.sapslaj.xyz.
+vm-vmagent IN CNAME koyuki.sapslaj.xyz.
+vm-vmalert IN CNAME koyuki.sapslaj.xyz.
+vm-vmsingle IN CNAME koyuki.sapslaj.xyz.
