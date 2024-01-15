@@ -1,6 +1,101 @@
 local log = require("log")
 return {
   sources = {
+    static = {
+      "custom",
+      config = {
+        endpoints = function(config)
+          local source_properties = { static = true, }
+          return {
+            {
+              hostname = "rem",
+              ipv4s = {"172.24.4.2"},
+              ipv6s = {"2001:470:e022:4::2"},
+              record_ttl = 300,
+              source_properties = source_properties,
+              provider_properties = nil,
+            },
+            {
+              hostname = "ram",
+              ipv4s = {"172.24.4.3"},
+              ipv6s = {"2001:470:e022:4::3"},
+              record_ttl = 300,
+              source_properties = source_properties,
+              provider_properties = nil,
+            },
+            {
+              hostname = "aqua",
+              ipv4s = {"172.24.4.10"},
+              ipv6s = {"2001:470:e022:4::a"},
+              record_ttl = 300,
+              source_properties = source_properties,
+              provider_properties = nil,
+            },
+            {
+              hostname = "daki",
+              ipv4s = {"172.24.2.2"},
+              ipv6s = {},
+              record_ttl = 300,
+              source_properties = source_properties,
+              provider_properties = nil,
+            },
+            {
+              hostname = "taiga",
+              ipv4s = {"172.24.2.3"},
+              ipv6s = {},
+              record_ttl = 300,
+              source_properties = source_properties,
+              provider_properties = nil,
+            },
+            {
+              hostname = "pdu1",
+              ipv4s = {"172.24.2.4"},
+              ipv6s = {},
+              record_ttl = 300,
+              source_properties = source_properties,
+              provider_properties = nil,
+            },
+            {
+              hostname = "pdu2",
+              ipv4s = {"172.24.2.5"},
+              ipv6s = {},
+              record_ttl = 300,
+              source_properties = source_properties,
+              provider_properties = nil,
+            },
+            {
+              hostname = "ups1",
+              ipv4s = {"172.24.2.6"},
+              ipv6s = {},
+              record_ttl = 300,
+              source_properties = source_properties,
+              provider_properties = nil,
+            },
+            {
+              hostname = "yor",
+              ipv4s = {
+                "172.24.0.0",
+                "172.24.1.1",
+                "172.24.2.1",
+                "172.24.3.1",
+                "172.24.4.1",
+                "172.24.5.1",
+              },
+              ipv6s = {
+                "2001:470:e022:1::1",
+                "2001:470:e022:2::1",
+                "2001:470:e022:3::1",
+                "2001:470:e022:4::1",
+                "2001:470:e022:5::1",
+              },
+              record_ttl = 300,
+              source_properties = source_properties,
+              provider_properties = nil,
+            },
+          }
+        end,
+      },
+    },
     vyos = {
       "vyos_ssh",
       config = {
@@ -28,6 +123,10 @@ return {
             hostname = endpoint.hostname,
             dhcp_pool = endpoint.source_properties.dhcp_pool,
           }
+          if endpoint.source_properties.static then
+            log.info("endpoint is static, allowing", log_labels)
+            return true
+          end
           if endpoint.source_properties.dhcp_pool == "LAN_Management" then
             log.info("endpoint is in LAN_Management, allowing", log_labels)
             return true
