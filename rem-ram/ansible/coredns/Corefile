@@ -1,0 +1,15 @@
+.:5530 {
+  log
+  errors
+  prometheus 0.0.0.0:9153
+  hosts /etc/coredns/zonepop.hosts {
+    reload 5m
+    fallthrough
+  }
+  forward . tls://1.1.1.1 tls://1.0.0.1 {
+    tls_servername cloudflare-dns.com
+  }
+  cache {
+    denial 10 5 5
+  }
+}

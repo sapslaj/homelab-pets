@@ -1,0 +1,22 @@
+- hosts: all
+  become: true
+  roles:
+    - role: cloudalchemy.coredns
+      vars:
+        coredns_version: 1.11.1
+        coredns_config_file: coredns/Corefile
+        coredns_dns_port: 5530
+        coredns_key_files_paths: []
+        coredns_zone_files_paths: []
+
+- hosts: all
+  become: true
+  tasks:
+    - name: add vsdd user
+      user:
+        name: vsdd
+        password: $6$c5CxkrI0fPogtZu0$m1dIqLZo/T48fmIn/W96GyXijvHfB74G9pLhLGZrAeWFlXO3W3r/TUO2z8K0Cp1cxAcTOlGC9Jrb7y2F0mWda.
+        append: yes
+        groups:
+          - coredns
+      ignore_errors: '{{ ansible_check_mode }}'
