@@ -456,6 +456,26 @@ resource "kubernetes_manifest" "static_scrape_adguard" {
   }
 }
 
+resource "kubernetes_manifest" "static_scrape_coredns" {
+  manifest = {
+    apiVersion = "operator.victoriametrics.com/v1beta1"
+    kind       = "VMStaticScrape"
+    metadata = {
+      name      = "coredns"
+      namespace = kubernetes_namespace_v1.monitoring.metadata[0].name
+    }
+    spec = {
+      jobName = "coredns"
+      targetEndpoints = [{
+        targets = [
+          "rem.sapslaj.xyz:9153",
+          "ram.sapslaj.xyz:9153",
+        ]
+      }]
+    }
+  }
+}
+
 resource "kubernetes_manifest" "static_scrape_homeassistant" {
   manifest = {
     apiVersion = "operator.victoriametrics.com/v1beta1"
