@@ -30,6 +30,7 @@ providers:
       ansible-community: *ghorg
       dolphin-emu: *ghorg
       elastic: *ghorg
+      FossifyOrg: *ghorg
       hashicorp: *ghorg
       helm: *ghorg
       internetarchive: *ghorg
