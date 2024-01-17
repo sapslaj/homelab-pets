@@ -66,6 +66,7 @@ providers:
             enabled: true
             clone_scheme: ssh
             actions: *actions
+      SimpleMobileTools: *ghorg
       sm64pc: *ghorg
       tachiyomi: *ghorg
       VictoriaMetrics: *ghorg
