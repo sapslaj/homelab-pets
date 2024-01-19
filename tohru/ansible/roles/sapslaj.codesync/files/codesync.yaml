@@ -25,6 +25,7 @@ providers:
             enabled: true
             actions: *actions
       alacritty: *ghorg
+      Andre0512: *ghorg
       ange-yaghi: *ghorg
       ansible: *ghorg
       ansible-community: *ghorg
