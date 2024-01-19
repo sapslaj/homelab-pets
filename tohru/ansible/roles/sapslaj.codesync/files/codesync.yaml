@@ -35,6 +35,7 @@ providers:
       hashicorp: *ghorg
       helm: *ghorg
       internetarchive: *ghorg
+      itchannel: *ghorg
       kubernetes-csi: *ghorg
       kubernetes-sigs: *ghorg
       kubernetes: *ghorg
