@@ -6,6 +6,7 @@
     - '{{ pvr_volumes_dir }}/jackett-config'
     - '{{ pvr_volumes_dir }}/prowlarr-config'
     - '{{ pvr_volumes_dir }}/radarr-config'
+    - '{{ pvr_volumes_dir }}/readarr-config'
     - '{{ pvr_volumes_dir }}/sonarr-config'
 - name: flairsolverr container
   docker_container:
@@ -72,6 +73,22 @@
       PGID: '0'
     volumes:
       - '{{ pvr_volumes_dir }}/radarr-config:/config'
+      - '{{ pvr_data_dir }}:/data'
+- name: readarr container
+  docker_container:
+    name: readarr
+    image: lscr.io/linuxserver/readarr:nightly
+    restart_policy: unless-stopped
+    links:
+      - '{{ pvr_vpn_container }}:jackett'
+    ports:
+      - 0.0.0.0:8787:8787
+      - '[::]:8787:8787'
+    env:
+      PUID: '0'
+      PGID: '0'
+    volumes:
+      - '{{ pvr_volumes_dir }}/readarr-config:/config'
       - '{{ pvr_data_dir }}:/data'
 - name: sonarr container
   docker_container:
