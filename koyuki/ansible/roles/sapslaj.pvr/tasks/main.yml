@@ -4,6 +4,7 @@
     state: directory
   with_items:
     - '{{ pvr_volumes_dir }}/jackett-config'
+    - '{{ pvr_volumes_dir }}/prowlarr-config'
     - '{{ pvr_volumes_dir }}/radarr-config'
     - '{{ pvr_volumes_dir }}/sonarr-config'
 - name: flairsolverr container
@@ -24,21 +25,37 @@
       TZ: America/New_York
     volumes:
       - '{{ pvr_volumes_dir }}/jackett-config:/config'
-- name: sonarr container
+- name: lidarr container
   docker_container:
-    name: sonarr
-    image: lscr.io/linuxserver/sonarr
+    name: lidarr
+    image: lscr.io/linuxserver/lidarr
     restart_policy: unless-stopped
     links:
       - '{{ pvr_vpn_container }}:jackett'
     ports:
-      - 0.0.0.0:8989:8989
-      - '[::]:8989:8989'
+      - 0.0.0.0:8686:8686
+      - '[::]:8686:8686'
     env:
       PUID: '0'
       PGID: '0'
     volumes:
-      - '{{ pvr_volumes_dir }}/sonarr-config:/config'
+      - '{{ pvr_volumes_dir }}/lidarr-config:/config'
+      - '{{ pvr_data_dir }}:/data'
+- name: prowlarr container
+  docker_container:
+    name: prowlarr
+    image: lscr.io/linuxserver/prowlarr
+    restart_policy: unless-stopped
+    links:
+      - '{{ pvr_vpn_container }}:jackett'
+    ports:
+      - 0.0.0.0:9696:9696
+      - '[::]:9696:9696'
+    env:
+      PUID: '0'
+      PGID: '0'
+    volumes:
+      - '{{ pvr_volumes_dir }}/prowlarr-config:/config'
       - '{{ pvr_data_dir }}:/data'
 - name: radarr container
   docker_container:
@@ -56,21 +73,21 @@
     volumes:
       - '{{ pvr_volumes_dir }}/radarr-config:/config'
       - '{{ pvr_data_dir }}:/data'
-- name: lidarr container
+- name: sonarr container
   docker_container:
-    name: lidarr
-    image: lscr.io/linuxserver/lidarr
+    name: sonarr
+    image: lscr.io/linuxserver/sonarr
     restart_policy: unless-stopped
     links:
       - '{{ pvr_vpn_container }}:jackett'
     ports:
-      - 0.0.0.0:8686:8686
-      - '[::]:8686:8686'
+      - 0.0.0.0:8989:8989
+      - '[::]:8989:8989'
     env:
       PUID: '0'
       PGID: '0'
     volumes:
-      - '{{ pvr_volumes_dir }}/lidarr-config:/config'
+      - '{{ pvr_volumes_dir }}/sonarr-config:/config'
       - '{{ pvr_data_dir }}:/data'
 
 - name: copy selfheal task list for pvr

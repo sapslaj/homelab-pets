@@ -10,6 +10,7 @@
 # PVR stack
 - hosts: all
   become: true
+  gather_facts: false
   vars:
     nordvpn_private_key: !vault |
       $ANSIBLE_VAULT;1.1;AES256
@@ -21,6 +22,7 @@
       3839373631663336383764316238376334373133336130303465
   roles:
     - role: sapslaj.nordvpn_container
+      tags: vpn
       vars:
         vpn_container_selfheal_enabled: false
         vpn_container_net6_local: 2600:1f18:1a9:7200::/56,2001:470:e022::/48,fe80::/10
@@ -32,6 +34,7 @@
           - 0.0.0.0:8191:8191 # FlairSolverr
           - '[::]:8191:8191'
     - role: sapslaj.qbittorrent
+      tags: qbittorrent
       vars:
         qbittorrent_selfheal_enabled: true
         qbittorrent_config_dir: /mnt/exos/volumes/qbittorrent-config
@@ -41,6 +44,7 @@
           PGID: '0'
           TZ: America/New_York
     - role: sapslaj.pvr
+      tags: pvr
       vars:
         pvr_selfheal_enabled: false
         pvr_data_dir: /mnt/exos/Media
@@ -48,19 +52,24 @@
 # Media server stack
 - hosts: all
   become: true
+  gather_facts: false
   roles:
     - role: sapslaj.plex
+      tags: plex
       vars:
         plex_media_dir: /mnt/exos/Media
     - role: sapslaj.jellyfin
+      tags: jellyfin
       vars:
         jellyfin_media_dir: /mnt/exos/Media
 
 # network syslog collector
 - hosts: all
   become: true
+  gather_facts: false
   roles:
     - role: sapslaj.network_syslog_promtail
+      tags: syslog_promtail
       vars:
         network_syslog_promtail_volumes_dir: /var/docker/volumes/syslog-promtail
         network_syslog_promtail_push_url: http://loki.sapslaj.xyz/loki/api/v1/push
@@ -79,11 +88,15 @@
 # Syncthing
 - hosts: all
   become: true
+  gather_facts: false
   roles:
     - role: sapslaj.syncthing
+      tags: syncthing
 
 # Morbius
 - hosts: all
   become: true
+  gather_facts: false
   roles:
     - role: sapslaj.morbius
+      tags: morbius

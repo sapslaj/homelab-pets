@@ -56,7 +56,13 @@
   shell: |
     set -euxo pipefail
     fixed=0
-    for app in sonarr radarr lidarr; do
+    apps=(
+      "lidarr"
+      "prowlarr"
+      "radarr"
+      "sonarr"
+    )
+    for app in ${apps[@]}; do
       [[ "$(docker inspect $app)" == *'"Status": "running"'* ]] || {
         docker start "$app"
         fixed=1
