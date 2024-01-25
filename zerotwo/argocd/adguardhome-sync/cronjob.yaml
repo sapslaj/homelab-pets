@@ -1,0 +1,47 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: adguardhome-sync
+spec:
+  schedule: '0 * * * *'
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: adguardhome-sync
+              image: ghcr.io/bakito/adguardhome-sync:latest
+              args:
+                - run
+                - --config
+                - /config/adguardhome-sync.yaml
+              volumeMounts:
+                - name: config
+                  mountPath: /config
+                  readOnly: true
+              env:
+                - name: ORIGIN_USERNAME
+                  valueFrom:
+                    secretKeyRef:
+                      name: adguardhome-sync-credentials
+                      key: username
+                - name: ORIGIN_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: adguardhome-sync-credentials
+                      key: password
+                - name: REPLICA_USERNAME
+                  valueFrom:
+                    secretKeyRef:
+                      name: adguardhome-sync-credentials
+                      key: username
+                - name: REPLICA_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: adguardhome-sync-credentials
+                      key: password
+          volumes:
+            - name: config
+              configMap:
+                name: adguardhome-sync

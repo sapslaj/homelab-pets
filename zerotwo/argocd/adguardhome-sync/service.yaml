@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: adguardhome-sync
+  labels:
+    app: adguardhome-sync
+spec:
+  selector:
+    app: adguardhome-sync
+  type: ClusterIP
+  ports:
+    - name: adguardhome-sync
+      protocol: TCP
+      port: 80
+      targetPort: 8080

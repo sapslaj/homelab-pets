@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: adguardhome-sync
+  labels:
+    app: adguardhome-sync
+data:
+  adguardhome-sync.yaml: |
+    # cron expression to run in daemon mode. (default; "" = runs only once)
+    cron: '0 * * * *'
+
+    # runs the synchronisation on startup
+    runOnStart: true
+
+    origin:
+      # url of the origin instance
+      url: https://rem.sapslaj.xyz:443
+      # apiPath: define an api path if other than "/control"
+      # insecureSkipVerify: true # disable tls check
+      # Credentials are stored in the `adguardhome-sync-credentials` secret
+
+    # replica instance (optional, if only one)
+    replica:
+      # url of the replica instance
+      url: https://ram.sapslaj.xyz:443
+      # Credentials are stored in the `adguardhome-sync-credentials` secret
+
+    # Configure sync features; by default all features are enabled.
+    features:
+      generalSettings: true
+      queryLogConfig: true
+      statsConfig: true
+      clientSettings: true
+      services: true
+      filters: true
+      dhcp:
+        serverConfig: true
+        staticLeases: true
+      dns:
+        serverConfig: true
+        accessLists: true
+        rewrites: true

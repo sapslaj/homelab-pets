@@ -1,0 +1,14 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: adguardhome-sync
+  namespace: argocd
+spec:
+  destination:
+    namespace: adguardhome-sync
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: zerotwo/argocd/adguardhome-sync
+    repoURL: git@github.com:sapslaj/homelab-pets.git
+    targetRevision: main
