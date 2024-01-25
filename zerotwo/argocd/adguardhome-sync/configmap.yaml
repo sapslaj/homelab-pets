@@ -7,7 +7,7 @@ metadata:
 data:
   adguardhome-sync.yaml: |
     # cron expression to run in daemon mode. (default; "" = runs only once)
-    cron: '0 * * * *'
+    cron: '* * * * *'
 
     # runs the synchronisation on startup
     runOnStart: true
