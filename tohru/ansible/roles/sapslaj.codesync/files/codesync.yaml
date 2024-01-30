@@ -61,6 +61,7 @@ providers:
             enabled: true
             actions: *actions
       rclone: *ghorg
+      rexim: *ghorg
       ruffle-rs: *ghorg
       sapslaj:
         enabled: true
@@ -72,6 +73,7 @@ providers:
       SimpleMobileTools: *ghorg
       sm64pc: *ghorg
       tachiyomi: *ghorg
+      Tsoding: *ghorg
       VictoriaMetrics: *ghorg
       wabarc: *ghorg
       ytdl-org: *ghorg
