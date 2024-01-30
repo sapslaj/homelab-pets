@@ -73,6 +73,7 @@ providers:
       SimpleMobileTools: *ghorg
       sm64pc: *ghorg
       tachiyomi: *ghorg
+      ThePrimeagen: *ghorg
       Tsoding: *ghorg
       VictoriaMetrics: *ghorg
       wabarc: *ghorg
