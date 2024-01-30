@@ -74,6 +74,7 @@ providers:
       sm64pc: *ghorg
       tachiyomi: *ghorg
       ThePrimeagen: *ghorg
+      tjdevries: *ghorg
       Tsoding: *ghorg
       VictoriaMetrics: *ghorg
       wabarc: *ghorg
