@@ -50,7 +50,9 @@ providers:
       maybe-finance: *ghorg
       medplum: *ghorg
       n64decomp: *ghorg
+      neovim: *ghorg
       netbootxyz: *ghorg
+      nvim-lua: *ghorg
       OpenBoardView: *ghorg
       opentofu: *ghorg
       prometheus: *ghorg
