@@ -20,10 +20,6 @@ spec:
       labels:
         app: adguardhome-sync
     spec:
-      # initContainers:
-        # Init containers are exactly like regular containers, except:
-          # - Init containers always run to completion.
-          # - Each init container must complete successfully before the next one starts.
       restartPolicy: Always
       containers:
         - name: adguardhome-sync
@@ -37,6 +33,8 @@ spec:
               mountPath: /config
               readOnly: true
           env:
+            - name: LOG_FORMAT
+              value: json
             - name: ORIGIN_USERNAME
               valueFrom:
                 secretKeyRef:
