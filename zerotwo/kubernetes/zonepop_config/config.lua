@@ -31,7 +31,7 @@ local forward_lookup_filter = function(endpoint)
         return true
       end
     end
-    local allowed_hostname_parts = {"BroadLink", "shellyht"}
+    local allowed_hostname_parts = {"BroadLink", "shelly"}
     for _, v in pairs(allowed_hostname_parts) do
       if string.find(endpoint.hostname, v) then
         log.info("endpoint is in LAN_Internal and contains allowed hostname part", log_labels)
