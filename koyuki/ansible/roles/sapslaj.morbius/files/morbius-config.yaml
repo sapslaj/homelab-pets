@@ -16,7 +16,7 @@ transport:
 enrichers:
   addr_type:
     morbing: enabled
-  proto_names:
+  netdb:
     morbing: enabled
   rdns:
     enable_cache: true
@@ -40,11 +40,10 @@ destinations:
     observe_flow_duration: false
     metric_labels:
       - dst_addr
-      # - dst_port
       - src_addr
-      # - src_port
       - ethernet_type_name
       - protocol_name
+      - service_name
     export_ip_info: true
     ip_info_labels:
       - addr
