@@ -80,6 +80,7 @@ providers:
       Tsoding: *ghorg
       VictoriaMetrics: *ghorg
       wabarc: *ghorg
+      weaveworks: *ghorg
       ytdl-org: *ghorg
       ytdlp: *ghorg
       yuzu-emu: *ghorg
