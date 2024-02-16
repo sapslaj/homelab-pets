@@ -15,7 +15,7 @@ providers:
             - pull
             - clone
           orphaned:
-            - raise
+            - nop
   github.com:
     orgs:
       /.*/: &ghorg
