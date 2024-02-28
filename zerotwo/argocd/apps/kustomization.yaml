@@ -4,3 +4,4 @@ kind: Kustomization
 resources:
   - ./adguardhome-sync.yaml
   - ./monitoring.yaml
+  - ./sealed-secrets.yaml
