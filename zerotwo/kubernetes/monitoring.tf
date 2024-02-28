@@ -306,6 +306,7 @@ resource "kubernetes_manifest" "static_scrape_node_exporter" {
           "rem.sapslaj.xyz:9100",
           "tohru.sapslaj.xyz:9100",
           "koyuki.sapslaj.xyz:9100",
+          "mitsuru.sapslaj.xyz:9100",
         ]
       }]
     }
