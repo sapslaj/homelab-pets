@@ -11,7 +11,7 @@ jobs:
   ansible-later:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: ansible-later
         uses: patrickjahns/ansible-later-action@v1
         with:
@@ -25,28 +25,47 @@ jobs:
       matrix:
         include:
           - ANSIBLE: "2.10"
+            MOLECULE_SCENARIO: default
           - ANSIBLE: "3.4"
-          - ANSIBLE: "4.3"
-          - ANSIBLE: "4.3"
-            MOLECULE_DISTRO: ubuntu1804
-          - ANSIBLE: "4.3"
+            MOLECULE_SCENARIO: default
+          - ANSIBLE: "4.10"
+            MOLECULE_SCENARIO: default
+          - ANSIBLE: "5.10"
+            MOLECULE_SCENARIO: default
+          - ANSIBLE: "6.6"
+            MOLECULE_SCENARIO: latest
+          - ANSIBLE: "6.6"
+            MOLECULE_SCENARIO: upgrade
+          - ANSIBLE: "6.6"
+            MOLECULE_SCENARIO: scenario_with_local_binary_directory
+          - ANSIBLE: "6.6"
+            MOLECULE_SCENARIO: download_and_propagate
+          - ANSIBLE: "6.6"
+            MOLECULE_SCENARIO: default
             MOLECULE_DISTRO: ubuntu2004
-          - ANSIBLE: "4.3"
+          - ANSIBLE: "6.6"
+            MOLECULE_SCENARIO: default
+            MOLECULE_DISTRO: ubuntu2204
+          - ANSIBLE: "6.6"
+            MOLECULE_SCENARIO: default
             MOLECULE_DISTRO: debian10
-          - ANSIBLE: "4.3"
+          - ANSIBLE: "6.6"
+            MOLECULE_SCENARIO: default
             MOLECULE_DISTRO: debian11
-          - ANSIBLE: "4.3"
-            MOLECULE_DISTRO: centos7
-          - ANSIBLE: "4.3"
+#          - ANSIBLE: "4.3"
+#            MOLECULE_DISTRO: centos7
+          - ANSIBLE: "6.6"
             MOLECULE_DISTRO: centos8
-          - ANSIBLE: "4.3"
-            MOLECULE_DISTRO: fedora31
+            MOLECULE_SCENARIO: default
+          - ANSIBLE: "6.6"
+            MOLECULE_DISTRO: fedora37
+            MOLECULE_SCENARIO: default
     steps:
-      - uses: actions/checkout@v3
-      - name: Set up Python 3.9
-        uses: actions/setup-python@v3
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
         with:
-          python-version: 3.9
+          python-version: "3.10"
       - name: Install tox
         run: |
           python -m pip install --upgrade pip
@@ -56,6 +75,7 @@ jobs:
         env:
           ANSIBLE: ${{ matrix.ANSIBLE }}
           MOLECULE_DISTRO: ${{ matrix.MOLECULE_DISTRO }}
+          MOLECULE_SCENARIO: ${{ matrix.MOLECULE_SCENARIO }}
         run: |
           tox -- pip list
-          tox -- molecule test --all --destroy always
+          tox -- molecule test -s ${MOLECULE_SCENARIO} --destroy always
