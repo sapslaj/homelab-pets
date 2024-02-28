@@ -77,7 +77,7 @@ return {
             },
             {
               hostname = "mitsuru",
-              ipv4s = {"172.24.4.10"},
+              ipv4s = {"172.24.4.11"},
               ipv6s = {"2001:470:e022:4::b"},
               record_ttl = 300,
               source_properties = source_properties,
