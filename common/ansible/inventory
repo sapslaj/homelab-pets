@@ -7,6 +7,10 @@ tohru.sapslaj.xyz
 zerotwo.sapslaj.xyz
 ichigo.sapslaj.xyz
 koyuki.sapslaj.xyz
+mitsuru.sapslaj.xyz
+
+[proxmox_hosts]
+mitsuru.sapslaj.xyz
 
 [nas_clients]
 eris.sapslaj.xyz
@@ -23,6 +27,7 @@ ram.sapslaj.xyz
 rem.sapslaj.xyz
 tohru.sapslaj.xyz
 koyuki.sapslaj.xyz
+mitsuru.sapslaj.xyz
 
 [qemu_guests]
 rem.sapslaj.xyz

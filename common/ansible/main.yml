@@ -3,13 +3,13 @@
   roles:
     - role: sapslaj.ansible_target
     - role: sapslaj.users
-    - role: sapslaj.selfheal
-    - role: sapslaj.waifu_motd
+    - role: patrickjahns.promtail
 
-- hosts: all
+- hosts: all,!proxmox_hosts
   become: true
   roles:
-    # - role: patrickjahns.promtail
+    - role: sapslaj.selfheal
+    - role: sapslaj.waifu_motd
     - role: sapslaj.rsyslog_promtail
 
 - hosts: nas_clients
