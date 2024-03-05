@@ -65,6 +65,7 @@ providers:
       rclone: *ghorg
       rexim: *ghorg
       ruffle-rs: *ghorg
+      Ryujinx: *ghorg
       sapslaj:
         enabled: true
         repos:
