@@ -55,6 +55,7 @@ providers:
       nvim-lua: *ghorg
       OpenBoardView: *ghorg
       opentofu: *ghorg
+      pineappleEA: *ghorg
       prometheus: *ghorg
       prometheus-community: *ghorg
       Prakxo:
