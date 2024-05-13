@@ -49,6 +49,7 @@ providers:
             enabled: false
       maybe-finance: *ghorg
       medplum: *ghorg
+      Mr-Wiseguy: *ghorg
       n64decomp: *ghorg
       neovim: *ghorg
       netbootxyz: *ghorg
