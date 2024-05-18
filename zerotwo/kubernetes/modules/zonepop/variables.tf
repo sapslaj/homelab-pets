@@ -3,6 +3,11 @@ variable "create_namespace" {
   default = true
 }
 
+variable "enable_service_monitor" {
+  type    = bool
+  default = true
+}
+
 variable "namespace" {
   type = string
 }
@@ -43,4 +48,10 @@ variable "labels" {
 variable "interval" {
   type    = string
   default = "1m"
+}
+
+variable "service_monitor_namespace" {
+  type     = string
+  default  = null
+  nullable = true
 }

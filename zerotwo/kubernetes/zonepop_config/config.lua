@@ -14,7 +14,7 @@ local forward_lookup_filter = function(endpoint)
     log.info("endpoint is in LAN_Management, allowing", log_labels)
     return true
   elseif endpoint.source_properties.dhcp_pool == "LAN_Servers" then
-    local skip_hostnames = {"aqua"}
+    local skip_hostnames = { "aqua" }
     for _, v in pairs(skip_hostnames) do
       if v == endpoint.hostname then
         log.info("endpoint is in LAN_Servers and should be skipped", log_labels)
@@ -24,14 +24,15 @@ local forward_lookup_filter = function(endpoint)
     log.info("endpoint is in LAN_Servers", log_labels)
     return true
   elseif endpoint.source_properties.dhcp_pool == "LAN_Internal" then
-    local allowed_hostnames = {"homeassistant", "darkness", "playboy", "k3sdev", "steamdeck", "megumin", "silverwolf"}
+    local allowed_hostnames =
+      { "homeassistant", "darkness", "playboy", "k3sdev", "steamdeck", "megumin", "silverwolf" }
     for _, v in pairs(allowed_hostnames) do
       if v == endpoint.hostname then
         log.info("endpoint is in LAN_Internal and is an allowed hostname", log_labels)
         return true
       end
     end
-    local allowed_hostname_parts = {"BroadLink", "shelly"}
+    local allowed_hostname_parts = { "BroadLink", "shelly" }
     for _, v in pairs(allowed_hostname_parts) do
       if string.find(endpoint.hostname, v) then
         log.info("endpoint is in LAN_Internal and contains allowed hostname part", log_labels)
@@ -49,43 +50,43 @@ return {
       "custom",
       config = {
         endpoints = function(config)
-          local source_properties = { static = true, }
+          local source_properties = { static = true }
           return {
             {
               hostname = "rem",
-              ipv4s = {"172.24.4.2"},
-              ipv6s = {"2001:470:e022:4::2"},
+              ipv4s = { "172.24.4.2" },
+              ipv6s = { "2001:470:e022:4::2" },
               record_ttl = 300,
               source_properties = source_properties,
               provider_properties = nil,
             },
             {
               hostname = "ram",
-              ipv4s = {"172.24.4.3"},
-              ipv6s = {"2001:470:e022:4::3"},
+              ipv4s = { "172.24.4.3" },
+              ipv6s = { "2001:470:e022:4::3" },
               record_ttl = 300,
               source_properties = source_properties,
               provider_properties = nil,
             },
             {
               hostname = "aqua",
-              ipv4s = {"172.24.4.10"},
-              ipv6s = {"2001:470:e022:4::a"},
+              ipv4s = { "172.24.4.10" },
+              ipv6s = { "2001:470:e022:4::a" },
               record_ttl = 300,
               source_properties = source_properties,
               provider_properties = nil,
             },
             {
               hostname = "mitsuru",
-              ipv4s = {"172.24.4.11"},
-              ipv6s = {"2001:470:e022:4::b"},
+              ipv4s = { "172.24.4.11" },
+              ipv6s = { "2001:470:e022:4::b" },
               record_ttl = 300,
               source_properties = source_properties,
               provider_properties = nil,
             },
             {
               hostname = "daki",
-              ipv4s = {"172.24.2.2"},
+              ipv4s = { "172.24.2.2" },
               ipv6s = {},
               record_ttl = 300,
               source_properties = source_properties,
@@ -93,7 +94,7 @@ return {
             },
             {
               hostname = "taiga",
-              ipv4s = {"172.24.2.3"},
+              ipv4s = { "172.24.2.3" },
               ipv6s = {},
               record_ttl = 300,
               source_properties = source_properties,
@@ -101,7 +102,7 @@ return {
             },
             {
               hostname = "pdu1",
-              ipv4s = {"172.24.2.4"},
+              ipv4s = { "172.24.2.4" },
               ipv6s = {},
               record_ttl = 300,
               source_properties = source_properties,
@@ -109,7 +110,7 @@ return {
             },
             {
               hostname = "pdu2",
-              ipv4s = {"172.24.2.5"},
+              ipv4s = { "172.24.2.5" },
               ipv6s = {},
               record_ttl = 300,
               source_properties = source_properties,
@@ -117,7 +118,7 @@ return {
             },
             {
               hostname = "ups1",
-              ipv4s = {"172.24.2.6"},
+              ipv4s = { "172.24.2.6" },
               ipv6s = {},
               record_ttl = 300,
               source_properties = source_properties,
@@ -170,8 +171,8 @@ return {
           host = "rem.sapslaj.xyz",
           username = os.getenv("VYOS_USERNAME"),
           password = os.getenv("VYOS_PASSWORD"),
-        }
-      }
+        },
+      },
     },
     ram_coredns = {
       "hosts_file",
@@ -183,8 +184,8 @@ return {
           host = "ram.sapslaj.xyz",
           username = os.getenv("VYOS_USERNAME"),
           password = os.getenv("VYOS_PASSWORD"),
-        }
-      }
+        },
+      },
     },
     route53 = {
       "aws_route53",
@@ -196,6 +197,17 @@ return {
         clean_ipv4_reverse_zone = true,
         clean_ipv6_reverse_zone = true,
         forward_lookup_filter = forward_lookup_filter,
+      },
+    },
+    prometheus = {
+      "prometheus_metrics",
+      config = {
+        source_labels = {
+          "static",
+          "dhcp_pool",
+          "hardware_address",
+        },
+        provider_labels = {},
       },
     },
   },

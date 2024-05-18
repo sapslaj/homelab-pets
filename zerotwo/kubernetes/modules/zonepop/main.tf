@@ -12,6 +12,7 @@ locals {
     app = "zonepop"
   }, var.labels)
   namespace = var.create_namespace ? kubernetes_namespace_v1.this[0].metadata[0].name : var.namespace
+  service_monitor_namespace = coalesce(var.service_monitor_namespace, local.namespace)
 
   config_files = var.config_files
 }
@@ -71,6 +72,12 @@ resource "kubernetes_deployment_v1" "this" {
             mount_path = "/etc/zonepop"
           }
 
+          port {
+            name           = "http"
+            container_port = 9412
+            protocol       = "TCP"
+          }
+
           env {
             name  = "CONFIG_HASH"
             value = md5(jsonencode(kubernetes_config_map_v1.config.data))
@@ -110,6 +117,48 @@ resource "kubernetes_deployment_v1" "this" {
           }
         }
       }
+    }
+  }
+}
+
+resource "kubernetes_service_v1" "this" {
+  metadata {
+    name      = "zonepop"
+    namespace = local.namespace
+    labels    = local.labels
+  }
+
+  spec {
+    selector = kubernetes_deployment_v1.this.spec[0].selector[0].match_labels
+
+    port {
+      name = "http"
+      port = 9412
+    }
+  }
+}
+
+resource "kubernetes_manifest" "service_monitor" {
+  count = var.enable_service_monitor ? 1 : 0
+
+  manifest = {
+    apiVersion = "monitoring.coreos.com/v1"
+    kind       = "ServiceMonitor"
+    metadata = {
+      name      = "shelly-ht-exporter"
+      namespace = local.service_monitor_namespace
+      labels    = local.labels
+    }
+    spec = {
+      selector = {
+        matchLabels = kubernetes_service_v1.this.spec[0].selector
+      }
+      namespaceSelector = {
+        matchNames = [local.namespace]
+      }
+      endpoints = [{
+        port = "http"
+      }]
     }
   }
 }
