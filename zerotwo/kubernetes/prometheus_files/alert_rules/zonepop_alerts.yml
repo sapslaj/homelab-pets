@@ -1,0 +1,24 @@
+groups:
+  - name: zonepop
+    rules:
+      - alert: ZonePopControllerFailing
+        expr: rate(zonepop_controller_runs{status="errored"}[5m]) > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: ZonePop controller runs are failing
+      - alert: ZonePopSourceDown
+        expr: zonepop_source_up == 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: ZonePop source {{ $labels.source }} is down
+      - alert: ZonePopProviderDown
+        expr: zonepop_provider_up == 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: ZonePop provider {{ $labels.provider }} is down
