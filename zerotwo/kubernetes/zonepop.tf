@@ -50,7 +50,7 @@ module "zonepop" {
   create_namespace = false
   namespace        = kubernetes_namespace_v1.zonepop.metadata[0].name
 
-  interval = "5m"
+  interval = "1m"
 
   config_files = {
     for f in fileset("${path.module}/zonepop_config", "*") : f => file("${path.module}/zonepop_config/${f}")
