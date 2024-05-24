@@ -24,15 +24,26 @@ local forward_lookup_filter = function(endpoint)
     log.info("endpoint is in LAN_Servers", log_labels)
     return true
   elseif endpoint.source_properties.dhcp_pool == "LAN_Internal" then
-    local allowed_hostnames =
-      { "homeassistant", "darkness", "playboy", "k3sdev", "steamdeck", "megumin", "silverwolf" }
+    local allowed_hostnames = {
+      "homeassistant",
+      "darkness",
+      "playboy",
+      "k3sdev",
+      "steamdeck",
+      "megumin",
+      "silverwolf",
+    }
     for _, v in pairs(allowed_hostnames) do
       if v == endpoint.hostname then
         log.info("endpoint is in LAN_Internal and is an allowed hostname", log_labels)
         return true
       end
     end
-    local allowed_hostname_parts = { "BroadLink", "shelly" }
+    local allowed_hostname_parts = {
+      "air-q",
+      "BroadLink",
+      "shelly",
+    }
     for _, v in pairs(allowed_hostname_parts) do
       if string.find(endpoint.hostname, v) then
         log.info("endpoint is in LAN_Internal and contains allowed hostname part", log_labels)
