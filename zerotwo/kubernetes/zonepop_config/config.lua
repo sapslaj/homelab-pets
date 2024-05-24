@@ -40,7 +40,7 @@ local forward_lookup_filter = function(endpoint)
       end
     end
     local allowed_hostname_parts = {
-      "air-q",
+      "air%-q",
       "BroadLink",
       "shelly",
     }
