@@ -1,0 +1,27 @@
+- name: make apt stop installing useless shit (Debian)
+  copy:
+    dest: /etc/apt/apt.conf.d/999norecommend
+    content: |
+      APT::Install-Recommends "0";
+      APT::Install-Suggests "0";
+  when: ansible_distribution in ["Debian", "Ubuntu", "Linux Mint", "OSMC"]
+
+- name: remove snapd (and associates) (Ubuntu)
+  apt:
+    name:
+      - snapd
+      - lxc
+    state: absent
+    autoremove: true
+    clean: true
+    purge: true
+  when: ansible_distribution in ["Ubuntu", "Linux Mint"]
+
+- name: make apt stop installing snap (Ubuntu)
+  copy:
+    dest: /etc/apt/preferences.d/nosnap.pref
+    content: |
+      Package: snapd
+      Pin: release a=*
+      Pin-Priority: -10
+  when: ansible_distribution in ["Ubuntu", "Linux Mint"]
