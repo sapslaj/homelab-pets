@@ -19,7 +19,7 @@
     - name: add vsdd user
       user:
         name: vsdd
-        password: $6$c5CxkrI0fPogtZu0$m1dIqLZo/T48fmIn/W96GyXijvHfB74G9pLhLGZrAeWFlXO3W3r/TUO2z8K0Cp1cxAcTOlGC9Jrb7y2F0mWda.
+        password: $6$HZ.QSIxXeW1iKA8N$G3dXZDM/n8qSn2YjiLkW2/0jsVNfcOvDkf5L6agLnWDYSxklDxOIPfrjVT7Lj0XzuYxg.aTt241FdfAaFCQxl.
         append: yes
         groups:
           - coredns
