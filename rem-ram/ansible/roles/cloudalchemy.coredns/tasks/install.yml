@@ -41,6 +41,7 @@
     - name: Unpack coredns binary
       become: false
       unarchive:
+        remote_src: true
         src: "/tmp/coredns_{{ coredns_version }}_linux_{{ go_arch }}.tgz"
         dest: "/tmp"
         creates: "/tmp/coredns"
