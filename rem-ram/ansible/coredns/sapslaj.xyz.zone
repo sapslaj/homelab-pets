@@ -11,6 +11,7 @@ argocd IN CNAME zerotwo.sapslaj.xyz.
 blackbox-exporter IN CNAME zerotwo.sapslaj.xyz.
 librenms IN CNAME zerotwo.sapslaj.xyz.
 loki IN CNAME zerotwo.sapslaj.xyz.
+misc IN CNAME zerotwo.sapslaj.xyz.
 oxidized IN CNAME zerotwo.sapslaj.xyz.
 prometheus IN CNAME zerotwo.sapslaj.xyz.
 shelly-ht-report IN CNAME zerotwo.sapslaj.xyz.
