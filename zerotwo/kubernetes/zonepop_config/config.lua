@@ -32,6 +32,7 @@ local forward_lookup_filter = function(endpoint)
       "steamdeck",
       "megumin",
       "silverwolf",
+      "prusa-mk4",
     }
     for _, v in pairs(allowed_hostnames) do
       if v == endpoint.hostname then
