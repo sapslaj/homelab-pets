@@ -84,6 +84,7 @@ providers:
       VictoriaMetrics: *ghorg
       wabarc: *ghorg
       weaveworks: *ghorg
+      WinampDesktop: *ghorg
       ytdl-org: *ghorg
       ytdlp: *ghorg
       yuzu-emu: *ghorg
