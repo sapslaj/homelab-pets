@@ -28,7 +28,7 @@
 #   git:
 #     repo: https://github.com/Koenkk/zigbee2mqtt.git
 #     dest: /opt/zigbee2mqtt
-#     version: 1.28.0
+#     version: 1.37.1
 
 - name: install packages
   npm:
