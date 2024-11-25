@@ -37,7 +37,7 @@
       tags: qbittorrent
       vars:
         qbittorrent_selfheal_enabled: true
-        qbittorrent_config_dir: /mnt/exos/volumes/qbittorrent-config
+        qbittorrent_config_dir: /var/docker/volumes/qbittorrent-config
         qbittorrent_data_dir: /mnt/exos/Media
         qbittorrent_env:
           PUID: '0'
