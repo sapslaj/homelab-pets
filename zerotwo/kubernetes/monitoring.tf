@@ -632,8 +632,8 @@ resource "helm_release" "blackbox_exporter" {
             module = "ssh_banner"
           },
           {
-            name   = "taiga-ssh"
-            url    = "taiga.sapslaj.xyz:22"
+            name   = "shiroko-ssh"
+            url    = "shiroko.sapslaj.xyz:22"
             module = "ssh_banner"
           },
           {
