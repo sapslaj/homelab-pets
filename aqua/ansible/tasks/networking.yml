@@ -34,9 +34,35 @@
     conn_name: enp10s0
     method4: auto
     method6: auto
-- name: set enp5s0f0.4
+
+- name: set enp7s0f0
   nmcli:
     state: present
+    conn_name: enp7s0f0
+    dns4:
+      - 172.24.4.2
+      - 172.24.4.3
+    dns4_search:
+      - sapslaj.xyz
+    dns6:
+      - 2001:470:e022:4::2
+      - 2001:470:e022:4::3
+    dns6_search:
+      - sapslaj.xyz
+    gw4: 172.24.4.1
+    gw6: 2001:470:e022:4::1
+    ifname: enp7s0f0
+    ip4:
+      - 172.24.4.10/24
+    ip6:
+      - 2001:470:e022:4::a/64
+    method4: manual
+    method6: manual
+    type: ethernet
+
+- name: set enp5s0f0.4
+  nmcli:
+    state: absent
     conn_name: enp5s0f0.4
     type: vlan
     vlandev: enp5s0f0
@@ -46,6 +72,14 @@
     ip4: 172.24.4.10/24
     ip6: 2001:470:e022:4::a/64
 
+- name: set enp7s0f2
+  nmcli:
+    state: present
+    conn_name: enp7s0f2
+    type: ethernet
+    method4: disabled
+    method6: disabled
+
 - name: set vm.br0.4
   nmcli:
     state: present
@@ -54,9 +88,18 @@
     method4: disabled
     method6: disabled
     priority: 36864
-- name: set enp5s0f1.4
+- name: set enp7s0f2.4
   nmcli:
     state: present
+    conn_name: enp7s0f2.4
+    master: vm.br0.4
+    type: vlan
+    vlandev: enp7s0f2
+    vlanid: 4
+    slave_type: bridge
+- name: set enp5s0f1.4
+  nmcli:
+    state: absent
     conn_name: enp5s0f1.4
     master: vm.br0.4
     type: vlan
@@ -70,9 +113,18 @@
     method4: disabled
     method6: disabled
     priority: 36864
-- name: set enp5s0f1.5
+- name: set enp7s0f2.5
   nmcli:
     state: present
+    conn_name: enp7s0f2.5
+    master: vm.br0.5
+    type: vlan
+    vlandev: enp7s0f2
+    vlanid: 5
+    slave_type: bridge
+- name: set enp5s0f1.5
+  nmcli:
+    state: absent
     conn_name: enp5s0f1.5
     master: vm.br0.5
     type: vlan
