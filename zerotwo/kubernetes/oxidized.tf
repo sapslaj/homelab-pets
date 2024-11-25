@@ -48,7 +48,7 @@ module "oxidized" {
     "routers.db" = join("\n", [
       "yor.sapslaj.xyz:vyatta",
       "daki.sapslaj.xyz:routeros",
-      "taiga.sapslaj.xyz:routeros",
+      "shiroko.sapslaj.xyz:routeros",
     ])
   }
 }
