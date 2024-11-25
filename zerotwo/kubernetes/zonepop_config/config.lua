@@ -137,6 +137,14 @@ return {
               provider_properties = nil,
             },
             {
+              hostname = "shiroko",
+              ipv4s = { "172.24.2.7" },
+              ipv6s = {},
+              record_ttl = 300,
+              source_properties = source_properties,
+              provider_properties = nil,
+            },
+            {
               hostname = "yor",
               ipv4s = {
                 "172.24.0.0",
