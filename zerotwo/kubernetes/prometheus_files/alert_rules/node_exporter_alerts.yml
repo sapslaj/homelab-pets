@@ -154,8 +154,8 @@ groups:
           severity: warning
       - alert: NodeHighNumberConntrackEntriesUsed
         annotations:
-          description: '{{ $value | humanizePercentage }} of conntrack entries are
-            used.'
+          description: "{{ $value | humanizePercentage }} of conntrack entries are
+            used."
           summary: Number of conntrack are getting close to the limit.
         expr: |
           (node_nf_conntrack_entries / node_nf_conntrack_entries_limit) > 0.75
@@ -202,7 +202,7 @@ groups:
       - alert: NodeSystemdUnitFailed
         annotations:
           summary: systemd unit failed.
-          message: '{{ $labels.name }} systemd unit has failed on {{ $labels.instance }}.'
+          message: "{{ $labels.name }} systemd unit has failed on {{ $labels.instance }}."
         expr: |
           node_systemd_unit_state{state="failed", name!="fwupd-refresh.service", name!="fwupd.service", name!="lightdm.service"} > 0
         labels:

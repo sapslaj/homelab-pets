@@ -42,6 +42,6 @@
     runner_user: ci
     github_account: sapslaj
     github_repo: homelab-pets
-    access_token: '{{ github_token | trim }}'
+    access_token: "{{ github_token | trim }}"
   roles:
     - role: monolithprojects.github_actions_runner

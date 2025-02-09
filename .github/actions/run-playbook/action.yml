@@ -12,10 +12,10 @@ inputs:
     default: inventory
   args:
     description: extra Ansible args
-    default: ''
+    default: ""
   vault_password:
     description: Ansible Vault password
-    default: ''
+    default: ""
 runs:
   using: composite
   steps:
@@ -34,6 +34,6 @@ runs:
         echo $COMPUTED_ARGS
         ansible-playbook -i "${{ inputs.inventory }}" -u ci "${{ inputs.playbook }}" $COMPUTED_ARGS ${{ inputs.args }}
       env:
-        ANSIBLE_HOST_KEY_CHECKING: 'False'
-        ANSIBLE_FORCE_COLOR: 'True'
+        ANSIBLE_HOST_KEY_CHECKING: "False"
+        ANSIBLE_FORCE_COLOR: "True"
         ANSIBLE_STDOUT_CALLBACK: yaml

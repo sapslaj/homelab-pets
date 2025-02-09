@@ -3,10 +3,10 @@
     name: ipv6-tcp-shim@{{ item }}.service
     state: restarted
     daemon_reload: yes
-  with_items: '{{ _enabled_tcp_ports }}'
+  with_items: "{{ _enabled_tcp_ports }}"
 - name: restart ipv6-udp-shim
   systemd:
     name: ipv6-udp-shim@{{ item }}.service
     state: restarted
     daemon_reload: yes
-  with_items: '{{ _enabled_udp_ports }}'
+  with_items: "{{ _enabled_udp_ports }}"

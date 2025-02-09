@@ -8,5 +8,5 @@
     env:
       TZ: America/New_York
     volumes:
-      - '{{ plex_config_dir }}:/config'
-      - '{{ plex_media_dir }}:/data/media:ro'
+      - "{{ plex_config_dir }}:/config"
+      - "{{ plex_media_dir }}:/data/media:ro"

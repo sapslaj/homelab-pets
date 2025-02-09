@@ -3,7 +3,7 @@ groups:
     rules:
       - alert: DockerNonRunningContainers
         annotations:
-          message: '{{ $labels.node_name }} has non-running Docker containers'
+          message: "{{ $labels.node_name }} has non-running Docker containers"
         expr: engine_daemon_container_states_containers{state!="running"} > 0
         for: 5m
         labels:

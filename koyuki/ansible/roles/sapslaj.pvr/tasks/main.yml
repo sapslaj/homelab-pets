@@ -1,13 +1,13 @@
 - name: config directories
   file:
-    path: '{{ item }}'
+    path: "{{ item }}"
     state: directory
   with_items:
-    - '{{ pvr_volumes_dir }}/jackett-config'
-    - '{{ pvr_volumes_dir }}/prowlarr-config'
-    - '{{ pvr_volumes_dir }}/radarr-config'
-    - '{{ pvr_volumes_dir }}/readarr-config'
-    - '{{ pvr_volumes_dir }}/sonarr-config'
+    - "{{ pvr_volumes_dir }}/jackett-config"
+    - "{{ pvr_volumes_dir }}/prowlarr-config"
+    - "{{ pvr_volumes_dir }}/radarr-config"
+    - "{{ pvr_volumes_dir }}/readarr-config"
+    - "{{ pvr_volumes_dir }}/sonarr-config"
 - name: flairsolverr container
   docker_container:
     name: flairsolverr
@@ -21,91 +21,91 @@
     restart_policy: unless-stopped
     network_mode: container:{{ pvr_vpn_container }}
     env:
-      PUID: '33'
-      PGID: '33'
+      PUID: "33"
+      PGID: "33"
       TZ: America/New_York
     volumes:
-      - '{{ pvr_volumes_dir }}/jackett-config:/config'
+      - "{{ pvr_volumes_dir }}/jackett-config:/config"
 - name: lidarr container
   docker_container:
     name: lidarr
     image: lscr.io/linuxserver/lidarr
     restart_policy: unless-stopped
     links:
-      - '{{ pvr_vpn_container }}:jackett'
+      - "{{ pvr_vpn_container }}:jackett"
     ports:
       - 0.0.0.0:8686:8686
-      - '[::]:8686:8686'
+      - "[::]:8686:8686"
     env:
-      PUID: '0'
-      PGID: '0'
+      PUID: "0"
+      PGID: "0"
     volumes:
-      - '{{ pvr_volumes_dir }}/lidarr-config:/config'
-      - '{{ pvr_data_dir }}:/data'
+      - "{{ pvr_volumes_dir }}/lidarr-config:/config"
+      - "{{ pvr_data_dir }}:/data"
 - name: prowlarr container
   docker_container:
     name: prowlarr
     image: lscr.io/linuxserver/prowlarr
     restart_policy: unless-stopped
     links:
-      - '{{ pvr_vpn_container }}:jackett'
+      - "{{ pvr_vpn_container }}:jackett"
     ports:
       - 0.0.0.0:9696:9696
-      - '[::]:9696:9696'
+      - "[::]:9696:9696"
     env:
-      PUID: '0'
-      PGID: '0'
+      PUID: "0"
+      PGID: "0"
     volumes:
-      - '{{ pvr_volumes_dir }}/prowlarr-config:/config'
-      - '{{ pvr_data_dir }}:/data'
+      - "{{ pvr_volumes_dir }}/prowlarr-config:/config"
+      - "{{ pvr_data_dir }}:/data"
 - name: radarr container
   docker_container:
     name: radarr
     image: lscr.io/linuxserver/radarr
     restart_policy: unless-stopped
     links:
-      - '{{ pvr_vpn_container }}:jackett'
+      - "{{ pvr_vpn_container }}:jackett"
     ports:
       - 0.0.0.0:7878:7878
-      - '[::]:7878:7878'
+      - "[::]:7878:7878"
     env:
-      PUID: '0'
-      PGID: '0'
+      PUID: "0"
+      PGID: "0"
     volumes:
-      - '{{ pvr_volumes_dir }}/radarr-config:/config'
-      - '{{ pvr_data_dir }}:/data'
+      - "{{ pvr_volumes_dir }}/radarr-config:/config"
+      - "{{ pvr_data_dir }}:/data"
 - name: readarr container
   docker_container:
     name: readarr
     image: lscr.io/linuxserver/readarr:nightly
     restart_policy: unless-stopped
     links:
-      - '{{ pvr_vpn_container }}:jackett'
+      - "{{ pvr_vpn_container }}:jackett"
     ports:
       - 0.0.0.0:8787:8787
-      - '[::]:8787:8787'
+      - "[::]:8787:8787"
     env:
-      PUID: '0'
-      PGID: '0'
+      PUID: "0"
+      PGID: "0"
     volumes:
-      - '{{ pvr_volumes_dir }}/readarr-config:/config'
-      - '{{ pvr_data_dir }}:/data'
+      - "{{ pvr_volumes_dir }}/readarr-config:/config"
+      - "{{ pvr_data_dir }}:/data"
 - name: sonarr container
   docker_container:
     name: sonarr
     image: lscr.io/linuxserver/sonarr
     restart_policy: unless-stopped
     links:
-      - '{{ pvr_vpn_container }}:jackett'
+      - "{{ pvr_vpn_container }}:jackett"
     ports:
       - 0.0.0.0:8989:8989
-      - '[::]:8989:8989'
+      - "[::]:8989:8989"
     env:
-      PUID: '0'
-      PGID: '0'
+      PUID: "0"
+      PGID: "0"
     volumes:
-      - '{{ pvr_volumes_dir }}/sonarr-config:/config'
-      - '{{ pvr_data_dir }}:/data'
+      - "{{ pvr_volumes_dir }}/sonarr-config:/config"
+      - "{{ pvr_data_dir }}:/data"
 
 - name: copy selfheal task list for pvr
   copy:

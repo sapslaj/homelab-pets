@@ -3,4 +3,4 @@
     name: morbius
     restart: yes
     state: started
-  ignore_errors: '{{ ansible_check_mode }}'
+  ignore_errors: "{{ ansible_check_mode }}"

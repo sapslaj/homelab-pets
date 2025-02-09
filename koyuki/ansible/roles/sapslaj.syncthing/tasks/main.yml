@@ -6,8 +6,8 @@
     network_mode: host
     env:
       TZ: America/New_York
-      PUID: '1000'
-      PGID: '1000'
+      PUID: "1000"
+      PGID: "1000"
     volumes:
       - /var/docker/volumes/syncthing-config:/config
       - /mnt/exos:/mnt/exos

@@ -1,21 +1,21 @@
 - name: config directories
   file:
-    path: '{{ item }}'
+    path: "{{ item }}"
     state: directory
   with_items:
-    - '{{ network_syslog_promtail_volumes_dir }}/syslog-ng-config'
-    - '{{ network_syslog_promtail_volumes_dir }}/promtail-config'
+    - "{{ network_syslog_promtail_volumes_dir }}/syslog-ng-config"
+    - "{{ network_syslog_promtail_volumes_dir }}/promtail-config"
 - name: syslog-ng config
   template:
     src: syslog-ng.conf.j2
-    dest: '{{ network_syslog_promtail_volumes_dir }}/syslog-ng-config/syslog-ng.conf'
+    dest: "{{ network_syslog_promtail_volumes_dir }}/syslog-ng-config/syslog-ng.conf"
   register: syslog_ng_config
 - name: syslog-ng container
   docker_container:
     name: syslog-ng
     image: lscr.io/linuxserver/syslog-ng
     restart_policy: unless-stopped
-    restart: '{{ syslog_ng_config.changed }}'
+    restart: "{{ syslog_ng_config.changed }}"
     network_mode: host
     env:
       TZ: America/New_York
@@ -25,21 +25,21 @@
       - /config/log/current
       - /config/log/debug.log
     volumes:
-      - '{{ network_syslog_promtail_volumes_dir }}/syslog-ng-config:/config'
+      - "{{ network_syslog_promtail_volumes_dir }}/syslog-ng-config:/config"
 - name: promtail config
   template:
     src: promtail.yaml.j2
-    dest: '{{ network_syslog_promtail_volumes_dir }}/promtail-config/promtail.yaml'
+    dest: "{{ network_syslog_promtail_volumes_dir }}/promtail-config/promtail.yaml"
   register: promtail_config
 - name: promtail container
   docker_container:
     name: promtail
     image: grafana/promtail
     restart_policy: unless-stopped
-    restart: '{{ promtail_config.changed }}'
+    restart: "{{ promtail_config.changed }}"
     ports:
       - 127.0.0.1:1514:1514
     command:
       - -config.file=/etc/promtail/promtail.yaml
     volumes:
-      - '{{ network_syslog_promtail_volumes_dir }}/promtail-config:/etc/promtail'
+      - "{{ network_syslog_promtail_volumes_dir }}/promtail-config:/etc/promtail"

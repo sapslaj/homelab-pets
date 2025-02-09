@@ -14,6 +14,7 @@ def convert(ip):
     expanded = [group.rjust(4, "0") for group in expanded]
     return ".".join(reversed(list("".join(expanded)))) + ".ip6.arpa."
 
+
 if __name__ == "__main__":
     query = json.load(sys.stdin)
     ip = query["ipv6"]

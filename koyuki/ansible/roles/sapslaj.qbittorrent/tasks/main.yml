@@ -6,21 +6,21 @@
       - /usr/bin/qbittorrent-nox
     restart_policy: unless-stopped
     network_mode: container:{{ qbittorrent_vpn_container }}
-    memory: '{{ qbittorrent_memory_limit }}'
-    env: '{{ qbittorrent_env }}'
+    memory: "{{ qbittorrent_memory_limit }}"
+    env: "{{ qbittorrent_env }}"
     volumes:
-      - '{{ qbittorrent_config_dir }}:/config'
-      - '{{ qbittorrent_data_dir }}:/data'
+      - "{{ qbittorrent_config_dir }}:/config"
+      - "{{ qbittorrent_data_dir }}:/data"
 
 - name: qbittorrent exporter container
   docker_container:
     name: qbittorrent-exporter
     image: esanchezm/prometheus-qbittorrent-exporter
     restart_policy: unless-stopped
-    env: '{{ qbittorrent_exporter_env }}'
+    env: "{{ qbittorrent_exporter_env }}"
     ports:
       - 0.0.0.0:{{ qbittorrent_exporter_port }}:8000
-      - '[::]:{{ qbittorrent_exporter_port }}:8000'
+      - "[::]:{{ qbittorrent_exporter_port }}:8000"
 
 - name: copy selfheal task list for qbittorrent
   template:

@@ -3,7 +3,7 @@ kind: CronJob
 metadata:
   name: adguardhome-sync
 spec:
-  schedule: '0 * * * *'
+  schedule: "0 * * * *"
   jobTemplate:
     spec:
       template:

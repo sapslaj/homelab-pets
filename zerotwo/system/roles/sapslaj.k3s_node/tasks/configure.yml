@@ -1,12 +1,12 @@
 - name: Copy k3s service env file
   template:
     src: k3s-agent.service.env.j2
-    dest: '{{ k3s_systemd_dir }}/k3s-agent.service.env'
+    dest: "{{ k3s_systemd_dir }}/k3s-agent.service.env"
 
 - name: Copy K3s service file
   template:
     src: k3s-agent.service.j2
-    dest: '{{ k3s_systemd_dir }}/k3s-agent.service'
+    dest: "{{ k3s_systemd_dir }}/k3s-agent.service"
     owner: root
     group: root
     mode: 0755

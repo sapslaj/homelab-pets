@@ -11,6 +11,6 @@
     src: rclone-sync@.timer
     dest: /etc/systemd/system/rclone-sync@.timer
 - include_tasks: script.yml
-  loop: '{{ rclone_jobs }}'
+  loop: "{{ rclone_jobs }}"
   loop_control:
     loop_var: rclone_job

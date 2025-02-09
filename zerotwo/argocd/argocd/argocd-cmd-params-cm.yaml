@@ -4,5 +4,5 @@ kind: ConfigMap
 metadata:
   name: argocd-cmd-params-cm
 data:
-  server.disable.auth: 'true'
-  server.insecure: 'true'
+  server.disable.auth: "true"
+  server.insecure: "true"

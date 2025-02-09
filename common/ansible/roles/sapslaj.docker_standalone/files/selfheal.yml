@@ -3,9 +3,9 @@
     state: started
 - docker_container:
     comparisons:
-      '*': ignore
+      "*": ignore
     name: watchtower
 - docker_container:
     comparisons:
-      '*': ignore
+      "*": ignore
     name: cadvisor

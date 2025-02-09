@@ -1,6 +1,6 @@
 - name: morbius directories
   file:
-    path: '{{ item }}'
+    path: "{{ item }}"
     state: directory
   with_items:
     - /etc/morbius
@@ -9,7 +9,7 @@
 
 - name: download MaxMind GeoLite2 MMDBs
   get_url:
-    url: '{{ item }}'
+    url: "{{ item }}"
     dest: /var/morbius/mmdb/
   with_items:
     - https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-ASN.mmdb

@@ -21,7 +21,7 @@
       register: update_result
     - name: update all packages via package module
       package:
-        name: '*'
+        name: "*"
         state: latest
       when: update_result is not defined
 

@@ -7,5 +7,5 @@ groups:
           severity: error
         annotations:
           summary: Water leak detected by leak sensor
-          friendly_name: '{{ $labels.friendly_name }}'
-          entity: '{{ $labels.entity }}'
+          friendly_name: "{{ $labels.friendly_name }}"
+          entity: "{{ $labels.entity }}"

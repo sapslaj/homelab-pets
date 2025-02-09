@@ -28,11 +28,11 @@
         vpn_container_net6_local: 2600:1f18:1a9:7200::/56,2001:470:e022::/48,fe80::/10
         vpn_container_ports:
           - 0.0.0.0:9117:9117 # Jackett
-          - '[::]:9117:9117'
+          - "[::]:9117:9117"
           - 0.0.0.0:8080:8080 # qBittorrent
-          - '[::]:8080:8080'
+          - "[::]:8080:8080"
           - 0.0.0.0:8191:8191 # FlairSolverr
-          - '[::]:8191:8191'
+          - "[::]:8191:8191"
     - role: sapslaj.qbittorrent
       tags: qbittorrent
       vars:
@@ -40,8 +40,8 @@
         qbittorrent_config_dir: /var/docker/volumes/qbittorrent-config
         qbittorrent_data_dir: /mnt/exos/Media
         qbittorrent_env:
-          PUID: '0'
-          PGID: '0'
+          PUID: "0"
+          PGID: "0"
           TZ: America/New_York
     - role: sapslaj.pvr
       tags: pvr

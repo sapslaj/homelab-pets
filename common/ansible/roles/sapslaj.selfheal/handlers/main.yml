@@ -3,11 +3,11 @@
     name: selfheal.service
     state: restarted
     daemon_reload: yes
-  ignore_errors: '{{ ansible_check_mode }}'
+  ignore_errors: "{{ ansible_check_mode }}"
 
 - name: restart selfheal timer
   systemd:
     name: selfheal.timer
     state: restarted
     daemon_reload: yes
-  ignore_errors: '{{ ansible_check_mode }}'
+  ignore_errors: "{{ ansible_check_mode }}"

@@ -16,14 +16,14 @@ victoria-metrics-k8s-stack:
     spec:
       resources:
         limits:
-          cpu: '2'
+          cpu: "2"
           memory: 1500Mi
         requests:
           cpu: 100m
           memory: 500Mi
       retentionPeriod: 100y
       extraArgs:
-        search.maxConcurrentRequests: '4'
+        search.maxConcurrentRequests: "4"
       storage:
         accessModes:
           - ReadWriteMany
@@ -113,7 +113,7 @@ victoria-metrics-k8s-stack:
     spec:
       resources:
         limits:
-          cpu: '2'
+          cpu: "2"
           memory: 100Mi
         requests:
           cpu: 100m
