@@ -456,6 +456,8 @@ export class ProxmoxVM extends pulumi.ComponentResource {
   name: pulumi.Output<string>;
   nodeName: pulumi.Output<string>;
 
+  _traitStore: Record<symbol, any> = {};
+
   constructor(id: string, props: ProxmoxVMProps = {}, opts: pulumi.ComponentResourceOptions = {}) {
     super("sapslaj:promxmox-vm:ProxmoxVM", id, {}, opts);
 

@@ -20,9 +20,16 @@ export interface CloudImageTraitConfig {
 }
 
 export class CloudImageTrait implements ProxmoxVMTrait {
+  static traitStore = {
+    file: Symbol("file"),
+  }
+
+  static fileFor(vm: ProxmoxVM): proxmoxve.download.File {
+    return vm._traitStore[CloudImageTrait.traitStore.file]!
+  }
+
   name: string;
   config: CloudImageTraitConfig;
-  file?: proxmoxve.download.File;
 
   constructor(name: string, config: CloudImageTraitConfig) {
     this.name = name;
@@ -42,17 +49,18 @@ export class CloudImageTrait implements ProxmoxVMTrait {
   }
 
   forArgs(args: proxmoxve.vm.VirtualMachineArgs, name: string, parent: ProxmoxVM): proxmoxve.vm.VirtualMachineArgs {
-    this.file = new proxmoxve.download.File(`${name}-${this.name}-file`, {
+    const file = new proxmoxve.download.File(`${name}-${this.name}-file`, {
       contentType: "iso",
       datastoreId: "local",
       nodeName: args.nodeName,
       fileName: `${name}-${this.name}.img`,
       ...this.config.downloadFileConfig,
     }, { parent });
+    parent._traitStore[CloudImageTrait.traitStore.file] = file;
     return proxmoxVMArgsAddDisk(args, [
       {
         datastoreId: "local-lvm",
-        fileId: this.file.id,
+        fileId: file.id,
         interface: "scsi0",
       },
     ]);

@@ -10,12 +10,24 @@ import { ProxmoxVMTrait } from "./ProxmoxVMTrait";
 
 export interface AnsibleTraitConfig extends Omit<AnsibleProvisionerProps, "connection"> {
   hostLookup?: IHostLookup;
+  privateKey?: tls.PrivateKey;
   privateKeyConfig?: Partial<tls.PrivateKeyArgs>;
   connection?: Partial<remote_inputs.ConnectionArgs>;
 }
 
 export class AnsibleTrait implements ProxmoxVMTrait {
-  privateKey?: tls.PrivateKey;
+  static traitStore = {
+    privateKey: Symbol("privateKey"),
+    ansibleProvisioner: Symbol("ansibleProvisioner"),
+  };
+
+  static privateKeyFor(vm: ProxmoxVM): tls.PrivateKey | undefined {
+    return vm._traitStore[AnsibleTrait.traitStore.privateKey] as tls.PrivateKey | undefined;
+  }
+
+  static ansibleProvisionerFor(vm: ProxmoxVM): AnsibleProvisioner {
+    return vm._traitStore[AnsibleTrait.traitStore.ansibleProvisioner]! as AnsibleProvisioner;
+  }
 
   constructor(public name: string, public config: AnsibleTraitConfig) {}
 
@@ -23,11 +35,18 @@ export class AnsibleTrait implements ProxmoxVMTrait {
     let newProps = { ...props };
 
     if (!this.config.connection?.privateKey && !this.config.connection?.password) {
-      this.privateKey = new tls.PrivateKey(`${name}-${this.name}-private-key`, {
-        algorithm: "ED25519",
-        ecdsaCurve: "P256",
-        ...this.config.privateKeyConfig,
-      }, { parent });
+      let privateKey: tls.PrivateKey;
+      if (this.config.privateKey) {
+        privateKey = this.config.privateKey;
+      } else {
+        privateKey = new tls.PrivateKey(`${name}-${this.name}-private-key`, {
+          algorithm: "ED25519",
+          ecdsaCurve: "P256",
+          ...this.config.privateKeyConfig,
+        }, { parent });
+      }
+
+      parent._traitStore[AnsibleTrait.traitStore.privateKey] = privateKey;
 
       if (newProps.userData === undefined) {
         newProps.userData = {};
@@ -36,12 +55,12 @@ export class AnsibleTrait implements ProxmoxVMTrait {
         newProps.userData.ssh_authorized_keys = [];
       }
 
-      newProps.userData.ssh_authorized_keys.push(this.privateKey.publicKeyOpenssh.apply((s) => s.trim()));
+      newProps.userData.ssh_authorized_keys.push(privateKey.publicKeyOpenssh.apply((s) => s.trim()));
 
       if (this.config.connection === undefined) {
         this.config.connection = {};
       }
-      this.config.connection.privateKey = this.privateKey.privateKeyOpenssh;
+      this.config.connection.privateKey = privateKey.privateKeyOpenssh;
     }
 
     if (!this.config.ansibleInstallCommand && !newProps.userData?.packages?.includes("ansible")) {
@@ -75,7 +94,7 @@ export class AnsibleTrait implements ProxmoxVMTrait {
       host,
     };
 
-    new AnsibleProvisioner(`${name}-${this.name}`, {
+    parent._traitStore[AnsibleTrait.traitStore.ansibleProvisioner] = new AnsibleProvisioner(`${name}-${this.name}`, {
       ...this.config,
       connection,
     }, { parent });
