@@ -1,0 +1,20 @@
+{
+  "name": "@sapslaj/homelab-pets",
+  "version": "0.0.0",
+  "description": "Pet servers; and an attempt to make them less pet-like.",
+  "devDependencies": {
+    "@types/node": "^18",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@muhlba91/pulumi-proxmoxve": "^6.18.0",
+    "@pulumi/command": "^1.0.1",
+    "@pulumi/pulumi": "^3.113.0",
+    "@pulumi/random": "^4.16.8",
+    "@pulumi/std": "^1.7.3",
+    "@pulumi/tls": "^5.0.10",
+    "dedent": "^1.5.3",
+    "node-ssh": "^13.2.0",
+    "yaml": "^2.7.0"
+  }
+}
