@@ -5,6 +5,7 @@ import * as pulumi from "@pulumi/pulumi";
 import * as random from "@pulumi/random";
 import * as std from "@pulumi/std";
 
+import { GuestAgentHostLookup, IHostLookup, VyosLeasesHostLookup } from "./host-lookup";
 import { ProxmoxVMTrait } from "./ProxmoxVMTrait";
 
 export enum ProxmoxVMAgentType {
@@ -416,6 +417,7 @@ export interface ProxmoxVMTimeoutConfig {
 }
 
 export interface ProxmoxVMProps extends Omit<proxmoxve.vm.VirtualMachineArgs, "cpu" | "disks" | "nodeName"> {
+  hostLookup?: IHostLookup;
   traits?: ProxmoxVMTrait[];
   userData?: Record<string, any>;
   userDataFileConfig?: Partial<proxmoxve.storage.FileArgs>;
@@ -458,6 +460,24 @@ export class ProxmoxVM extends pulumi.ComponentResource {
 
   _traitStore: Record<symbol, any> = {};
 
+  public static defaultHostLookup: (props?: ProxmoxVMProps) => IHostLookup = () => {
+    if (process.env.VYOS_HOST) {
+      return new VyosLeasesHostLookup({
+        sshConfig: {
+          host: process.env.VYOS_HOST,
+          username: process.env.VYOS_USERNAME,
+          password: process.env.VYOS_PASSWORD,
+        },
+      });
+    } else {
+      return new GuestAgentHostLookup();
+    }
+  };
+
+  protected hostLookup: IHostLookup;
+
+  private _ipv4: pulumi.Output<string> | undefined;
+
   constructor(id: string, props: ProxmoxVMProps = {}, opts: pulumi.ComponentResourceOptions = {}) {
     super("sapslaj:promxmox-vm:ProxmoxVM", id, {}, opts);
 
@@ -481,6 +501,7 @@ export class ProxmoxVM extends pulumi.ComponentResource {
 
     let {
       traits: _,
+      hostLookup,
       userData,
       cpu,
       disks,
@@ -500,6 +521,8 @@ export class ProxmoxVM extends pulumi.ComponentResource {
       timeoutStartVm: timeout?.start,
       timeoutStopVm: timeout?.stop,
     };
+
+    this.hostLookup = hostLookup ?? ProxmoxVM.defaultHostLookup(mutatedProps);
 
     if (cpu === undefined) {
       // Default to giving every VM 2 CPU cores unless otherwise defined
@@ -647,5 +670,12 @@ export class ProxmoxVM extends pulumi.ComponentResource {
       }
       trait.forResource(this.machine, config as VirtualMachineArgs, id, this);
     });
+  }
+
+  public get ipv4(): pulumi.Output<string> {
+    if (!this._ipv4) {
+      this._ipv4 = pulumi.output(this.hostLookup.resolve(this.machine));
+    }
+    return this._ipv4;
   }
 }

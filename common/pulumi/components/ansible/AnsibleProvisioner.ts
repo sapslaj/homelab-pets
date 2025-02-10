@@ -55,8 +55,10 @@ export class AnsibleProvisioner extends pulumi.ComponentResource {
     }]);
 
     const initCommands: pulumi.Input<string>[] = [
-      "sudo mkdir -p /var/ansible\n",
-      pulumi.all({ remotePath }).apply(({ remotePath }) => `sudo chown -Rv $USER:$USER ${remotePath}\n`),
+      pulumi.all({ remotePath }).apply(({ remotePath }) => [
+        `sudo mkdir -p ${remotePath}\n`,
+        `sudo chown -Rv $USER:$USER ${remotePath}\n`
+      ].join()),
     ];
     if (props.ansibleInstallCommand) {
       initCommands.push(props.ansibleInstallCommand);
@@ -155,7 +157,7 @@ export class AnsibleProvisioner extends pulumi.ComponentResource {
             return "$exit_code"
           }
 
-          cd '${remotePath}'
+          cd ${remotePath}
           [[ -s requirements.yml ]] && with_backoff ansible-galaxy install -r requirements.yml
           with_backoff ansible-playbook -i localhost, '${id}.yml'
         `)

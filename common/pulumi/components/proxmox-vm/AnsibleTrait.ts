@@ -4,12 +4,10 @@ import * as pulumi from "@pulumi/pulumi";
 import * as tls from "@pulumi/tls";
 
 import { AnsibleProvisioner, AnsibleProvisionerProps } from "../ansible/AnsibleProvisioner";
-import { GuestAgentHostLookup, IHostLookup } from "./host-lookup";
 import { ProxmoxVM, ProxmoxVMProps } from "./ProxmoxVM";
 import { ProxmoxVMTrait } from "./ProxmoxVMTrait";
 
 export interface AnsibleTraitConfig extends Omit<AnsibleProvisionerProps, "connection"> {
-  hostLookup?: IHostLookup;
   privateKey?: tls.PrivateKey;
   privateKeyConfig?: Partial<tls.PrivateKeyArgs>;
   connection?: Partial<remote_inputs.ConnectionArgs>;
@@ -86,8 +84,7 @@ export class AnsibleTrait implements ProxmoxVMTrait {
     if (this.config.connection?.host) {
       host = this.config.connection.host;
     } else {
-      const hostLookup = this.config.hostLookup ?? new GuestAgentHostLookup();
-      host = pulumi.output(hostLookup.resolve(machine));
+      host = parent.ipv4;
     }
     const connection: remote_inputs.ConnectionArgs = {
       ...this.config.connection,
