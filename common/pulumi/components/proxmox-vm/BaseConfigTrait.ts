@@ -124,11 +124,9 @@ export function buildAnsibleTraitConfig(
     builder.enableNasClientRole = true;
   }
 
-  let { roles, rolePaths } = builder.build();
+  const roles = builder.buildRoles();
+  const rolePaths = builder.buildRolePaths();
 
-  if (!rolePaths) {
-    rolePaths = [];
-  }
   ansibleConfig?.rolePaths?.forEach((rolePath) => rolePaths.push(rolePath))
   ansibleConfig?.roles?.forEach((role) => roles.push(role));
 

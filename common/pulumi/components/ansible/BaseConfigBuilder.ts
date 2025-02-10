@@ -1,6 +1,8 @@
 import * as path from "path";
 
-import { AnsibleProvisionerProps } from "./AnsibleProvisioner";
+import * as pulumi from "@pulumi/pulumi";
+
+import { AnsiblePlaybookRole, AnsibleProvisionerProps } from "./AnsibleProvisioner";
 
 export interface BaseRsyncBackupJobConfig {
   src: string;
@@ -240,7 +242,7 @@ export class BaseConfigBuilder {
       : false;
     this.enableDockerStandaloneRole = baseConfig.dockerStandalone === undefined
       ? false
-      : Boolean(typeof baseConfig.dockerStandalone);
+      : Boolean(baseConfig.dockerStandalone);
 
     this.dockerStandaloneConfig = typeof baseConfig.dockerStandalone === "boolean"
       ? {}
@@ -290,15 +292,19 @@ export class BaseConfigBuilder {
 
   build(): Pick<AnsibleProvisionerProps, "rolePaths" | "roles"> {
     return {
-      rolePaths: [
-        path.join(__dirname, "../../../ansible/roles"),
-      ],
+      rolePaths: this.buildRolePaths(),
       roles: this.buildRoles(),
     };
   }
 
-  buildRoles(): Record<string, any>[] {
-    const roles: Record<string, any>[] = [];
+  buildRolePaths(): string[] {
+    return [
+      path.join(__dirname, "../../../ansible/roles"),
+    ];
+  }
+
+  buildRoles(): AnsiblePlaybookRole[] {
+    const roles: AnsiblePlaybookRole[] = [];
 
     if (this.enableAnsibleTargetRole) {
       roles.push({
