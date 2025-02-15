@@ -164,7 +164,7 @@ export class AnsibleProvisioner extends pulumi.ComponentResource {
       ),
       connection,
       triggers: [
-        new Date(),
+        new Date().toUTCString(),
         playbookYaml,
         init,
         initCommands,
