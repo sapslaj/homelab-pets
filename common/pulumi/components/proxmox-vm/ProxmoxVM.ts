@@ -4,6 +4,7 @@ import { VirtualMachineArgs } from "@muhlba91/pulumi-proxmoxve/vm";
 import * as pulumi from "@pulumi/pulumi";
 import * as random from "@pulumi/random";
 import * as std from "@pulumi/std";
+import { remote as remote_inputs } from "@pulumi/command/types/input";
 
 import { GuestAgentHostLookup, IHostLookup, VyosLeasesHostLookup } from "./host-lookup";
 import { ProxmoxVMTrait } from "./ProxmoxVMTrait";
@@ -419,6 +420,7 @@ export interface ProxmoxVMTimeoutConfig {
 export interface ProxmoxVMProps extends Omit<proxmoxve.vm.VirtualMachineArgs, "cpu" | "disks" | "nodeName"> {
   hostLookup?: IHostLookup;
   traits?: ProxmoxVMTrait[];
+  connectionArgs?: Partial<remote_inputs.ConnectionArgs>;
   userData?: Record<string, any>;
   userDataFileConfig?: Partial<proxmoxve.storage.FileArgs>;
   acpi?: boolean;
@@ -476,6 +478,8 @@ export class ProxmoxVM extends pulumi.ComponentResource {
 
   protected hostLookup: IHostLookup;
 
+  protected connectionArgs: Partial<remote_inputs.ConnectionArgs>;
+
   private _ipv4: pulumi.Output<string> | undefined;
 
   constructor(id: string, props: ProxmoxVMProps = {}, opts: pulumi.ComponentResourceOptions = {}) {
@@ -502,6 +506,7 @@ export class ProxmoxVM extends pulumi.ComponentResource {
     let {
       traits: _,
       hostLookup,
+      connectionArgs,
       userData,
       cpu,
       disks,
@@ -523,6 +528,8 @@ export class ProxmoxVM extends pulumi.ComponentResource {
     };
 
     this.hostLookup = hostLookup ?? ProxmoxVM.defaultHostLookup(mutatedProps);
+
+    this.connectionArgs = connectionArgs ?? {};
 
     if (cpu === undefined) {
       // Default to giving every VM 2 CPU cores unless otherwise defined
@@ -677,5 +684,12 @@ export class ProxmoxVM extends pulumi.ComponentResource {
       this._ipv4 = pulumi.output(this.hostLookup.resolve(this.machine));
     }
     return this._ipv4;
+  }
+
+  public get connection(): remote_inputs.ConnectionArgs {
+    return {
+      host: this.ipv4,
+      ...this.connectionArgs,
+    }
   }
 }

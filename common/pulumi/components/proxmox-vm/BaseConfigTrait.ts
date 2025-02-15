@@ -170,13 +170,10 @@ export class BaseConfigTrait implements ProxmoxVMTrait {
 
     if (this.config.ansible !== false) {
       let ansibleConfig = buildAnsibleTraitConfig(this.config, newProps);
-      if (!ansibleConfig.connection?.user) {
-        ansibleConfig = {
-          ...ansibleConfig,
-          connection: {
-            user: this.distro.username,
-            ...ansibleConfig.connection,
-          },
+      if (!newProps.connectionArgs?.user) {
+        newProps.connectionArgs = {
+          user: this.distro.username,
+          ...newProps.connectionArgs,
         };
       }
       newProps.traits.push(
