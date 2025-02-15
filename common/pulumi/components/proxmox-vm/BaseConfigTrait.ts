@@ -95,22 +95,22 @@ export function buildAnsibleTraitConfig(
 
   if (builder.promtailConfig.scrapeConfigs?.syslog !== false) {
     builder.addPromtailScrapeConfig(BaseConfigBuilder.syslogPromtailScrapeConfig);
-    builder.enableRsyslogPromtailRole = true;
+    builder.rsyslogPromtail = true;
   }
 
   if (baseConfig.qemuGuest !== false && props.agent?.enabled) {
-    builder.enableQemuGuestRole = true;
+    builder.qemuGuest = true;
   }
 
-  if (builder.enableDockerStandaloneRole) {
+  if (builder.dockerStandalone) {
     if (baseConfig.selfheal !== false) {
-      builder.enableSelfHealRole = true;
+      builder.selfHeal = true;
     }
     if (builder.dockerStandaloneConfig.enableSelfheal !== false) {
-      builder.dockerStandaloneConfig.enableSelfheal = builder.enableSelfHealRole;
+      builder.dockerStandaloneConfig.enableSelfheal = builder.selfHeal;
     }
     if (baseConfig.rsyncBackup !== false) {
-      builder.enableRsyncBackupRole = true;
+      builder.rsyncBackup = true;
       builder.addRsyncBackupJob({
         src: "/var/docker/volumes",
         dest: "/mnt/exos/volumes/{{ ansible_hostname }}/docker-volumes",
@@ -120,8 +120,8 @@ export function buildAnsibleTraitConfig(
     builder.addPromtailScrapeConfig(BaseConfigBuilder.dockerPromtailScrapeConfig);
   }
 
-  if (baseConfig.nasClient !== false && builder.enableRsyncBackupRole) {
-    builder.enableNasClientRole = true;
+  if (baseConfig.nasClient !== false && builder.rsyncBackup) {
+    builder.nasClient = true;
   }
 
   const roles = builder.buildRoles();

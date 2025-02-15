@@ -1,7 +1,5 @@
 import * as path from "path";
 
-import * as pulumi from "@pulumi/pulumi";
-
 import { AnsiblePlaybookRole, AnsibleProvisionerProps } from "./AnsibleProvisioner";
 
 export interface BaseRsyncBackupJobConfig {
@@ -71,8 +69,14 @@ export interface BaseDockerStandaloneConfig {
    */
   enableWatchtower?: boolean;
 
+  /**
+   * @default "adminadmin"
+   */
   watchTowerHttpApiToken?: string;
 
+  /**
+   * @default 9420
+   */
   watchPowerPort?: number;
 }
 
@@ -115,7 +119,9 @@ export interface BaseConfig {
   /**
    * @default false
    */
-  dockerStandalone?: boolean | BaseDockerStandaloneConfig;
+  dockerStandalone?: boolean;
+
+  dockerStandaloneConfig?: BaseDockerStandaloneConfig;
 
   /**
    * @default false
@@ -125,12 +131,16 @@ export interface BaseConfig {
   /**
    * @default false
    */
-  rsyncBackup?: boolean | BaseRsyncBackupConfig;
+  rsyncBackup?: boolean;
+
+  rsyncBackupConfig?: BaseRsyncBackupConfig;
 
   /**
    * @default true
    */
-  promtail?: boolean | BasePromtailConfig;
+  promtail?: boolean;
+
+  promtailConfig?: BasePromtailConfig;
 }
 
 export class BaseConfigBuilder {
@@ -209,18 +219,18 @@ export class BaseConfigBuilder {
     ],
   };
 
-  enableAnsibleTargetRole: boolean;
-  enableUnfuckUbuntuRole: boolean;
-  enableNodeExporterRole: boolean;
-  enableUsersRole: boolean;
-  enableQemuGuestRole: boolean;
-  enableProcessExporterRole: boolean;
-  enableNasClientRole: boolean;
-  enableDockerStandaloneRole: boolean;
-  enableSelfHealRole: boolean;
-  enableRsyncBackupRole: boolean;
-  enablePromtailRole: boolean;
-  enableRsyslogPromtailRole: boolean;
+  ansibleTarget: boolean;
+  unfuckUbuntu: boolean;
+  nodeExporter: boolean;
+  users: boolean;
+  qemuGuest: boolean;
+  processExporter: boolean;
+  nasClient: boolean;
+  dockerStandalone: boolean;
+  selfHeal: boolean;
+  rsyncBackup: boolean;
+  promtailRole: boolean;
+  rsyslogPromtail: boolean;
 
   dockerStandaloneConfig: BaseDockerStandaloneConfig;
   rsyncBackupConfig: BaseRsyncBackupConfig;
@@ -228,30 +238,35 @@ export class BaseConfigBuilder {
   promtailScrapeConfigs: Record<string, any>[] = [];
 
   constructor(public baseConfig: BaseConfig) {
-    this.enableAnsibleTargetRole = baseConfig.ansibleTarget ?? true;
-    this.enableUnfuckUbuntuRole = baseConfig.unfuckUbuntu ?? true;
-    this.enableUsersRole = baseConfig.users ?? true;
-    this.enableNodeExporterRole = baseConfig.nodeExporter ?? true;
-    this.enableQemuGuestRole = baseConfig.qemuGuest ?? false;
-    this.enableProcessExporterRole = baseConfig.processExporter ?? false;
-    this.enableNasClientRole = baseConfig.nasClient ?? false;
-    this.enableSelfHealRole = baseConfig.selfheal ?? false;
-    this.enablePromtailRole = typeof baseConfig.promtail === "boolean" ? baseConfig.promtail : true;
-    this.enableRsyncBackupRole = typeof baseConfig.rsyncBackup === "boolean"
-      ? baseConfig.rsyncBackup
-      : false;
-    this.enableDockerStandaloneRole = baseConfig.dockerStandalone === undefined
-      ? false
-      : Boolean(baseConfig.dockerStandalone);
+    this.ansibleTarget = baseConfig.ansibleTarget ?? true;
 
-    this.dockerStandaloneConfig = typeof baseConfig.dockerStandalone === "boolean"
-      ? {}
-      : baseConfig.dockerStandalone ?? {};
-    this.rsyncBackupConfig = typeof baseConfig.rsyncBackup === "boolean"
-      ? {}
-      : baseConfig.rsyncBackup ?? {};
-    this.promtailConfig = typeof baseConfig.promtail === "boolean" ? {} : baseConfig.promtail ?? {};
-    this.enableRsyslogPromtailRole = this.enablePromtailRole && this.promtailConfig.scrapeConfigs?.syslog !== false;
+    this.unfuckUbuntu = baseConfig.unfuckUbuntu ?? true;
+
+    this.users = baseConfig.users ?? true;
+
+    this.nodeExporter = baseConfig.nodeExporter ?? true;
+
+    this.qemuGuest = baseConfig.qemuGuest ?? false;
+
+    this.processExporter = baseConfig.processExporter ?? false;
+
+    this.nasClient = baseConfig.nasClient ?? false;
+
+    this.selfHeal = baseConfig.selfheal ?? false;
+
+    this.promtailRole = baseConfig.promtail ?? true;
+
+    this.rsyncBackup = baseConfig.rsyncBackup ?? false;
+
+    this.dockerStandalone = baseConfig.dockerStandalone ?? false;
+
+    this.dockerStandaloneConfig = baseConfig.dockerStandaloneConfig ?? {};
+
+    this.rsyncBackupConfig = baseConfig.rsyncBackupConfig ?? {};
+
+    this.promtailConfig = baseConfig.promtailConfig ?? {};
+
+    this.rsyslogPromtail = this.promtailRole && this.promtailConfig.scrapeConfigs?.syslog !== false;
 
     if (!this.rsyncBackupConfig.timer) {
       this.rsyncBackupConfig.timer = {
@@ -306,37 +321,37 @@ export class BaseConfigBuilder {
   buildRoles(): AnsiblePlaybookRole[] {
     const roles: AnsiblePlaybookRole[] = [];
 
-    if (this.enableAnsibleTargetRole) {
+    if (this.ansibleTarget) {
       roles.push({
         role: "sapslaj.ansible_target",
       });
     }
 
-    if (this.enableUnfuckUbuntuRole) {
+    if (this.unfuckUbuntu) {
       roles.push({
         role: "sapslaj.unfuck_ubuntu",
       });
     }
 
-    if (this.enableUsersRole) {
+    if (this.users) {
       roles.push({
         role: "sapslaj.users",
       });
     }
 
-    if (this.enableNodeExporterRole) {
+    if (this.nodeExporter) {
       roles.push({
         role: "prometheus.prometheus.node_exporter",
       });
     }
 
-    if (this.enableQemuGuestRole) {
+    if (this.qemuGuest) {
       roles.push({
         role: "sapslaj.qemu_guest",
       });
     }
 
-    if (this.enableProcessExporterRole) {
+    if (this.processExporter) {
       roles.push({
         role: "cloudalchemy.process_exporter",
         vars: {
@@ -345,39 +360,39 @@ export class BaseConfigBuilder {
       });
     }
 
-    if (this.enableNasClientRole) {
+    if (this.nasClient) {
       roles.push({
         role: "sapslaj.nas_client",
       });
     }
 
-    if (this.enableSelfHealRole) {
+    if (this.selfHeal) {
       roles.push({
         role: "sapslaj.selfheal",
       });
     }
 
-    if (this.enableDockerStandaloneRole) {
+    if (this.dockerStandalone) {
       roles.push({
         role: "sapslaj.docker_standalone",
         vars: this.buildDockerStandaloneVars(),
       });
     }
 
-    if (this.enableRsyslogPromtailRole) {
+    if (this.rsyslogPromtail) {
       roles.push({
         role: "sapslaj.rsyslog_promtail",
       });
     }
 
-    if (this.enablePromtailRole) {
+    if (this.promtailRole) {
       roles.push({
         role: "patrickjahns.promtail",
         vars: this.buildPromtailVars(),
       });
     }
 
-    if (this.enableRsyncBackupRole) {
+    if (this.rsyncBackup) {
       roles.push({
         role: "sapslaj.rsync_backup",
         vars: this.buildRsyncBackupVars(),
