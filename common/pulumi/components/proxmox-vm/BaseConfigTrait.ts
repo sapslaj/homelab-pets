@@ -181,6 +181,14 @@ export class BaseConfigTrait implements ProxmoxVMTrait {
       );
     }
 
+    if (!newProps.memory) {
+      // Provisioning seems to get OOMKilled with 512MB of memory, so bump the
+      // default up.
+      newProps.memory = {
+        dedicated: 1024,
+      }
+    }
+
     if (!newProps.userData) {
       newProps.userData = {};
     }
