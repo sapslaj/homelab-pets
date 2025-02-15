@@ -57,8 +57,8 @@ export class AnsibleProvisioner extends pulumi.ComponentResource {
     const initCommands: pulumi.Input<string>[] = [
       pulumi.all({ remotePath }).apply(({ remotePath }) => [
         `sudo mkdir -p ${remotePath}\n`,
-        `sudo chown -Rv $USER:$USER ${remotePath}\n`
-      ].join()),
+        `sudo chown -Rv $USER:$USER ${remotePath}\n`,
+      ].join("")),
     ];
     if (props.ansibleInstallCommand) {
       initCommands.push(props.ansibleInstallCommand);
