@@ -1,0 +1,51 @@
+- name: Install socat
+  apt:
+    name:
+      - socat
+- name: Copy ipv6-tcp-shim.service
+  copy:
+    src: ipv6-tcp-shim@.service
+    dest: /etc/systemd/system/ipv6-tcp-shim@.service
+  notify:
+    - restart ipv6-tcp-shim
+- name: Copy ipv6-udp-shim.service
+  copy:
+    src: ipv6-udp-shim@.service
+    dest: /etc/systemd/system/ipv6-udp-shim@.service
+  notify:
+    - restart ipv6-udp-shim
+
+- name: Set enabled ports
+  set_fact:
+    _enabled_tcp_ports: "{{ ipv6_shim_tcp_ports | json_query(\"[?state != 'absent'].port\") | default([]) }}"
+    _enabled_udp_ports: "{{ ipv6_shim_udp_ports | json_query(\"[?state != 'absent'].port\") | default([]) }}"
+    _disabled_tcp_ports: "{{ ipv6_shim_tcp_ports | json_query(\"[?state == 'absent'].port\") | default([]) }}"
+    _disabled_udp_ports: "{{ ipv6_shim_udp_ports | json_query(\"[?state == 'absent'].port\") | default([]) }}"
+
+- name: Start ipv6-tcp-shim for enabled ports
+  systemd:
+    name: ipv6-tcp-shim@{{ item }}.service
+    enabled: yes
+    state: started
+  with_items: "{{ _enabled_tcp_ports }}"
+- name: Start ipv6-udp-shim for enabled ports
+  systemd:
+    name: ipv6-udp-shim@{{ item }}.service
+    enabled: yes
+    state: started
+  with_items: "{{ _enabled_udp_ports }}"
+
+- name: Stop ipv6-tcp-shim for disabled ports
+  systemd:
+    name: ipv6-tcp-shim@{{ item }}.service
+    enabled: yes
+    state: stopped
+  with_items: "{{ _disabled_tcp_ports }}"
+  ignore_errors: true
+- name: Stop ipv6-udp-shim for disabled ports
+  systemd:
+    name: ipv6-udp-shim@{{ item }}.service
+    enabled: yes
+    state: stopped
+  with_items: "{{ _disabled_udp_ports }}"
+  ignore_errors: true
