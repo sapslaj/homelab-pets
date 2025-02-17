@@ -1,0 +1,5 @@
+name: homelab-pets-shimiko
+runtime:
+  name: nodejs
+  options:
+    packagemanager: npm

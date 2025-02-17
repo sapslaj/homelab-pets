@@ -1,0 +1,40 @@
+- name: create /var/shimiko
+  file:
+    path: /var/shimiko
+    state: directory
+
+- name: create /etc/sysconfig
+  file:
+    path: /etc/sysconfig
+    state: directory
+
+- name: copy /usr/local/bin/shimiko
+  copy:
+    src: shimiko
+    dest: /usr/local/bin/shimiko
+    mode: a+x
+  notify:
+    - restart shimiko-server.service
+
+- name: copy /etc/sysconfig/shimiko.env
+  template:
+    src: shimiko.env.j2
+    dest: /etc/sysconfig/shimiko.env
+  notify:
+    - restart shimiko-server.service
+
+- name: copy /etc/systemd/system/shimiko-server.service
+  copy:
+    src: shimiko-server.service
+    dest: /etc/systemd/system/shimiko-server.service
+  notify:
+    - restart shimiko-server.service
+
+- meta: flush_handlers
+
+- name: enable shimiko-server.service
+  systemd:
+    name: shimiko-server.service
+    state: started
+    enabled: true
+    daemon_reload: true
