@@ -8,7 +8,11 @@
   },
   "dependencies": {
     "@muhlba91/pulumi-proxmoxve": "^6.18.0",
+    "@nodesecure/fs-walk": "^2.0.0",
+    "@pulumi/aws": "^6.68.0",
     "@pulumi/command": "^1.0.1",
+    "@pulumi/dynamic": "^1.0.0-alpha.1657294496",
+    "@pulumi/kubernetes": "^4.21.1",
     "@pulumi/pulumi": "^3.113.0",
     "@pulumi/random": "^4.16.8",
     "@pulumi/std": "^1.7.3",
