@@ -4,6 +4,8 @@ import * as pulumi from "@pulumi/pulumi";
 import dedent from "dedent";
 import * as YAML from "yaml";
 
+import { directoryHash, stringHash } from "../../asset-utils";
+
 export interface AnsiblePlaybookRole {
   role: pulumi.Input<string>;
   vars?: pulumi.Input<Record<string, pulumi.Input<any>>>;
@@ -21,6 +23,15 @@ export interface AnsibleProvisionerProps {
   tasks?: pulumi.Input<pulumi.Input<any>[]>;
   vars?: pulumi.Input<Record<string, pulumi.Input<any>>>;
   remotePath?: pulumi.Input<string>;
+  triggers?: pulumi.Input<any[]>;
+}
+
+interface RolesCopy {
+  rolePath: string;
+  asset: pulumi.asset.FileArchive;
+  resource: remote.CopyToRemote;
+  resourceId: string;
+  hash: pulumi.Output<string>;
 }
 
 export class AnsibleProvisioner extends pulumi.ComponentResource {
@@ -55,10 +66,12 @@ export class AnsibleProvisioner extends pulumi.ComponentResource {
     }]);
 
     const initCommands: pulumi.Input<string>[] = [
-      pulumi.all({ remotePath }).apply(({ remotePath }) => [
-        `sudo mkdir -p ${remotePath}\n`,
-        `sudo chown -Rv $USER:$USER ${remotePath}\n`,
-      ].join("")),
+      pulumi.all({ remotePath }).apply(({ remotePath }) =>
+        [
+          `sudo mkdir -p ${remotePath}\n`,
+          `sudo chown -Rv $USER:$USER ${remotePath}\n`,
+        ].join("")
+      ),
     ];
     if (props.ansibleInstallCommand) {
       initCommands.push(props.ansibleInstallCommand);
@@ -103,24 +116,22 @@ export class AnsibleProvisioner extends pulumi.ComponentResource {
       parent: this,
     });
 
-    const rolesCopies: remote.CopyToRemote[] = [];
-    if (props.rolePaths) {
-      for (const [index, rolePath] of props.rolePaths?.entries()) {
-        const source = new pulumi.asset.FileArchive(rolePath);
-        rolesCopies.push(
-          new remote.CopyToRemote(`${id}-roles-copy-${index}`, {
-            connection,
-            source,
-            remotePath,
-          }, {
-            parent: this,
-            dependsOn: [
-              init,
-            ],
-          }),
-        );
-      }
-    }
+    const rolesCopies = this.buildRolesCopies({
+      connection,
+      remotePath,
+      id,
+      rolesPaths: props.rolePaths,
+      init,
+    });
+
+    const triggers = this.buildTriggers({
+      remotePath,
+      init,
+      inputTriggers: props.triggers,
+      playbook,
+      rolesCopies,
+      requirements: props.requirements,
+    });
 
     const run = new remote.Command(`${id}-run`, {
       create: pulumi.all({ remotePath }).apply(({ remotePath }) =>
@@ -163,19 +174,139 @@ export class AnsibleProvisioner extends pulumi.ComponentResource {
         `)
       ),
       connection,
-      triggers: [
-        new Date().toUTCString(),
-        playbookYaml,
-        init,
-        initCommands,
-        ...rolesCopies,
-      ],
+      triggers,
     }, {
       parent: this,
       dependsOn: [
         init,
-        ...rolesCopies,
+        ...rolesCopies.map((rc) => rc.resource),
       ],
+    });
+  }
+
+  protected buildRolesCopies(inputs: {
+    id: string;
+    rolesPaths?: string[];
+    connection: remote_inputs.ConnectionArgs;
+    remotePath: pulumi.Input<string>;
+    init: remote.Command;
+  }): RolesCopy[] {
+    if (!inputs.rolesPaths) {
+      return [];
+    }
+
+    const rolesCopies: RolesCopy[] = [];
+    for (const [index, rolePath] of inputs.rolesPaths.entries()) {
+      const resourceId = `${inputs.id}-roles-copy-${index}`;
+      const hash = pulumi.output(directoryHash(rolePath));
+      const asset = new pulumi.asset.FileArchive(rolePath);
+      const resource = new remote.CopyToRemote(resourceId, {
+        remotePath: inputs.remotePath,
+        connection: inputs.connection,
+        source: asset,
+        triggers: [
+          hash,
+        ],
+      }, {
+        parent: this,
+        dependsOn: [
+          inputs.init,
+        ],
+      });
+      rolesCopies.push({
+        resourceId,
+        resource,
+        asset,
+        rolePath,
+        hash,
+      });
+    }
+    return rolesCopies;
+  }
+
+  protected buildTriggers(inputs: {
+    remotePath: pulumi.Input<string>;
+    inputTriggers?: pulumi.Input<any[]>;
+    requirements?: pulumi.Input<any>;
+    playbook: pulumi.Output<any>;
+    init: remote.Command;
+    rolesCopies: RolesCopy[];
+  }): pulumi.Output<any[]> {
+    // change this to force reprovision on next up
+    const serial = "serial:6e884a67-eec3-4ecc-bbc2-15f1122edf0f";
+
+    const triggerParts: pulumi.Output<any[]>[] = [];
+
+    if (inputs.inputTriggers) {
+      triggerParts.push(pulumi.output(inputs.inputTriggers));
+    }
+
+    triggerParts.push(pulumi.output(inputs.remotePath).apply((remotePath) => [`remote-path:${remotePath}`]));
+
+    if (inputs.requirements) {
+      triggerParts.push(
+        pulumi.output(inputs.requirements).apply((requirements) => [requirements]),
+      );
+    }
+
+    triggerParts.push(
+      pulumi.unsecret(
+        pulumi.all({
+          playbook: inputs.playbook,
+          isSecret: pulumi.isSecret(inputs.playbook),
+        }).apply(({
+          playbook,
+          isSecret,
+        }) => {
+          if (isSecret) {
+            return [`playbook-secret:${stringHash(JSON.stringify(playbook))}`];
+          } else {
+            return [playbook];
+          }
+        }),
+      ),
+    );
+
+    triggerParts.push(
+      pulumi.unsecret(
+        pulumi.all([
+          inputs.init.id,
+          inputs.init.create,
+          pulumi.isSecret(inputs.init.create),
+        ]).apply(([
+          id,
+          create,
+          isSecret,
+        ]) => {
+          if (isSecret) {
+            return [
+              `init-id:${id}`,
+              `init-cmd-secret:${stringHash(create ?? "")}`,
+            ];
+          } else {
+            return [
+              `init-id:${id}`,
+              create,
+            ];
+          }
+        }),
+      ),
+    );
+
+    inputs.rolesCopies.forEach((rc) => {
+      triggerParts.push(rc.hash.apply((hash) => [`${rc.resourceId}:${hash}`]));
+    });
+
+    return pulumi.all(triggerParts).apply((parts) => {
+      const triggers: any[] = [];
+      triggers.push(serial);
+      if (process.env.ANSIBLE_PROVISIONER_FORCE) {
+        triggers.push(new Date().toUTCString());
+      }
+      parts.forEach((part) => {
+        triggers.push(...part);
+      });
+      return triggers;
     });
   }
 }
