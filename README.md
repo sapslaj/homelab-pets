@@ -21,11 +21,21 @@ Physical server running Debian.
 - libvirtd
 - [virt-backup](https://github.com/aruhier/virt-backup) backs up all VMs to main datastore (which is then backed up to Wasabi)
 
+### eris
+
+Raspberry Pi 4 running Raspbian.
+
+Currently dead 💀
+
 ### homeassistant
 
 HAOS VM running inside [aqua](#aqua). Due to my negligence the current name of the VM is `ha` while the DNS name is `homeassistant`. It is deployed as an appliance and is thus (mostly) excluded from being managed as code.
 
 Home Assistant is deployed as a VM instead of on a dedicated Rasberry Pi or similar SBC because it is much easier to do backups of VM disks than it is to do physical disks, especially when access to the underlying OS is somewhat limited as is the case with HAOS. It was never designed with infra-as-code in mind and is hard to shoehorn it in, so for my own sanity I treat it more or less as a black box managed service and just back up the VM disk.
+
+### k3s
+
+WIP new Kubernetes cluster. Might be renamed. "production" Kubernetes cluster is still zerotwo.
 
 ### koyuki
 
@@ -96,6 +106,16 @@ need to do complicated container networking to make appropriate traffic flow thr
                            +------------+
 ```
 
+### mitsuru
+
+Dell Precision Tower 7910 running Proxmox.
+
+#### Uses
+
+##### Proxmox
+
+Main Proxmox node.
+
 ### playboy
 
 Raspberry Pi 4 running Raspbian located behind the Bedroom TV.
@@ -126,6 +146,40 @@ rem, being a VM, makes backups easy. ram is running not a VM in the event of aqu
 
 Runs [AdGuard Home](https://github.com/AdguardTeam/AdGuardHome) with [AdGuardHome sync](https://github.com/bakito/adguardhome-sync) to keep the instances in sync. Also uses [adguard-exporter](https://github.com/ebrianne/adguard-exporter) for Prometheus metrics scraping.
 
+### shimiko
+
+VM inside [mitsuru](#mitsuru).
+
+This server runs the server software of the same name. The purpose is to
+DNS-related management and bookkeeping, service discovery, and anything else
+DNS or SD related that I need.
+
+#### Uses
+
+##### DNS management
+
+shimiko is not a DNS resolver (that is taken care of my rem and ram) but
+provides a RESTful interface for managing DNS records that sync to both rem/ram
+and Route53. Dynamic DNS is still handled by ZonePop running in zerotwo.
+
+##### Service Discovery _(planned)_
+
+Consul-like SD without actually having to deal with the overhead of running
+Consul. It's supposed to be _dead_ simple.
+
+##### ACME _(planned? maybe?)_
+
+Due to the whole not having things exposed to the world thing it's hard to get
+Let's Encrypt certs, but it sure would be nice to do so. I'm thinking about
+either implementing an ACME protocol proxy or something more simple like
+[acme-dns](https://github.com/joohoi/acme-dns) to make getting certs easier.
+
+### soju
+
+VM inside [mitsuru](#mitsuru).
+
+WIP IRC bouncer running [soju](https://soju.im/). Not finished yet.
+
 ### tohru
 
 VM inside [aqua](#aqua).
@@ -137,6 +191,8 @@ VM inside [aqua](#aqua).
 Actions runner for this repository and some others. Needed since direct access to these servers is not possible from the outside via IPv4.
 
 ##### DDNS
+
+_TODO: should this be a [shimiko](#shimiko) responsibility?_
 
 - Cloudflare DDNS to update current public IP to `sapslaj.com` Cloudflare zone.
 - VSDD for doing dynamic DNS updates to `sapslaj.xyz` Route53 zone based on DHCP leases and IPv6 neighbors.
