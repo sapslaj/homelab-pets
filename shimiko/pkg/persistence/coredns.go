@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 
-	scp "github.com/bramvdbogaerde/go-scp"
+	"github.com/bramvdbogaerde/go-scp"
 	"golang.org/x/crypto/ssh"
 
 	"github.com/sapslaj/homelab-pets/shimiko/pkg/env"

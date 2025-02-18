@@ -3,9 +3,10 @@ package main
 import (
 	"os"
 
+	"github.com/spf13/cobra"
+
 	"github.com/sapslaj/homelab-pets/shimiko/pkg/telemetry"
 	"github.com/sapslaj/homelab-pets/shimiko/server"
-	"github.com/spf13/cobra"
 )
 
 func main() {
@@ -29,6 +30,13 @@ func main() {
 					os.Exit(1)
 				}
 			},
+		},
+	)
+
+	rootCmd.AddCommand(
+		&cobra.Command{
+			Use: "sync",
+			Run: sync,
 		},
 	)
 

@@ -76,9 +76,24 @@ func (s *Server) upsertDNSRecords(c echo.Context) error {
 	}
 	type responseType struct {
 		Results []responseResultType `json:"results"`
+		Error   string               `json:"error,omitempty"`
 	}
 	response := responseType{
 		Results: []responseResultType{},
+	}
+
+	ps, err := s.p.NewSession(c.Request().Context())
+	if err != nil {
+		s.loggerWithEchoContext(c).ErrorContext(
+			c.Request().Context(),
+			"failed to start persistence session",
+			"error", err,
+		)
+		return c.JSON(500, map[string]any{
+			"msg":    "internal server error",
+			"status": "ERROR",
+			"error":  err.Error(),
+		})
 	}
 
 	hasError := false
@@ -94,7 +109,7 @@ func (s *Server) upsertDNSRecords(c echo.Context) error {
 			})
 			continue
 		}
-		err := record.Upsert(c.Request().Context(), s.p)
+		err := record.Upsert(c.Request().Context(), ps)
 		if err != nil {
 			hasError = true
 			s.loggerWithEchoContext(c).ErrorContext(
@@ -115,6 +130,18 @@ func (s *Server) upsertDNSRecords(c echo.Context) error {
 			})
 		}
 	}
+
+	err = ps.Finish(c.Request().Context())
+	if err != nil {
+		s.loggerWithEchoContext(c).ErrorContext(
+			c.Request().Context(),
+			"failed to finish persistence session",
+			"error", err,
+		)
+		hasError = true
+		response.Error = err.Error()
+	}
+
 	var statusCode int
 	if hasError {
 		statusCode = 500
@@ -146,14 +173,29 @@ func (s *Server) deleteDNSRecords(c echo.Context) error {
 	}
 	type responseType struct {
 		Results []responseResultType `json:"results"`
+		Error   string               `json:"error,omitempty"`
 	}
 	response := responseType{
 		Results: []responseResultType{},
 	}
 
+	ps, err := s.p.NewSession(c.Request().Context())
+	if err != nil {
+		s.loggerWithEchoContext(c).ErrorContext(
+			c.Request().Context(),
+			"failed to start persistence session",
+			"error", err,
+		)
+		return c.JSON(500, map[string]any{
+			"msg":    "internal server error",
+			"status": "ERROR",
+			"error":  err.Error(),
+		})
+	}
+
 	hasError := false
 	for _, record := range body.Records {
-		err := record.Delete(c.Request().Context(), s.p)
+		err := record.Delete(c.Request().Context(), ps)
 		if err != nil {
 			hasError = true
 			s.loggerWithEchoContext(c).ErrorContext(
@@ -174,6 +216,18 @@ func (s *Server) deleteDNSRecords(c echo.Context) error {
 			})
 		}
 	}
+
+	err = ps.Finish(c.Request().Context())
+	if err != nil {
+		s.loggerWithEchoContext(c).ErrorContext(
+			c.Request().Context(),
+			"failed to finish persistence session",
+			"error", err,
+		)
+		hasError = true
+		response.Error = err.Error()
+	}
+
 	var statusCode int
 	if hasError {
 		statusCode = 500
@@ -257,7 +311,21 @@ func (s *Server) upsertDNSRecord(c echo.Context) error {
 		})
 	}
 
-	err = body.Record.Upsert(c.Request().Context(), s.p)
+	ps, err := s.p.NewSession(c.Request().Context())
+	if err != nil {
+		s.loggerWithEchoContext(c).ErrorContext(
+			c.Request().Context(),
+			"failed to start persistence session",
+			"error", err,
+		)
+		return c.JSON(500, map[string]any{
+			"msg":    "internal server error",
+			"status": "ERROR",
+			"error":  err.Error(),
+		})
+	}
+
+	err = body.Record.Upsert(c.Request().Context(), ps)
 	if err != nil {
 		s.loggerWithEchoContext(c).ErrorContext(
 			c.Request().Context(),
@@ -271,6 +339,21 @@ func (s *Server) upsertDNSRecord(c echo.Context) error {
 			Error:  err.Error(),
 		})
 	}
+
+	err = ps.Finish(c.Request().Context())
+	if err != nil {
+		s.loggerWithEchoContext(c).ErrorContext(
+			c.Request().Context(),
+			"failed to finish persistence session",
+			"error", err,
+		)
+		return c.JSON(500, responseResultType{
+			Record: body.Record,
+			Status: "ERROR",
+			Error:  err.Error(),
+		})
+	}
+
 	return c.JSON(200, responseResultType{
 		Record: body.Record,
 		Status: "OK",
@@ -285,12 +368,26 @@ func (s *Server) deleteDNSRecord(c echo.Context) error {
 		Validation *persistence.DNSRecordValidation `json:"validation,omitempty"`
 	}
 
+	ps, err := s.p.NewSession(c.Request().Context())
+	if err != nil {
+		s.loggerWithEchoContext(c).ErrorContext(
+			c.Request().Context(),
+			"failed to start persistence session",
+			"error", err,
+		)
+		return c.JSON(500, map[string]any{
+			"msg":    "internal server error",
+			"status": "ERROR",
+			"error":  err.Error(),
+		})
+	}
+
 	record := &persistence.DNSRecord{
 		Type: c.Param("type"),
 		Name: c.Param("name"),
 	}
 
-	err := record.Delete(c.Request().Context(), s.p)
+	err = record.Delete(c.Request().Context(), ps)
 	if err != nil {
 		s.loggerWithEchoContext(c).ErrorContext(
 			c.Request().Context(),
@@ -304,6 +401,21 @@ func (s *Server) deleteDNSRecord(c echo.Context) error {
 			Error:  err.Error(),
 		})
 	}
+
+	err = ps.Finish(c.Request().Context())
+	if err != nil {
+		s.loggerWithEchoContext(c).ErrorContext(
+			c.Request().Context(),
+			"failed to finish persistence session",
+			"error", err,
+		)
+		return c.JSON(500, responseResultType{
+			Record: record,
+			Status: "ERROR",
+			Error:  err.Error(),
+		})
+	}
+
 	return c.JSON(200, responseResultType{
 		Record: record,
 		Status: "OK",

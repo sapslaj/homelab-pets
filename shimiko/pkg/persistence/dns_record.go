@@ -88,15 +88,15 @@ func (record *DNSRecord) shouldReplace(other *DNSRecord) bool {
 	return false
 }
 
-func (record *DNSRecord) Upsert(ctx context.Context, p *Persistence) error {
+func (record *DNSRecord) Upsert(ctx context.Context, ps *PersistenceSession) error {
 	var existing *DNSRecord
 	if record.ID == 0 {
 		if record.Name == "" || record.Type == "" {
 			return errors.New("DNS record must have name and type set")
 		}
-		p.DB.Where("name = ? AND type = ?", record.Name, record.Type).First(&existing)
+		ps.DB.Where("name = ? AND type = ?", record.Name, record.Type).First(&existing)
 	} else {
-		p.DB.Where("id = ?", record.ID).First(&existing)
+		ps.DB.Where("id = ?", record.ID).First(&existing)
 	}
 	if existing != nil {
 		if record.ID == 0 {
@@ -121,29 +121,17 @@ func (record *DNSRecord) Upsert(ctx context.Context, p *Persistence) error {
 			record.TTL = existing.TTL
 		}
 	}
-	result := p.DB.Save(&record)
+	result := ps.DB.Save(&record)
 	if result.Error != nil {
 		return result.Error
 	}
 
-	coreDNS, err := LoadCoreDNS(ctx)
-	if err != nil {
-		return err
-	}
-	err = coreDNS.UpsertRecord(ctx, record, existing)
-	if err != nil {
-		return err
-	}
-	err = coreDNS.Save(ctx)
+	err := ps.CoreDNS.UpsertRecord(ctx, record, existing)
 	if err != nil {
 		return err
 	}
 
-	r53, err := NewRoute53(ctx)
-	if err != nil {
-		return err
-	}
-	err = r53.UpsertRecord(ctx, record, existing)
+	err = ps.Route53.UpsertRecord(ctx, record, existing)
 	if err != nil {
 		return err
 	}
@@ -151,41 +139,29 @@ func (record *DNSRecord) Upsert(ctx context.Context, p *Persistence) error {
 	return nil
 }
 
-func (record *DNSRecord) Delete(ctx context.Context, p *Persistence) error {
+func (record *DNSRecord) Delete(ctx context.Context, ps *PersistenceSession) error {
 	var existing *DNSRecord
 	if record.ID == 0 {
 		if record.Name == "" || record.Type == "" {
 			return errors.New("DNS record must have name and type set")
 		}
-		p.DB.Where("name = ? AND type = ?", record.Name, record.Type).First(&existing)
+		ps.DB.Where("name = ? AND type = ?", record.Name, record.Type).First(&existing)
 	} else {
-		p.DB.Where("id = ?", record.ID).First(&existing)
+		ps.DB.Where("id = ?", record.ID).First(&existing)
 	}
 	if existing != nil && existing.ID != 0 {
-		tx := p.DB.Delete(&existing)
+		tx := ps.DB.Delete(&existing)
 		if tx.Error != nil {
 			return tx.Error
 		}
 	}
 
-	coreDNS, err := LoadCoreDNS(ctx)
-	if err != nil {
-		return err
-	}
-	err = coreDNS.DeleteRecord(ctx, record)
-	if err != nil {
-		return err
-	}
-	err = coreDNS.Save(ctx)
+	err := ps.CoreDNS.DeleteRecord(ctx, record)
 	if err != nil {
 		return err
 	}
 
-	r53, err := NewRoute53(ctx)
-	if err != nil {
-		return err
-	}
-	err = r53.DeleteRecord(ctx, record)
+	err = ps.Route53.DeleteRecord(ctx, record)
 	if err != nil {
 		return err
 	}
