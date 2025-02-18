@@ -1,6 +1,7 @@
 import { BaseConfig, BaseConfigBuilder } from "../ansible/BaseConfigBuilder";
 import { AnsibleTrait, AnsibleTraitConfig } from "./AnsibleTrait";
 import { CloudImageTrait, CloudImageTraitConfig, CloudImageTraitConfigDownloadFileConfig } from "./CloudImageTrait";
+import { DNSRecordTrait, DNSRecordTraitConfig } from "./DNSRecordTrait";
 import { ProxmoxVM, ProxmoxVMProps } from "./ProxmoxVM";
 import { ProxmoxVMTrait } from "./ProxmoxVMTrait";
 
@@ -72,6 +73,8 @@ export interface BaseConfigTraitConfig {
     };
 
   ansible?: boolean | BaseConfigTraitAnsibleConfig;
+
+  dnsRecord?: boolean | DNSRecordTraitConfig;
 }
 
 export const sapslajPasswd =
@@ -127,7 +130,7 @@ export function buildAnsibleTraitConfig(
   const roles = builder.buildRoles();
   const rolePaths = builder.buildRolePaths();
 
-  ansibleConfig?.rolePaths?.forEach((rolePath) => rolePaths.push(rolePath))
+  ansibleConfig?.rolePaths?.forEach((rolePath) => rolePaths.push(rolePath));
   ansibleConfig?.roles?.forEach((role) => roles.push(role));
 
   return {
@@ -168,6 +171,11 @@ export class BaseConfigTrait implements ProxmoxVMTrait {
       );
     }
 
+    if (this.config.dnsRecord !== false && !newProps.traits.find((t) => t instanceof DNSRecordTrait)) {
+      const dnsRecordTraitConfig = typeof this.config.dnsRecord === "boolean" ? undefined : this.config.dnsRecord;
+      newProps.traits.push(new DNSRecordTrait(`${this.name}-dns-record`, dnsRecordTraitConfig));
+    }
+
     if (this.config.ansible !== false) {
       let ansibleConfig = buildAnsibleTraitConfig(this.config, newProps);
       if (!newProps.connectionArgs?.user) {
@@ -186,7 +194,7 @@ export class BaseConfigTrait implements ProxmoxVMTrait {
       // default up.
       newProps.memory = {
         dedicated: 1024,
-      }
+      };
     }
 
     if (!newProps.userData) {
