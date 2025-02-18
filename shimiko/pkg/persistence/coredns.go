@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/bramvdbogaerde/go-scp"
 	"golang.org/x/crypto/ssh"
@@ -96,6 +97,10 @@ func LoadCoreDNS(ctx context.Context) (*CoreDNS, error) {
 }
 
 func (coreDNS *CoreDNS) Save(ctx context.Context) error {
+	err := coreDNS.bumpSOASerial()
+	if err != nil {
+		return err
+	}
 	data := coreDNS.ZF.Save()
 	if data[len(data)-1] != '\n' {
 		data = append(data, '\n')
@@ -163,4 +168,24 @@ func (coreDNS *CoreDNS) DeleteRecord(ctx context.Context, record *DNSRecord) err
 		}
 	}
 	return nil
+}
+
+func (coreDNS *CoreDNS) bumpSOASerial() error {
+	for _, entry := range coreDNS.ZF.Entries() {
+		if !bytes.Equal(entry.Type(), []byte("SOA")) {
+			continue
+		}
+		vs := entry.Values()
+		if len(vs) != 7 {
+			return errors.New("wrong number of parameters for SOA line")
+		}
+		serial, err := strconv.Atoi(string(vs[2]))
+		if err != nil {
+			return fmt.Errorf("could not parse serial: %w", err)
+		}
+		entry.SetValue(2, []byte(strconv.Itoa(serial+1)))
+		return nil
+	}
+
+	return errors.New("could not find SOA entry")
 }
