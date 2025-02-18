@@ -3,10 +3,12 @@
   errors
   prometheus 0.0.0.0:9153
   hosts /etc/coredns/zonepop.hosts {
-    reload 5m
+    reload 1m
     fallthrough
   }
-  file sapslaj.xyz.zone sapslaj.xyz
+  file sapslaj.xyz.zone sapslaj.xyz {
+    reload 1m
+  }
   forward . tls://1.1.1.1 tls://1.0.0.1 {
     tls_servername cloudflare-dns.com
   }
