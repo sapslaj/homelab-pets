@@ -5,13 +5,18 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"strconv"
+	"time"
 
 	"github.com/bramvdbogaerde/go-scp"
 	"golang.org/x/crypto/ssh"
 
 	"github.com/sapslaj/homelab-pets/shimiko/pkg/env"
-	"github.com/sapslaj/homelab-pets/shimiko/pkg/zonefile"
+	"github.com/sapslaj/homelab-pets/shimiko/pkg/zonefile/ast"
+	"github.com/sapslaj/homelab-pets/shimiko/pkg/zonefile/lexer"
+	"github.com/sapslaj/homelab-pets/shimiko/pkg/zonefile/parser"
+	"github.com/sapslaj/homelab-pets/shimiko/pkg/zonefile/token"
 )
 
 var coreDNSHosts = []string{
@@ -20,17 +25,17 @@ var coreDNSHosts = []string{
 }
 
 type CoreDNS struct {
-	ZF *zonefile.Zonefile
+	Entries []ast.Node
 }
 
 func (coreDNS *CoreDNS) newClient(host string) (*scp.Client, error) {
 	username, err := env.Get[string]("VYOS_USERNAME")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error getting VYOS_USERNAME: %w", err)
 	}
 	password, err := env.Get[string]("VYOS_PASSWORD")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error getting VYOS_PASSWORD: %w", err)
 	}
 	client := scp.NewClient(fmt.Sprintf("%s:22", host), &ssh.ClientConfig{
 		User: username,
@@ -45,16 +50,16 @@ func (coreDNS *CoreDNS) newClient(host string) (*scp.Client, error) {
 func (coreDNS *CoreDNS) LoadZoneFileData(ctx context.Context) ([]byte, error) {
 	client, err := coreDNS.newClient(coreDNSHosts[0])
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error creating new scp client for CoreDNS: %w", err)
 	}
 	err = client.Connect()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error connecting scp client for CoreDNS: %w", err)
 	}
 	buffer := &bytes.Buffer{}
 	err = client.CopyFromRemotePassThru(ctx, buffer, "/etc/coredns/sapslaj.xyz.zone", nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error copying file from remote '%s' for CoreDNS: %w", coreDNSHosts[0], err)
 	}
 	return buffer.Bytes(), nil
 }
@@ -63,32 +68,37 @@ func (coreDNS *CoreDNS) SaveCoreDNSZoneFile(ctx context.Context, data []byte) er
 	for _, host := range coreDNSHosts {
 		client, err := coreDNS.newClient(host)
 		if err != nil {
-			return err
+			return fmt.Errorf("error creating new scp client for CoreDNS: %w", err)
 		}
 		err = client.Connect()
 		if err != nil {
-			return err
+			return fmt.Errorf("error connecting scp client for CoreDNS: %w", err)
 		}
 		reader := bytes.NewReader(data)
 		err = client.CopyFile(ctx, reader, "/etc/coredns/sapslaj.xyz.zone", "0644")
 		if err != nil {
-			return err
+			return fmt.Errorf("error copying file to remote '%s' for CoreDNS: %w", host, err)
 		}
 	}
+	return nil
+}
+
+func (coreDNS *CoreDNS) LoadData(ctx context.Context, data []byte) error {
+	tokens := lexer.LexBytes(data).AllTokens()
+	entries, err := parser.ParseEntries(tokens)
+	if err != nil {
+		return fmt.Errorf("error parsing CoreDNS entries: %w", err)
+	}
+	coreDNS.Entries = entries
 	return nil
 }
 
 func (coreDNS *CoreDNS) Load(ctx context.Context) error {
 	data, err := coreDNS.LoadZoneFileData(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("error loading zone file data for CoreDNS: %w", err)
 	}
-	zf, err := zonefile.Load(data)
-	if err != nil {
-		return err
-	}
-	coreDNS.ZF = zf
-	return nil
+	return coreDNS.LoadData(ctx, data)
 }
 
 func LoadCoreDNS(ctx context.Context) (*CoreDNS, error) {
@@ -96,14 +106,22 @@ func LoadCoreDNS(ctx context.Context) (*CoreDNS, error) {
 	return coreDNS, coreDNS.Load(ctx)
 }
 
+func (coreDNS *CoreDNS) ToBytes(ctx context.Context) ([]byte, error) {
+	tokens, err := parser.Tokenize(coreDNS.Entries)
+	if err != nil {
+		return nil, fmt.Errorf("error tokenizing CoreDNS zone file: %w", err)
+	}
+	return token.RenderTokens(tokens), nil
+}
+
 func (coreDNS *CoreDNS) Save(ctx context.Context) error {
 	err := coreDNS.bumpSOASerial()
 	if err != nil {
-		return err
+		return fmt.Errorf("error bumping CoreDNS zone file SOA serial: %w", err)
 	}
-	data := coreDNS.ZF.Save()
-	if data[len(data)-1] != '\n' {
-		data = append(data, '\n')
+	data, err := coreDNS.ToBytes(ctx)
+	if err != nil {
+		return fmt.Errorf("error rendering CoreDNS zone file: %w", err)
 	}
 	return coreDNS.SaveCoreDNSZoneFile(ctx, data)
 }
@@ -113,77 +131,80 @@ func (coreDNS *CoreDNS) UpsertRecord(ctx context.Context, record *DNSRecord, pre
 		return errors.New("DNSRecord is null")
 	}
 
-	var zfentry *zonefile.Entry
 	if record.shouldReplace(previous) {
-		coreDNS.DeleteRecord(ctx, previous)
-	} else {
-		for _, entry := range coreDNS.ZF.Entries() {
-			if string(entry.Domain()) == previous.Name && string(entry.Type()) == previous.Type {
-				zfentry = &entry
-				break
-			}
+		err := coreDNS.DeleteRecord(ctx, previous)
+		if err != nil {
+			return fmt.Errorf("error deleting previous record: %w", err)
 		}
 	}
 
-	var err error
-	if zfentry == nil {
-		zfentry = coreDNS.ZF.AddA(record.Name, "")
-	}
-	err = zfentry.SetDomain([]byte(record.Name))
+	// TODO: make this algo less shit
+	err := coreDNS.DeleteRecord(ctx, record)
 	if err != nil {
-		return err
+		return fmt.Errorf("error deleting record: %w", err)
 	}
-	if record.TTL != 0 {
-		err = zfentry.SetTTL(record.TTL)
-		if err != nil {
-			return err
+	for _, value := range record.Records {
+		rrecord := ast.RRecord{
+			Class: "IN",
+			Type:  record.Type,
+			RData: []ast.RData{
+				{
+					Value: value,
+				},
+			},
 		}
-	} else {
-		err = zfentry.RemoveTTL()
-		if err != nil {
-			return err
+		if record.TTL != 0 {
+			rrecord.TTL = time.Duration(record.TTL) * time.Second
 		}
-	}
-	err = zfentry.SetClass([]byte("IN"))
-	if err != nil {
-		return err
-	}
-	err = zfentry.SetType([]byte(record.Type))
-	if err != nil {
-		return err
-	}
-	for i, val := range record.Records {
-		err = zfentry.SetValue(i, []byte(val))
-		if err != nil {
-			return err
-		}
+		coreDNS.Entries = append(coreDNS.Entries, ast.Node{
+			NodeType: ast.NodeTypeRREntry,
+			Entry: ast.RREntry{
+				DomainName: record.Name,
+				RRecord:    rrecord,
+			},
+		})
 	}
 	return nil
 }
 
 func (coreDNS *CoreDNS) DeleteRecord(ctx context.Context, record *DNSRecord) error {
-	for _, entry := range coreDNS.ZF.Entries() {
-		if string(entry.Domain()) == record.Name && string(entry.Type()) == record.Type {
-			coreDNS.ZF.RemoveEntry(entry)
+	coreDNS.Entries = slices.DeleteFunc(coreDNS.Entries, func(node ast.Node) bool {
+		if !node.IsRREntry() {
+			return false
 		}
-	}
+		entry := node.RREntry()
+		if entry.RRecord.Type != record.Type {
+			return false
+		}
+		if entry.DomainName == record.Name {
+			return true
+		}
+		if entry.DomainName == record.FullHostname()+"." {
+			return true
+		}
+		return false
+	})
 	return nil
 }
 
 func (coreDNS *CoreDNS) bumpSOASerial() error {
-	for _, entry := range coreDNS.ZF.Entries() {
-		if !bytes.Equal(entry.Type(), []byte("SOA")) {
+	for i := range coreDNS.Entries {
+		if !coreDNS.Entries[i].IsRREntry() {
 			continue
 		}
-		vs := entry.Values()
-		if len(vs) != 7 {
-			return errors.New("wrong number of parameters for SOA line")
+		entry := coreDNS.Entries[i].RREntry()
+		if entry.RRecord.Type != "SOA" {
+			continue
 		}
-		serial, err := strconv.Atoi(string(vs[2]))
+		if len(entry.RRecord.RData) != 7 {
+			return errors.New("invalid SOA entry")
+		}
+		serial, err := strconv.Atoi(entry.RRecord.RData[2].Value)
 		if err != nil {
 			return fmt.Errorf("could not parse serial: %w", err)
 		}
-		entry.SetValue(2, []byte(strconv.Itoa(serial+1)))
+		entry.RRecord.RData[2].Value = strconv.Itoa(serial + 1)
+		coreDNS.Entries[i].Entry = entry
 		return nil
 	}
 
