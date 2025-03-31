@@ -30,8 +30,19 @@ export interface DNSRecordOutputs {
 }
 
 export class DNSRecord extends pulumi.dynamic.Resource {
+  public readonly name!: pulumi.Output<string>;
+  public readonly type!: pulumi.Output<DNSRecordType>;
+  public readonly records!: pulumi.Output<string[]>;
+  public readonly ttl!: pulumi.Output<number | undefined>;
+  public readonly createdAt!: pulumi.Output<string>;
+  public readonly updatedAt!: pulumi.Output<string>;
+
   constructor(name: string, props: DNSRecordInputs, opts?: pulumi.CustomResourceOptions) {
     const provider = opts?.provider as any as DNSRecordProvider ?? new DNSRecordProvider();
     super(provider, name, props, opts);
+  }
+
+  get fullname(): pulumi.Output<string> {
+    return this.name.apply((name) => name.endsWith(".sapslaj.xyz") ? name : `${name}.sapslaj.xyz`);
   }
 }
