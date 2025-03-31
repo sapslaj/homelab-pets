@@ -121,9 +121,6 @@ export class ControlPlane extends pulumi.ComponentResource {
             ],
           }),
         ],
-        connectionArgs: {
-          user: baseConfigTrait.distro.username,
-        },
         ...props.nodeConfig,
       }, { parent: this });
 

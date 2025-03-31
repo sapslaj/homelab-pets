@@ -66,9 +66,6 @@ export class NodeGroup extends pulumi.ComponentResource {
           new AnsibleTrait("base", {
             privateKey,
             rolePaths,
-            connection: {
-              user: baseConfigTrait.distro.username,
-            },
             roles: [
               ...roles,
               {

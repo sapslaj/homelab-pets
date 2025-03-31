@@ -169,6 +169,13 @@ export class BaseConfigTrait implements ProxmoxVMTrait {
           ...cloudImageConfig,
         }),
       );
+
+      if (!newProps.connectionArgs?.user) {
+        newProps.connectionArgs = {
+          user: this.distro.username,
+          ...newProps.connectionArgs,
+        };
+      }
     }
 
     if (this.config.dnsRecord !== false && !newProps.traits.find((t) => t instanceof DNSRecordTrait)) {
