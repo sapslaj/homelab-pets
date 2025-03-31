@@ -9,9 +9,11 @@ import { BaseConfigBuilder } from "../common/pulumi/components/ansible/BaseConfi
 import { AnsibleTrait } from "../common/pulumi/components/proxmox-vm/AnsibleTrait";
 import { BaseConfigTrait } from "../common/pulumi/components/proxmox-vm/BaseConfigTrait";
 import { ProxmoxVM, ProxmoxVMProps } from "../common/pulumi/components/proxmox-vm/ProxmoxVM";
+import { DNSRecord } from "../common/pulumi/components/shimiko";
 
 export interface ControlPlaneProps {
-  k3sVersion: string;
+  k3sVersion: pulumi.Input<string>;
+  dnsName?: pulumi.Input<string>;
   nodeCount?: number;
   nodeConfig?: ProxmoxVMProps;
   serverArgs?: pulumi.Input<string>[];
@@ -24,6 +26,10 @@ export class ControlPlane extends pulumi.ComponentResource {
   nodes: ProxmoxVM[];
 
   kubeconfig: pulumi.Output<string>;
+
+  dnsRecord: DNSRecord;
+
+  server: pulumi.Output<string>;
 
   constructor(id: string, props: ControlPlaneProps, opts: pulumi.ComponentResourceOptions = {}) {
     super("sapslaj:k3s:ControlPlane", id, {}, opts);
@@ -65,6 +71,18 @@ export class ControlPlane extends pulumi.ComponentResource {
 
     const baseConfigTrait = new BaseConfigTrait("base", {
       ansible: false,
+    });
+
+    const dnsName = props.dnsName ?? id;
+
+    this.server = pulumi.output(dnsName).apply((dnsName) => {
+      let fullname: string;
+      if (dnsName.endsWith(".sapslaj.xyz")) {
+        fullname = dnsName;
+      } else {
+        fullname = `${dnsName}.sapslaj.xyz`;
+      }
+      return pulumi.interpolate`https://${fullname}:6443`;
     });
 
     const nodeCount = props.nodeCount ?? 3;
@@ -112,9 +130,15 @@ export class ControlPlane extends pulumi.ComponentResource {
       this.nodes.push(node);
     }
 
+    this.dnsRecord = new DNSRecord(id, {
+      name: dnsName,
+      type: "A",
+      records: this.nodes.map((node) => node.ipv4),
+    });
+
     const kubeconfigSlurp = new remote.Command(`${id}-kubeconfig`, {
       connection: {
-        host: this.nodes[0].ipv4,
+        host: this.dnsRecord.fullname,
         user: baseConfigTrait.distro.username,
         privateKey: privateKey.privateKeyOpenssh,
       },
@@ -127,9 +151,5 @@ export class ControlPlane extends pulumi.ComponentResource {
     this.kubeconfig = pulumi.all({ kubeconfig: kubeconfigSlurp.stdout, server: this.server }).apply((
       { kubeconfig, server },
     ) => kubeconfig.replace("https://127.0.0.1:6443", server));
-  }
-
-  get server(): pulumi.Output<string> {
-    return pulumi.interpolate`https://${this.nodes[0].ipv4}:6443`;
   }
 }
