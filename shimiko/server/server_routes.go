@@ -10,40 +10,41 @@ import (
 	"github.com/sapslaj/homelab-pets/shimiko/pkg/persistence"
 )
 
-func (s *Server) routes() {
-	e := s.e
-	e.GET("/", s.root)
-	e.GET("/healthz", s.healthzLiveness)
-	e.GET("/healthz/liveness", s.healthzLiveness)
-	e.GET("/v1/dns-records", s.indexDNSRecords)
-	e.POST("/v1/dns-records", s.upsertDNSRecords)
-	e.PUT("/v1/dns-records", s.upsertDNSRecords)
-	e.PATCH("/v1/dns-records", s.upsertDNSRecords)
-	e.DELETE("/v1/dns-records", s.deleteDNSRecords)
-	e.GET("/v1/dns-records/:type/:name", s.showDNSRecord)
-	e.POST("/v1/dns-records/:type/:name", s.upsertDNSRecord)
-	e.PUT("/v1/dns-records/:type/:name", s.upsertDNSRecord)
-	e.PATCH("/v1/dns-records/:type/:name", s.upsertDNSRecord)
-	e.DELETE("/v1/dns-records/:type/:name", s.deleteDNSRecord)
+func (s *Server) Routes() {
+	e := s.Echo
+	e.GET("/", s.Root)
+	e.GET("/healthz", s.HealthzLiveness)
+	e.GET("/healthz/liveness", s.HealthzLiveness)
+	e.GET("/v1/dns-records", s.IndexDNSRecords)
+	e.POST("/v1/dns-records", s.UpsertDNSRecords)
+	e.PUT("/v1/dns-records", s.UpsertDNSRecords)
+	e.PATCH("/v1/dns-records", s.UpsertDNSRecords)
+	e.DELETE("/v1/dns-records", s.DeleteDNSRecords)
+	e.GET("/v1/dns-records/:type/:name", s.ShowDNSRecord)
+	e.POST("/v1/dns-records/:type/:name", s.UpsertDNSRecord)
+	e.PUT("/v1/dns-records/:type/:name", s.UpsertDNSRecord)
+	e.PATCH("/v1/dns-records/:type/:name", s.UpsertDNSRecord)
+	e.DELETE("/v1/dns-records/:type/:name", s.DeleteDNSRecord)
 }
 
-func (s *Server) root(c echo.Context) error {
+func (s *Server) Root(c echo.Context) error {
 	return c.JSON(200, map[string]any{
 		"msg": "Hello, Sensei! It's Shimiko!",
 	})
 }
 
-func (s *Server) healthzLiveness(c echo.Context) error {
+func (s *Server) HealthzLiveness(c echo.Context) error {
 	return c.JSON(200, map[string]any{
 		"msg": "OK",
 	})
 }
 
-func (s *Server) indexDNSRecords(c echo.Context) error {
+func (s *Server) IndexDNSRecords(c echo.Context) error {
+	logger := s.RequestLogger(c)
 	var records []*persistence.DNSRecord
-	result := s.p.DB.Find(&records)
+	result := s.DB.Find(&records)
 	if result.Error != nil {
-		s.loggerWithEchoContext(c).ErrorContext(
+		logger.ErrorContext(
 			c.Request().Context(),
 			"error retrieving DNSRecords",
 			"error", result.Error,
@@ -55,7 +56,9 @@ func (s *Server) indexDNSRecords(c echo.Context) error {
 	})
 }
 
-func (s *Server) upsertDNSRecords(c echo.Context) error {
+func (s *Server) UpsertDNSRecords(c echo.Context) error {
+	logger := s.RequestLogger(c)
+
 	type bodyType struct {
 		Records []*persistence.DNSRecord `json:"records"`
 	}
@@ -82,9 +85,9 @@ func (s *Server) upsertDNSRecords(c echo.Context) error {
 		Results: []responseResultType{},
 	}
 
-	ps, err := s.p.NewSession(c.Request().Context())
+	ps, err := persistence.NewSession(c.Request().Context(), s.DB)
 	if err != nil {
-		s.loggerWithEchoContext(c).ErrorContext(
+		logger.ErrorContext(
 			c.Request().Context(),
 			"failed to start persistence session",
 			"error", err,
@@ -112,7 +115,7 @@ func (s *Server) upsertDNSRecords(c echo.Context) error {
 		err := record.Upsert(c.Request().Context(), ps)
 		if err != nil {
 			hasError = true
-			s.loggerWithEchoContext(c).ErrorContext(
+			logger.ErrorContext(
 				c.Request().Context(),
 				"error upserting DNSRecord",
 				"error", err,
@@ -133,7 +136,7 @@ func (s *Server) upsertDNSRecords(c echo.Context) error {
 
 	err = ps.Finish(c.Request().Context())
 	if err != nil {
-		s.loggerWithEchoContext(c).ErrorContext(
+		logger.ErrorContext(
 			c.Request().Context(),
 			"failed to finish persistence session",
 			"error", err,
@@ -153,7 +156,9 @@ func (s *Server) upsertDNSRecords(c echo.Context) error {
 	return c.JSON(statusCode, response)
 }
 
-func (s *Server) deleteDNSRecords(c echo.Context) error {
+func (s *Server) DeleteDNSRecords(c echo.Context) error {
+	logger := s.RequestLogger(c)
+
 	type bodyType struct {
 		Records []*persistence.DNSRecord `json:"records"`
 	}
@@ -179,9 +184,9 @@ func (s *Server) deleteDNSRecords(c echo.Context) error {
 		Results: []responseResultType{},
 	}
 
-	ps, err := s.p.NewSession(c.Request().Context())
+	ps, err := persistence.NewSession(c.Request().Context(), s.DB)
 	if err != nil {
-		s.loggerWithEchoContext(c).ErrorContext(
+		logger.ErrorContext(
 			c.Request().Context(),
 			"failed to start persistence session",
 			"error", err,
@@ -198,7 +203,7 @@ func (s *Server) deleteDNSRecords(c echo.Context) error {
 		err := record.Delete(c.Request().Context(), ps)
 		if err != nil {
 			hasError = true
-			s.loggerWithEchoContext(c).ErrorContext(
+			logger.ErrorContext(
 				c.Request().Context(),
 				"error deleting DNSRecord",
 				"error", err,
@@ -219,7 +224,7 @@ func (s *Server) deleteDNSRecords(c echo.Context) error {
 
 	err = ps.Finish(c.Request().Context())
 	if err != nil {
-		s.loggerWithEchoContext(c).ErrorContext(
+		logger.ErrorContext(
 			c.Request().Context(),
 			"failed to finish persistence session",
 			"error", err,
@@ -237,19 +242,21 @@ func (s *Server) deleteDNSRecords(c echo.Context) error {
 	return c.JSON(statusCode, response)
 }
 
-func (s *Server) showDNSRecord(c echo.Context) error {
+func (s *Server) ShowDNSRecord(c echo.Context) error {
+	logger := s.RequestLogger(c)
+
 	typ := c.Param("type")
 	name := c.Param("name")
 
 	var record *persistence.DNSRecord
-	tx := s.p.DB.Where("type = ? and name = ?", typ, name).First(&record)
+	tx := s.DB.Where("type = ? and name = ?", typ, name).First(&record)
 	if tx.Error != nil || record == nil {
 		if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
 			return c.JSON(404, map[string]any{
 				"msg": "not found",
 			})
 		} else {
-			s.loggerWithEchoContext(c).ErrorContext(
+			logger.ErrorContext(
 				c.Request().Context(),
 				"error showing DNSRecord",
 				"error", tx.Error,
@@ -266,7 +273,9 @@ func (s *Server) showDNSRecord(c echo.Context) error {
 	})
 }
 
-func (s *Server) upsertDNSRecord(c echo.Context) error {
+func (s *Server) UpsertDNSRecord(c echo.Context) error {
+	logger := s.RequestLogger(c)
+
 	type responseResultType struct {
 		Record     *persistence.DNSRecord           `json:"record"`
 		Status     string                           `json:"status"`
@@ -311,9 +320,9 @@ func (s *Server) upsertDNSRecord(c echo.Context) error {
 		})
 	}
 
-	ps, err := s.p.NewSession(c.Request().Context())
+	ps, err := persistence.NewSession(c.Request().Context(), s.DB)
 	if err != nil {
-		s.loggerWithEchoContext(c).ErrorContext(
+		logger.ErrorContext(
 			c.Request().Context(),
 			"failed to start persistence session",
 			"error", err,
@@ -327,7 +336,7 @@ func (s *Server) upsertDNSRecord(c echo.Context) error {
 
 	err = body.Record.Upsert(c.Request().Context(), ps)
 	if err != nil {
-		s.loggerWithEchoContext(c).ErrorContext(
+		logger.ErrorContext(
 			c.Request().Context(),
 			"error upserting DNSRecord",
 			"error", err,
@@ -342,7 +351,7 @@ func (s *Server) upsertDNSRecord(c echo.Context) error {
 
 	err = ps.Finish(c.Request().Context())
 	if err != nil {
-		s.loggerWithEchoContext(c).ErrorContext(
+		logger.ErrorContext(
 			c.Request().Context(),
 			"failed to finish persistence session",
 			"error", err,
@@ -360,7 +369,9 @@ func (s *Server) upsertDNSRecord(c echo.Context) error {
 	})
 }
 
-func (s *Server) deleteDNSRecord(c echo.Context) error {
+func (s *Server) DeleteDNSRecord(c echo.Context) error {
+	logger := s.RequestLogger(c)
+
 	type responseResultType struct {
 		Record     *persistence.DNSRecord           `json:"record"`
 		Status     string                           `json:"status"`
@@ -368,9 +379,9 @@ func (s *Server) deleteDNSRecord(c echo.Context) error {
 		Validation *persistence.DNSRecordValidation `json:"validation,omitempty"`
 	}
 
-	ps, err := s.p.NewSession(c.Request().Context())
+	ps, err := persistence.NewSession(c.Request().Context(), s.DB)
 	if err != nil {
-		s.loggerWithEchoContext(c).ErrorContext(
+		logger.ErrorContext(
 			c.Request().Context(),
 			"failed to start persistence session",
 			"error", err,
@@ -389,7 +400,7 @@ func (s *Server) deleteDNSRecord(c echo.Context) error {
 
 	err = record.Delete(c.Request().Context(), ps)
 	if err != nil {
-		s.loggerWithEchoContext(c).ErrorContext(
+		logger.ErrorContext(
 			c.Request().Context(),
 			"error deleting DNSRecord",
 			"error", err,
@@ -404,7 +415,7 @@ func (s *Server) deleteDNSRecord(c echo.Context) error {
 
 	err = ps.Finish(c.Request().Context())
 	if err != nil {
-		s.loggerWithEchoContext(c).ErrorContext(
+		logger.ErrorContext(
 			c.Request().Context(),
 			"failed to finish persistence session",
 			"error", err,

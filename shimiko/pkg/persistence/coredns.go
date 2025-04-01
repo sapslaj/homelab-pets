@@ -28,7 +28,7 @@ type CoreDNS struct {
 	Entries []ast.Node
 }
 
-func (coreDNS *CoreDNS) newClient(host string) (*scp.Client, error) {
+func (coreDNS *CoreDNS) MakeScpClient(host string) (*scp.Client, error) {
 	username, err := env.Get[string]("VYOS_USERNAME")
 	if err != nil {
 		return nil, fmt.Errorf("error getting VYOS_USERNAME: %w", err)
@@ -48,7 +48,7 @@ func (coreDNS *CoreDNS) newClient(host string) (*scp.Client, error) {
 }
 
 func (coreDNS *CoreDNS) LoadZoneFileData(ctx context.Context) ([]byte, error) {
-	client, err := coreDNS.newClient(coreDNSHosts[0])
+	client, err := coreDNS.MakeScpClient(coreDNSHosts[0])
 	if err != nil {
 		return nil, fmt.Errorf("error creating new scp client for CoreDNS: %w", err)
 	}
@@ -66,7 +66,7 @@ func (coreDNS *CoreDNS) LoadZoneFileData(ctx context.Context) ([]byte, error) {
 
 func (coreDNS *CoreDNS) SaveCoreDNSZoneFile(ctx context.Context, data []byte) error {
 	for _, host := range coreDNSHosts {
-		client, err := coreDNS.newClient(host)
+		client, err := coreDNS.MakeScpClient(host)
 		if err != nil {
 			return fmt.Errorf("error creating new scp client for CoreDNS: %w", err)
 		}
@@ -115,7 +115,7 @@ func (coreDNS *CoreDNS) ToBytes(ctx context.Context) ([]byte, error) {
 }
 
 func (coreDNS *CoreDNS) Save(ctx context.Context) error {
-	err := coreDNS.bumpSOASerial()
+	err := coreDNS.BumpSOASerial()
 	if err != nil {
 		return fmt.Errorf("error bumping CoreDNS zone file SOA serial: %w", err)
 	}
@@ -131,7 +131,7 @@ func (coreDNS *CoreDNS) UpsertRecord(ctx context.Context, record *DNSRecord, pre
 		return errors.New("DNSRecord is null")
 	}
 
-	if record.shouldReplace(previous) {
+	if record.ShouldReplace(previous) {
 		err := coreDNS.DeleteRecord(ctx, previous)
 		if err != nil {
 			return fmt.Errorf("error deleting previous record: %w", err)
@@ -187,7 +187,7 @@ func (coreDNS *CoreDNS) DeleteRecord(ctx context.Context, record *DNSRecord) err
 	return nil
 }
 
-func (coreDNS *CoreDNS) bumpSOASerial() error {
+func (coreDNS *CoreDNS) BumpSOASerial() error {
 	for i := range coreDNS.Entries {
 		if !coreDNS.Entries[i].IsRREntry() {
 			continue

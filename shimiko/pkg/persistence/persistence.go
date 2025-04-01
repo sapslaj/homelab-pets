@@ -2,87 +2,36 @@ package persistence
 
 import (
 	"context"
-	"log/slog"
+	"fmt"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
 	"github.com/sapslaj/homelab-pets/shimiko/pkg/env"
+	"github.com/sapslaj/homelab-pets/shimiko/pkg/telemetry"
 )
 
-const DomainName = "sapslaj.xyz"
-
-type Persistence struct {
-	DB           *gorm.DB
-	parentLogger *slog.Logger
-}
-
-func NewPersistence(parentLogger *slog.Logger) (*Persistence, error) {
+func OpenDB(ctx context.Context) (*gorm.DB, error) {
 	databasePath := env.GetDefault("SHIMIKO_DATABASE_PATH", ":memory:")
-	logger := parentLogger.With(
+	logger := telemetry.LoggerFromContext(ctx).With(
 		"database_path", databasePath,
 	)
-	logger.Info("opening database")
+	logger.InfoContext(ctx, "opening database")
 	db, err := gorm.Open(sqlite.Open(databasePath), &gorm.Config{
-		Logger: &gormLoggerAdapter{
-			logger: logger,
+		Logger: &GormLoggerAdapter{
+			Logger: logger,
 		},
 	})
 	if err != nil {
-		return nil, err
+		logger.ErrorContext(ctx, "error opening database", "error", err)
+		return nil, fmt.Errorf("error opening database: %w", err)
 	}
 
-	logger.Info("migrating database")
-	db.AutoMigrate(&DNSRecord{})
-
-	p := &Persistence{
-		DB:           db,
-		parentLogger: logger,
-	}
-
-	return p, nil
-}
-
-func (p *Persistence) logger() *slog.Logger {
-	return p.parentLogger.With()
-}
-
-type PersistenceSession struct {
-	DB           *gorm.DB
-	parentLogger *slog.Logger
-	CoreDNS      *CoreDNS
-	Route53      *Route53
-}
-
-func (p *Persistence) NewSession(ctx context.Context) (*PersistenceSession, error) {
-	ps := &PersistenceSession{
-		DB: p.DB,
-		parentLogger: p.parentLogger,
-	}
-
-	var err error
-	ps.CoreDNS, err = LoadCoreDNS(ctx)
+	logger.InfoContext(ctx, "migrating database")
+	err = db.AutoMigrate(&DNSRecord{})
 	if err != nil {
-		return ps, err
+		logger.ErrorContext(ctx, "error running migrations", "error", err)
+		return db, fmt.Errorf("error running migrations: %w", err)
 	}
-
-	ps.Route53, err = NewRoute53(ctx)
-	if err != nil {
-		return ps, err
-	}
-	ps.Route53.StartChangeBatch()
-
-	return ps, nil
-}
-
-func (ps *PersistenceSession) Finish(ctx context.Context) error {
-	err := ps.CoreDNS.Save(ctx)
-	if err != nil {
-		return err
-	}
-	_, err = ps.Route53.FlushChangeBatch(ctx)
-	if err != nil {
-		return err
-	}
-	return nil
+	return db, nil
 }

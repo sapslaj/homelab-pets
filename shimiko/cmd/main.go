@@ -6,7 +6,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sapslaj/homelab-pets/shimiko/pkg/telemetry"
-	"github.com/sapslaj/homelab-pets/shimiko/server"
 )
 
 func main() {
@@ -18,25 +17,14 @@ func main() {
 	rootCmd.AddCommand(
 		&cobra.Command{
 			Use: "server",
-			Run: func(cmd *cobra.Command, args []string) {
-				server, err := server.NewServer()
-				if err != nil {
-					telemetry.DefaultLogger.Error("error initializing server", "err", err)
-					os.Exit(1)
-				}
-				err = server.Run(cmd.Context())
-				if err != nil {
-					telemetry.DefaultLogger.Error("error starting server", "err", err)
-					os.Exit(1)
-				}
-			},
+			Run: Server,
 		},
 	)
 
 	rootCmd.AddCommand(
 		&cobra.Command{
 			Use: "sync",
-			Run: sync,
+			Run: Sync,
 		},
 	)
 

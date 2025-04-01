@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-var hostnameRegex = regexp.MustCompile(`^[a-z0-9][a-z0-9\.\-]+[a-z0-9]$`)
+var HostnameRegex = regexp.MustCompile(`^[a-z0-9][a-z0-9\.\-]+[a-z0-9]$`)
 
 var SupportedRecordTypes = []string{
 	"A",
@@ -63,7 +63,7 @@ func (record *DNSRecord) Validate() *DNSRecordValidation {
 			len(record.FullHostname())))
 	}
 
-	if !hostnameRegex.MatchString(record.Name) {
+	if !HostnameRegex.MatchString(record.Name) {
 		messages = append(messages, fmt.Sprintf("The name '%s' is not a valid RFC 1123 hostname.", record.Name))
 	}
 
@@ -79,7 +79,7 @@ func (record *DNSRecord) Validate() *DNSRecordValidation {
 	return nil
 }
 
-func (record *DNSRecord) shouldReplace(other *DNSRecord) bool {
+func (record *DNSRecord) ShouldReplace(other *DNSRecord) bool {
 	if other != nil {
 		if record.Name != other.Name || record.Type != other.Type {
 			return true

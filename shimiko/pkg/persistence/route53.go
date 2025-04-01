@@ -67,7 +67,7 @@ func (r53 *Route53) UpsertRecord(ctx context.Context, record *DNSRecord, previou
 		r53.StartChangeBatch()
 	}
 
-	if record.shouldReplace(previous) {
+	if record.ShouldReplace(previous) {
 		err := r53.DeleteRecord(ctx, previous)
 		if err != nil {
 			return err

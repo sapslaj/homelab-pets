@@ -9,9 +9,10 @@ import (
 	"github.com/sapslaj/homelab-pets/shimiko/pkg/telemetry"
 )
 
-func sync(cmd *cobra.Command, args []string) {
-	ctx := cmd.Context()
+func Sync(cmd *cobra.Command, args []string) {
 	logger := telemetry.DefaultLogger.With("cmd", "sync")
+	ctx := telemetry.ContextWithLogger(cmd.Context(), logger)
+
 	fatal := func(msg string, err error) {
 		if err != nil {
 			logger.ErrorContext(ctx, msg, "error", err)
@@ -20,13 +21,14 @@ func sync(cmd *cobra.Command, args []string) {
 		}
 		os.Exit(1)
 	}
-	p, err := persistence.NewPersistence(logger)
+
+	db, err := persistence.OpenDB(ctx)
 	if err != nil {
-		fatal("failed to set persistence", err)
+		fatal("failed to open DB", err)
 	}
-	ps, err := p.NewSession(ctx)
+	ps, err := persistence.NewSession(ctx, db)
 	if err != nil {
-		fatal("failed to set persistence session", err)
+		fatal("failed to create persistence session", err)
 	}
 	defer func() {
 		err := ps.Finish(ctx)
