@@ -19,6 +19,11 @@ func NewErrVarNotFound(name string) *ErrVarNotFound {
 	}
 }
 
+func IsErrVarNotFound(err error) bool {
+	_, ok := err.(*ErrVarNotFound)
+	return ok
+}
+
 type ErrParsing struct {
 	Name       string
 	InnerError error
@@ -56,6 +61,11 @@ func NewErrParsingWrapped(name string, wrapped error) *ErrParsing {
 	}
 }
 
+func IsErrParsing(err error) bool {
+	_, ok := err.(*ErrParsing)
+	return ok
+}
+
 type ErrUnsupportedType struct {
 	Name  string
 	Value any
@@ -69,4 +79,9 @@ func NewErrUnsupportedType(name string) *ErrUnsupportedType {
 	return &ErrUnsupportedType{
 		Name: name,
 	}
+}
+
+func IsErrUnsupportedType(err error) bool {
+	_, ok := err.(*ErrUnsupportedType)
+	return ok
 }

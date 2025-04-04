@@ -20,6 +20,12 @@ func Get[T any](name string) (T, error) {
 	switch interface{}(value).(type) {
 	case string:
 		elem.SetString(raw)
+	case int:
+		valueInt, err := strconv.ParseInt(raw, 10, 0)
+		if err != nil {
+			return value, NewErrParsingWrapped(name, err)
+		}
+		elem.SetInt(valueInt)
 	case int8:
 		valueInt, err := strconv.ParseInt(raw, 10, 8)
 		if err != nil {
@@ -68,6 +74,12 @@ func Get[T any](name string) (T, error) {
 			return value, NewErrParsingWrapped(name, err)
 		}
 		elem.SetUint(valueUint)
+	case uint:
+		valueUint, err := strconv.ParseUint(raw, 10, 0)
+		if err != nil {
+			return value, NewErrParsingWrapped(name, err)
+		}
+		elem.SetUint(valueUint)
 	case float32:
 		valueFloat, err := strconv.ParseFloat(raw, 32)
 		if err != nil {
@@ -100,7 +112,15 @@ func MustGet[T any](name string) T {
 	return value
 }
 
-func GetDefault[T any](name string, defaultValue T) T {
+func GetDefault[T any](name string, defaultValue T) (T, error) {
+	value, err := Get[T](name)
+	if err != nil && IsErrVarNotFound(err) {
+		return defaultValue, nil
+	}
+	return value, err
+}
+
+func MustGetDefault[T any](name string, defaultValue T) T {
 	value, err := Get[T](name)
 	if err != nil {
 		return defaultValue
