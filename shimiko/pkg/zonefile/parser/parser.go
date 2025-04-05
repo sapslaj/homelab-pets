@@ -362,7 +362,7 @@ func Tokenize(entries []ast.Node) ([]token.Token, error) {
 			emit(token.Token{
 				Type:             token.CONTROL_ENTRY,
 				Literal:          []byte("$TTL"),
-				WhiteSpaceBefore: []byte(" "),
+				WhiteSpaceBefore: []byte(""),
 			})
 			emit(token.Token{
 				Type:             token.TTL,
