@@ -7,6 +7,7 @@ import * as pulumi from "@pulumi/pulumi";
 import { directoryHash } from "../common/pulumi/asset-utils";
 import { AnsibleProvisioner } from "../common/pulumi/components/ansible/AnsibleProvisioner";
 import { BaseConfigTrait } from "../common/pulumi/components/proxmox-vm/BaseConfigTrait";
+import { DNSRecordTrait } from "../common/pulumi/components/proxmox-vm/DNSRecordTrait";
 import { ProxmoxVM } from "../common/pulumi/components/proxmox-vm/ProxmoxVM";
 
 const config = new pulumi.Config();
@@ -37,6 +38,10 @@ const vm = new ProxmoxVM("shimiko", {
   ],
 });
 
+export const dnsRecord = DNSRecordTrait.dnsRecordFor(vm);
+
+export const ipv4 = vm.ipv4;
+
 const shimikoBinaryBuild = new local.Command("shimiko-binary-build", {
   create: `go build -o '${__dirname}/ansible/roles/shimiko/files/shimiko' '${__dirname}/cmd'`,
   triggers: [
@@ -55,6 +60,11 @@ new aws.iam.UserPolicyAttachment("shimiko-route53", {
   policyArn: "arn:aws:iam::aws:policy/AmazonRoute53FullAccess",
 });
 
+let acmeURL = "https://acme-staging-v02.api.letsencrypt.org/directory";
+if (production) {
+  acmeURL = "https://acme-v02.api.letsencrypt.org/directory";
+}
+
 new AnsibleProvisioner("shimiko-setup", {
   connection: vm.connection,
   rolePaths: [
@@ -70,6 +80,9 @@ new AnsibleProvisioner("shimiko-setup", {
           AWS_SECRET_ACCESS_KEY: iamKey.secret,
           VYOS_USERNAME: process.env.VYOS_USERNAME, // FIXME: don't do this.
           VYOS_PASSWORD: process.env.VYOS_PASSWORD, // FIXME: don't do this.
+          SHIMIKO_ACME_EMAIL: "alerts@sapslaj.com",
+          SHIMIKO_ACME_URL: acmeURL,
+          SHIMIKO_CERT_DOMAINS: dnsRecord.fullname,
         },
       },
     },
