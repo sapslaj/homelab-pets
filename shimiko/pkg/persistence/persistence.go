@@ -12,7 +12,7 @@ import (
 )
 
 func OpenDB(ctx context.Context) (*gorm.DB, error) {
-	databasePath := env.GetDefault("SHIMIKO_DATABASE_PATH", ":memory:")
+	databasePath := env.MustGetDefault("SHIMIKO_DATABASE_PATH", "./shimiko.sqlite3")
 	logger := telemetry.LoggerFromContext(ctx).With(
 		"database_path", databasePath,
 	)

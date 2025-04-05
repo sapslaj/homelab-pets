@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53/types"
 )
 
-const route53HostedZoneId = "Z00048261CEI1B6JY63KT"
+const Route53HostedZoneId = "Z00048261CEI1B6JY63KT"
 
 type Route53 struct {
 	Client      *route53.Client
@@ -48,7 +48,7 @@ func (r53 *Route53) FlushChangeBatch(ctx context.Context) (*route53.ChangeResour
 		return nil, nil
 	}
 	output, err := r53.Client.ChangeResourceRecordSets(ctx, &route53.ChangeResourceRecordSetsInput{
-		HostedZoneId: aws.String(route53HostedZoneId),
+		HostedZoneId: aws.String(Route53HostedZoneId),
 		ChangeBatch:  r53.ChangeBatch,
 	})
 	if err == nil {
@@ -119,7 +119,7 @@ func (r53 *Route53) DeleteRecord(ctx context.Context, record *DNSRecord) error {
 	var nextRecordIdentifier *string
 	for isTruncated {
 		existingQuery, err := r53.Client.ListResourceRecordSets(ctx, &route53.ListResourceRecordSetsInput{
-			HostedZoneId: aws.String(route53HostedZoneId),
+			HostedZoneId:          aws.String(Route53HostedZoneId),
 			StartRecordIdentifier: nextRecordIdentifier,
 		})
 		isTruncated = existingQuery.IsTruncated

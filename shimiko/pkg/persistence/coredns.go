@@ -19,7 +19,7 @@ import (
 	"github.com/sapslaj/homelab-pets/shimiko/pkg/zonefile/token"
 )
 
-var coreDNSHosts = []string{
+var CoreDNSHosts = []string{
 	"rem.sapslaj.xyz",
 	"ram.sapslaj.xyz",
 }
@@ -48,7 +48,7 @@ func (coreDNS *CoreDNS) MakeScpClient(host string) (*scp.Client, error) {
 }
 
 func (coreDNS *CoreDNS) LoadZoneFileData(ctx context.Context) ([]byte, error) {
-	client, err := coreDNS.MakeScpClient(coreDNSHosts[0])
+	client, err := coreDNS.MakeScpClient(CoreDNSHosts[0])
 	if err != nil {
 		return nil, fmt.Errorf("error creating new scp client for CoreDNS: %w", err)
 	}
@@ -59,13 +59,13 @@ func (coreDNS *CoreDNS) LoadZoneFileData(ctx context.Context) ([]byte, error) {
 	buffer := &bytes.Buffer{}
 	err = client.CopyFromRemotePassThru(ctx, buffer, "/etc/coredns/sapslaj.xyz.zone", nil)
 	if err != nil {
-		return nil, fmt.Errorf("error copying file from remote '%s' for CoreDNS: %w", coreDNSHosts[0], err)
+		return nil, fmt.Errorf("error copying file from remote '%s' for CoreDNS: %w", CoreDNSHosts[0], err)
 	}
 	return buffer.Bytes(), nil
 }
 
 func (coreDNS *CoreDNS) SaveCoreDNSZoneFile(ctx context.Context, data []byte) error {
-	for _, host := range coreDNSHosts {
+	for _, host := range CoreDNSHosts {
 		client, err := coreDNS.MakeScpClient(host)
 		if err != nil {
 			return fmt.Errorf("error creating new scp client for CoreDNS: %w", err)
