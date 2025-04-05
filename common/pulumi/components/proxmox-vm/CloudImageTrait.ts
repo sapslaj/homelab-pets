@@ -22,10 +22,10 @@ export interface CloudImageTraitConfig {
 export class CloudImageTrait implements ProxmoxVMTrait {
   static traitStore = {
     file: Symbol("file"),
-  }
+  };
 
   static fileFor(vm: ProxmoxVM): proxmoxve.download.File {
-    return vm._traitStore[CloudImageTrait.traitStore.file]!
+    return vm._traitStore[CloudImageTrait.traitStore.file]!;
   }
 
   name: string;
@@ -53,9 +53,14 @@ export class CloudImageTrait implements ProxmoxVMTrait {
       contentType: "iso",
       datastoreId: "local",
       nodeName: args.nodeName,
-      fileName: `${name}-${this.name}.img`,
+      fileName: `${args.name ?? name}-${this.name}.img`,
       ...this.config.downloadFileConfig,
-    }, { parent });
+    }, {
+      parent,
+      ignoreChanges: [
+        "fileName",
+      ],
+    });
     parent._traitStore[CloudImageTrait.traitStore.file] = file;
     return proxmoxVMArgsAddDisk(args, [
       {
