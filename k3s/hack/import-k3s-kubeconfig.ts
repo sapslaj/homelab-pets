@@ -71,6 +71,7 @@ function mergeList(list: any[], append: any, name: string) {
       ...process.env,
       ANSIBLE_LOAD_CALLBACK_PLUGINS: "1",
       ANSIBLE_STDOUT_CALLBACK: "json",
+      ANSIBLE_HOST_KEY_CHECKING: "False",
     },
     encoding: "utf8",
   });
