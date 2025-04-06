@@ -11,6 +11,7 @@
     name:
       - snapd
       - lxc
+      - ubuntu-pro-client
     state: absent
     autoremove: true
     clean: true
@@ -25,3 +26,21 @@
       Pin: release a=*
       Pin-Priority: -10
   when: ansible_distribution in ["Ubuntu", "Linux Mint"]
+
+- name: check for motd-news
+  stat:
+    path: /etc/default/motd-news
+  register: motd_news
+
+- when: motd_news.stat.exists
+  block:
+    - name: disable motd-news
+      lineinfile:
+        path: /etc/default/motd-news
+        line: ENABLED=0
+        regexp: ^ENABLED
+    - name: clear motd-news urls just in case
+      lineinfile:
+        path: /etc/default/motd-news
+        line: URLS=""
+        regexp: ^URLS=
