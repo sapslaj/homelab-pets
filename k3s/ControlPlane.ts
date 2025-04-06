@@ -21,6 +21,14 @@ export interface ControlPlaneProps {
 }
 
 export class ControlPlane extends pulumi.ComponentResource {
+  k3sVersion: pulumi.Output<string>;
+
+  dnsName: pulumi.Output<string>;
+
+  dnsFullname: pulumi.Output<string>;
+
+  nodeCount: number;
+
   k3sToken: pulumi.Output<string>;
 
   nodes: ProxmoxVM[];
@@ -33,6 +41,8 @@ export class ControlPlane extends pulumi.ComponentResource {
 
   constructor(id: string, props: ControlPlaneProps, opts: pulumi.ComponentResourceOptions = {}) {
     super("sapslaj:k3s:ControlPlane", id, {}, opts);
+
+    this.k3sVersion = pulumi.output(props.k3sVersion);
 
     const k3sToken = new random.RandomPassword(`${id}-k3s-token`, {
       length: 64,
@@ -73,30 +83,61 @@ export class ControlPlane extends pulumi.ComponentResource {
       ansible: false,
     });
 
-    const dnsName = props.dnsName ?? id;
+    this.dnsName = pulumi.output(props.dnsName ?? id);
 
-    this.server = pulumi.output(dnsName).apply((dnsName) => {
-      let fullname: string;
+    this.dnsFullname = this.dnsName.apply((dnsName) => {
       if (dnsName.endsWith(".sapslaj.xyz")) {
-        fullname = dnsName;
+        return dnsName;
       } else {
-        fullname = `${dnsName}.sapslaj.xyz`;
+        return `${dnsName}.sapslaj.xyz`;
       }
-      return pulumi.interpolate`https://${fullname}:6443`;
     });
 
-    const nodeCount = props.nodeCount ?? 3;
+    this.server = this.dnsFullname.apply((dnsFullname) => {
+      return pulumi.interpolate`https://${dnsFullname}:6443`;
+    });
 
-    for (let i = 1; i <= nodeCount; i++) {
+    this.nodeCount = props.nodeCount ?? 3;
+
+    for (let i = 1; i <= this.nodeCount; i++) {
       const serverArgs: pulumi.Input<string>[] = [
         ...(props.serverArgs ?? []),
       ];
       if (i == 1) {
-        serverArgs.push("--cluster-init");
+        serverArgs.push(
+          pulumi.all({ dnsName: this.dnsName, server: this.server }).apply(async ({ dnsName, server }) => {
+            const req = await fetch(`https://shimiko.sapslaj.xyz/v1/dns-records/A/${dnsName}`);
+            if (req.status === 404) {
+              return "--cluster-init";
+            }
+
+            if (req.status !== 200) {
+              throw new Error(`shimiko is wack (${req.status}): ${await req.text()}`);
+            }
+
+            return `--server ${server}`;
+          }),
+        );
       } else {
-        serverArgs.push("--server");
-        serverArgs.push(this.server);
+        serverArgs.push(
+          pulumi.all({ dnsName: this.dnsName, server: this.server, node1: this.nodes[0].ipv4 }).apply(
+            async ({ dnsName, server, node1 }) => {
+              const req = await fetch(`https://shimiko.sapslaj.xyz/v1/dns-records/A/${dnsName}`);
+              if (req.status === 404) {
+                return `--server https://${node1}:6443`;
+              }
+
+              if (req.status !== 200) {
+                throw new Error(`shimiko is wack (${req.status}): ${await req.text()}`);
+              }
+
+              return `--server ${server}`;
+            },
+          ),
+        );
       }
+
+      serverArgs.push("--tls-san", this.dnsFullname);
 
       const node = new ProxmoxVM(`${id}-${i}`, {
         traits: [
@@ -122,13 +163,16 @@ export class ControlPlane extends pulumi.ComponentResource {
           }),
         ],
         ...props.nodeConfig,
-      }, { parent: this });
+      }, {
+        parent: this,
+        dependsOn: [...this.nodes],
+      });
 
       this.nodes.push(node);
     }
 
     this.dnsRecord = new DNSRecord(id, {
-      name: dnsName,
+      name: this.dnsName,
       type: "A",
       records: this.nodes.map((node) => node.ipv4),
     });
