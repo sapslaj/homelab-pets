@@ -94,7 +94,7 @@ export class DNSRecordProvider
     }
 
     return {
-      inputs: news,
+      inputs: stripUndefined(news),
       failures: failures,
     };
   }
@@ -124,7 +124,7 @@ export class DNSRecordProvider
     }
     return {
       id: this.recordId(inputs),
-      outs,
+      outs: stripUndefined(outs),
     };
   }
 
@@ -188,7 +188,7 @@ export class DNSRecordProvider
       outs.ttl = record.ttl;
     }
     return {
-      outs,
+      outs: stripUndefined(outs),
     };
   }
 
@@ -237,7 +237,7 @@ export class DNSRecordProvider
     }
     return {
       id: this.recordId(body.record),
-      props: {
+      props: stripUndefined({
         ...props,
         name: body.record.name,
         type: body.record.type,
@@ -245,7 +245,17 @@ export class DNSRecordProvider
         ttl: body.record.ttl,
         createdAt: body.record.created_at,
         updatedAt: body.record.updated_at,
-      },
+      }),
     };
   }
+}
+
+export function stripUndefined<T extends Record<string, any>>(obj: T): T {
+  let res: any = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (value !== undefined) {
+      res[key] = value;
+    }
+  }
+  return res as T;
 }
