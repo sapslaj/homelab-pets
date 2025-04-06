@@ -94,7 +94,7 @@ func (record *DNSRecord) Upsert(ctx context.Context, ps *PersistenceSession) err
 		if record.Name == "" || record.Type == "" {
 			return errors.New("DNS record must have name and type set")
 		}
-		ps.DB.Where("name = ? AND type = ?", record.Name, record.Type).First(&existing)
+		ps.DB.Unscoped().Where("name = ? AND type = ?", record.Name, record.Type).First(&existing)
 	} else {
 		ps.DB.Where("id = ?", record.ID).First(&existing)
 	}
@@ -108,9 +108,7 @@ func (record *DNSRecord) Upsert(ctx context.Context, ps *PersistenceSession) err
 		if record.UpdatedAt.IsZero() {
 			record.UpdatedAt = existing.UpdatedAt
 		}
-		if record.DeletedAt.Time.IsZero() {
-			record.DeletedAt = existing.DeletedAt
-		}
+		record.DeletedAt = gorm.DeletedAt{}
 		if record.Name == "" {
 			record.Name = existing.Name
 		}
