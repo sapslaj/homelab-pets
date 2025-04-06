@@ -1,10 +1,10 @@
 import * as proxmoxve from "@muhlba91/pulumi-proxmoxve";
 import * as proxmoxve_inputs from "@muhlba91/pulumi-proxmoxve/types/input";
 import { VirtualMachineArgs } from "@muhlba91/pulumi-proxmoxve/vm";
+import { remote as remote_inputs } from "@pulumi/command/types/input";
 import * as pulumi from "@pulumi/pulumi";
 import * as random from "@pulumi/random";
 import * as std from "@pulumi/std";
-import { remote as remote_inputs } from "@pulumi/command/types/input";
 
 import { GuestAgentHostLookup, IHostLookup, VyosLeasesHostLookup } from "./host-lookup";
 import { ProxmoxVMTrait } from "./ProxmoxVMTrait";
@@ -240,21 +240,8 @@ export function proxmoxVMArgsAddDisk(
   const newDisks: proxmoxve_inputs.VM.VirtualMachineDisk[] = disks.map((diskConfig) => {
     let discard = diskConfig.discard === undefined ? undefined : proxmoxVMDiskDiscard(diskConfig.discard);
 
-    let speed = diskConfig.speed === undefined ? undefined : {
-      iopsRead: 0,
-      iopsReadBurstable: 0,
-      iopsWrite: 0,
-      iopsWriteBurstable: 0,
-      read: 0,
-      readBurstable: 0,
-      write: 0,
-      writeBurstable: 0,
-      ...diskConfig.speed,
-    };
-
     return {
       ...diskConfig,
-      speed,
       discard,
     };
   });
@@ -623,13 +610,13 @@ export class ProxmoxVM extends pulumi.ComponentResource {
         ],
       }).result;
 
-      this.userDataFile = new proxmoxve.storage.File(`${id}-user-data-file`, {
+      this.userDataFile = new proxmoxve.storage.File(id, {
         datastoreId: "local",
         nodeName: config.nodeName!,
         contentType: "snippets",
         ...mutatedProps.userDataFileConfig,
         sourceRaw: {
-          fileName: `${id}-user-data.yaml`,
+          fileName: `${name}-user-data.yaml`,
           data,
           ...mutatedProps.userDataFileConfig?.sourceRaw,
         },
@@ -664,9 +651,8 @@ export class ProxmoxVM extends pulumi.ComponentResource {
     this.machine = new proxmoxve.vm.VirtualMachine(`${id}-vm`, config as VirtualMachineArgs, {
       parent: this,
       ignoreChanges: [
-        // HACK: because the provider thinks there are new CDROMs when it's
-        // just cloud-init
-        ...(config.initialization !== undefined ? ["cdrom"] : []),
+        // HACK: because the provider always thinks there is a diff with the speed
+        "disks[0].speed",
       ],
     });
     this.name = pulumi.output(name);
@@ -691,6 +677,6 @@ export class ProxmoxVM extends pulumi.ComponentResource {
     return {
       host: this.ipv4,
       ...this.connectionArgs,
-    }
+    };
   }
 }
