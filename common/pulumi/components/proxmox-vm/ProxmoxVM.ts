@@ -410,33 +410,33 @@ export interface ProxmoxVMProps extends Omit<proxmoxve.vm.VirtualMachineArgs, "c
   connectionArgs?: Partial<remote_inputs.ConnectionArgs>;
   userData?: Record<string, any>;
   userDataFileConfig?: Partial<proxmoxve.storage.FileArgs>;
-  acpi?: boolean;
+  acpi?: pulumi.Input<boolean>;
   agent?: ProxmoxVMAgentConfig;
   audioDevice?: ProxmoxVMAudioDeviceConfig;
   bios?: ProxmoxVMBiosType;
-  bootOrder?: string[];
+  bootOrder?: pulumi.Input<pulumi.Input<string>[]>;
   cpu?: ProxmoxVMCPUConfig;
-  description?: string;
+  description?: pulumi.Input<string>;
   disks?: ProxmoxVMDiskConfig[];
   efiDisk?: ProxmoxVMEFIDiskConfig;
   tpmState?: ProxmoxVMTPMState;
   keyboardLayout?: ProxmoxVMKeyboardLayout;
-  kvmArguments?: string;
+  kvmArguments?: pulumi.Input<string>;
   machine?: ProxmoxVMMachine;
-  migrate?: boolean;
-  name?: string;
+  migrate?: pulumi.Input<boolean>;
+  name?: pulumi.Input<string>;
   networkDevices?: ProxmoxVMNetworkDeviceConfig[];
-  nodeName?: string;
-  onBoot?: boolean;
+  nodeName?: pulumi.Input<string>;
+  onBoot?: pulumi.Input<boolean>;
   operatingSystem?: ProxmoxVMOperatingSystemConfig;
-  poolId?: string;
-  reboot?: boolean;
+  poolId?: pulumi.Input<string>;
+  reboot?: pulumi.Input<boolean>;
   scsiHardware?: ProxmoxVMSCSIHardware;
-  started?: boolean;
-  tabletDevice?: boolean;
-  tags?: string[];
-  template?: boolean;
-  stopOnDestroy?: boolean;
+  started?: pulumi.Input<boolean>;
+  tabletDevice?: pulumi.Input<boolean>;
+  tags?: pulumi.Input<pulumi.Input<string>[]>;
+  template?: pulumi.Input<boolean>;
+  stopOnDestroy?: pulumi.Input<boolean>;
   timeout?: ProxmoxVMTimeoutConfig;
   vga?: ProxmoxVMVGAConfig;
 }
@@ -600,15 +600,12 @@ export class ProxmoxVM extends pulumi.ComponentResource {
         };
       }
 
-      const data = std.joinOutput({
-        separator: "\n",
-        input: [
-          "#cloud-config\n",
-          std.jsonencodeOutput({
-            input: userData,
-          }).result,
-        ],
-      }).result;
+      const data = pulumi.concat(
+        "#cloud-config\n",
+        std.jsonencodeOutput({
+          input: userData,
+        }).result,
+      );
 
       this.userDataFile = new proxmoxve.storage.File(id, {
         datastoreId: "local",
@@ -616,7 +613,7 @@ export class ProxmoxVM extends pulumi.ComponentResource {
         contentType: "snippets",
         ...mutatedProps.userDataFileConfig,
         sourceRaw: {
-          fileName: `${name}-user-data.yaml`,
+          fileName: pulumi.interpolate`${name}-user-data.yaml`,
           data,
           ...mutatedProps.userDataFileConfig?.sourceRaw,
         },

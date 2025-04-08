@@ -53,7 +53,7 @@ export class CloudImageTrait implements ProxmoxVMTrait {
       contentType: "iso",
       datastoreId: "local",
       nodeName: args.nodeName,
-      fileName: `${args.name ?? name}-${this.name}.img`,
+      fileName: pulumi.interpolate`${args.name ?? name}-${this.name}.img`,
       ...this.config.downloadFileConfig,
     }, {
       parent,
