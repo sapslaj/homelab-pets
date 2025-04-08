@@ -9,6 +9,7 @@
   file sapslaj.xyz.zone sapslaj.xyz {
     reload 1m
   }
+  loadbalance round_robin
   forward . tls://1.1.1.1 tls://1.0.0.1 {
     tls_servername cloudflare-dns.com
   }
