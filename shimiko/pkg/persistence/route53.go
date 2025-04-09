@@ -122,11 +122,11 @@ func (r53 *Route53) DeleteRecord(ctx context.Context, record *DNSRecord) error {
 			HostedZoneId:          aws.String(Route53HostedZoneId),
 			StartRecordIdentifier: nextRecordIdentifier,
 		})
-		isTruncated = existingQuery.IsTruncated
-		nextRecordIdentifier = existingQuery.NextRecordIdentifier
 		if err != nil {
 			return err
 		}
+		isTruncated = existingQuery.IsTruncated
+		nextRecordIdentifier = existingQuery.NextRecordIdentifier
 		for _, rr := range existingQuery.ResourceRecordSets {
 			if record.Name == *rr.Name && record.Type == string(rr.Type) {
 				r53.AddToChangeBatch(types.Change{
