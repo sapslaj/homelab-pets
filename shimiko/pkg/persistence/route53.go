@@ -115,9 +115,9 @@ func (r53 *Route53) DeleteRecord(ctx context.Context, record *DNSRecord) error {
 		r53.StartChangeBatch()
 	}
 
-	isTruncated := true
 	var nextRecordIdentifier *string
-	for isTruncated {
+	// FIXME: figure out why this is infinite looping
+	for i := 0; i < 1000; i++ {
 		existingQuery, err := r53.Client.ListResourceRecordSets(ctx, &route53.ListResourceRecordSetsInput{
 			HostedZoneId:          aws.String(Route53HostedZoneId),
 			StartRecordIdentifier: nextRecordIdentifier,
@@ -125,7 +125,6 @@ func (r53 *Route53) DeleteRecord(ctx context.Context, record *DNSRecord) error {
 		if err != nil {
 			return err
 		}
-		isTruncated = existingQuery.IsTruncated
 		nextRecordIdentifier = existingQuery.NextRecordIdentifier
 		for _, rr := range existingQuery.ResourceRecordSets {
 			if record.Name == *rr.Name && record.Type == string(rr.Type) {
@@ -134,6 +133,9 @@ func (r53 *Route53) DeleteRecord(ctx context.Context, record *DNSRecord) error {
 					ResourceRecordSet: &rr,
 				})
 			}
+		}
+		if existingQuery.IsTruncated {
+			break
 		}
 	}
 
