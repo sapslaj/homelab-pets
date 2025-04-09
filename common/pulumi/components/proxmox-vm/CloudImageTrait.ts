@@ -67,6 +67,7 @@ export class CloudImageTrait implements ProxmoxVMTrait {
         datastoreId: "local-lvm",
         fileId: file.id,
         interface: "scsi0",
+        ...this.config.diskConfig,
       },
     ]);
   }

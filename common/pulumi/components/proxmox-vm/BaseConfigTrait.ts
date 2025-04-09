@@ -83,7 +83,7 @@ export interface BaseConfigTraitConfig {
   cloudImage?:
     | boolean
     | Partial<CloudImageTraitConfig> & {
-      downloadFileConfig: Partial<CloudImageTraitConfigDownloadFileConfig>;
+      downloadFileConfig?: Partial<CloudImageTraitConfigDownloadFileConfig>;
     };
 
   ansible?: boolean | BaseConfigTraitAnsibleConfig;
