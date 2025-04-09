@@ -18,19 +18,21 @@ export interface DNSRecordProviderOutputs extends DNSRecordProviderInputs {
   updatedAt: string;
 }
 
+export const defaultEndpoint = "https://shimiko.sapslaj.xyz";
+
 export class DNSRecordProvider
   implements pulumi.dynamic.ResourceProvider<DNSRecordProviderInputs, DNSRecordProviderOutputs>
 {
   constructor(public config: DNSRecordProviderConfig = {}) {
     if (!this.config.shimikoEndpoint) {
-      this.config.shimikoEndpoint = "http://shimiko.sapslaj.xyz";
+      this.config.shimikoEndpoint = defaultEndpoint;
     }
   }
 
   get shimikoEndpoint(): string {
     let endpoint = this.config.shimikoEndpoint;
     if (!endpoint) {
-      endpoint = "http://shimiko.sapslaj.xyz";
+      endpoint = defaultEndpoint;
     }
     if (!endpoint.endsWith("/")) {
       endpoint += "/";
