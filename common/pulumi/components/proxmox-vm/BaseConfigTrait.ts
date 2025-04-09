@@ -8,12 +8,18 @@ import { ProxmoxVMTrait } from "./ProxmoxVMTrait";
 export interface IDistro {
   url: string;
   username: string;
+  ansibleInstallCommand?: string;
 }
 
 export class Distro implements IDistro {
   static UBUNTU_24_04 = new Distro({
     url: "https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img",
     username: "ubuntu",
+    ansibleInstallCommand: [
+      "export DEBIAN_FRONTEND=noninteractive",
+      "with_backoff sudo apt-get update",
+      "with_backoff sudo apt-get install -y ansible git",
+    ].join(" && "),
   });
 
   static UBUNTU_NOBLE = Distro.UBUNTU_24_04;
@@ -21,6 +27,11 @@ export class Distro implements IDistro {
   static DEBIAN_12 = new Distro({
     url: "https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-genericcloud-amd64.qcow2",
     username: "debian",
+    ansibleInstallCommand: [
+      "export DEBIAN_FRONTEND=noninteractive",
+      "with_backoff sudo apt-get update",
+      "with_backoff sudo apt-get install -y ansible git",
+    ].join(" && "),
   });
 
   static DEBIAN_BOOKWORM = Distro.DEBIAN_12;
@@ -28,6 +39,7 @@ export class Distro implements IDistro {
   static ALPINE_3_21_2 = new Distro({
     url: "https://dl-cdn.alpinelinux.org/alpine/v3.21/releases/cloud/nocloud_alpine-3.21.2-x86_64-bios-tiny-r0.qcow2",
     username: "alpine",
+    ansibleInstallCommand: "with_backoff sudo apk add ansible git",
   });
 
   static ALPINE_3_21 = Distro.ALPINE_3_21_2;
@@ -35,10 +47,12 @@ export class Distro implements IDistro {
 
   url: string;
   username: string;
+  ansibleInstallCommand?: string;
 
   constructor(distro: IDistro) {
     this.url = distro.url;
     this.username = distro.username;
+    this.ansibleInstallCommand = distro.ansibleInstallCommand;
   }
 }
 
@@ -190,6 +204,9 @@ export class BaseConfigTrait implements ProxmoxVMTrait {
           user: this.distro.username,
           ...newProps.connectionArgs,
         };
+      }
+      if (ansibleConfig.ansibleInstallCommand === undefined) {
+        ansibleConfig.ansibleInstallCommand = this.distro.ansibleInstallCommand;
       }
       newProps.traits.push(
         new AnsibleTrait(`${this.name}-ansible`, ansibleConfig),
