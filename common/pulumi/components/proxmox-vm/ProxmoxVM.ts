@@ -439,6 +439,7 @@ export interface ProxmoxVMProps extends Omit<proxmoxve.vm.VirtualMachineArgs, "c
   stopOnDestroy?: pulumi.Input<boolean>;
   timeout?: ProxmoxVMTimeoutConfig;
   vga?: ProxmoxVMVGAConfig;
+  ignoreChanges?: string[];
 }
 
 export class ProxmoxVM extends pulumi.ComponentResource {
@@ -648,6 +649,7 @@ export class ProxmoxVM extends pulumi.ComponentResource {
     this.machine = new proxmoxve.vm.VirtualMachine(`${id}-vm`, config as VirtualMachineArgs, {
       parent: this,
       ignoreChanges: [
+        ...(props.ignoreChanges ?? []),
         // HACK: because the provider always thinks there is a diff with the speed
         "disks[0].speed",
       ],
