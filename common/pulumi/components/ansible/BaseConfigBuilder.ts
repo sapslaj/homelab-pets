@@ -1,6 +1,6 @@
 import * as path from "path";
 
-import { AnsiblePlaybookRole, AnsibleProvisionerProps } from "./AnsibleProvisioner";
+import { AnsiblePlaybookRole, AnsibleProvisionerProps } from "@sapslaj/pulumi-ansible-provisioner";
 
 export interface BaseRsyncBackupJobConfig {
   src: string;

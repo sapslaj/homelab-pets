@@ -1,7 +1,8 @@
 import * as proxmoxve from "@muhlba91/pulumi-proxmoxve";
 import * as tls from "@pulumi/tls";
 
-import { AnsibleProvisioner, AnsibleProvisionerProps } from "../ansible/AnsibleProvisioner";
+import { AnsibleProvisioner, AnsibleProvisionerProps } from "@sapslaj/pulumi-ansible-provisioner";
+
 import { PrivateKeyTrait, PrivateKeyTraitConfig } from "./PrivateKeyTrait";
 import { ProxmoxVM, ProxmoxVMProps } from "./ProxmoxVM";
 import { ProxmoxVMTrait } from "./ProxmoxVMTrait";
