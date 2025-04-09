@@ -646,7 +646,7 @@ export class ProxmoxVM extends pulumi.ComponentResource {
       config = trait.forArgs(config as VirtualMachineArgs, id, this);
     });
 
-    this.machine = new proxmoxve.vm.VirtualMachine(`${id}-vm`, config as VirtualMachineArgs, {
+    this.machine = new proxmoxve.vm.VirtualMachine(id, config as VirtualMachineArgs, {
       parent: this,
       ignoreChanges: [
         ...(props.ignoreChanges ?? []),
