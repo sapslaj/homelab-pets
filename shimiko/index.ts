@@ -3,9 +3,9 @@ import * as path from "path";
 import * as aws from "@pulumi/aws";
 import { local } from "@pulumi/command";
 import * as pulumi from "@pulumi/pulumi";
+import { AnsibleProvisioner } from "@sapslaj/pulumi-ansible-provisioner";
 
 import { directoryHash } from "../common/pulumi/asset-utils";
-import { AnsibleProvisioner } from "../common/pulumi/components/ansible/AnsibleProvisioner";
 import { BaseConfigTrait } from "../common/pulumi/components/proxmox-vm/BaseConfigTrait";
 import { DNSRecordTrait } from "../common/pulumi/components/proxmox-vm/DNSRecordTrait";
 import { ProxmoxVM } from "../common/pulumi/components/proxmox-vm/ProxmoxVM";
@@ -70,6 +70,15 @@ new AnsibleProvisioner("shimiko-setup", {
   rolePaths: [
     path.join(__dirname, "ansible/roles"),
   ],
+  preTasks: production
+    ? [
+      {
+        shell: {
+          cmd: `if [ ! -d /var/shimiko ]; then cp -rv /mnt/exos/volumes/shimiko/shimiko-data/shimiko /var/ ; fi`,
+        },
+      },
+    ]
+    : [],
   roles: [
     {
       role: "shimiko",
