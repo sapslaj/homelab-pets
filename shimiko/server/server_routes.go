@@ -296,6 +296,13 @@ func (s *Server) UpsertDNSRecord(c echo.Context) error {
 		})
 	}
 
+	if body.Record == nil {
+		return c.JSON(400, responseResultType{
+			Status: "ERROR",
+			Error:  "no record present in request body",
+		})
+	}
+
 	if body.Record.Type != c.Param("type") {
 		return c.JSON(400, responseResultType{
 			Record: body.Record,
