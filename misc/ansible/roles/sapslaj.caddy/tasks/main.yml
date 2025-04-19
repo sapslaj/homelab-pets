@@ -1,0 +1,75 @@
+- name: install xcaddy deps
+  apt:
+    state: present
+    name:
+      - apt-transport-https
+      - curl
+      - debian-archive-keyring
+      - debian-keyring
+      - golang-go
+
+- name: download cloudsmith GPG key
+  shell:
+    cmd: "curl -1sLf 'https://dl.cloudsmith.io/public/caddy/xcaddy/gpg.key' | sudo gpg --dearmor -o /usr/share/keyrings/caddy-xcaddy-archive-keyring.gpg"
+    creates: /usr/share/keyrings/caddy-xcaddy-archive-keyring.gpg
+
+- name: install cloudsmith apt repo
+  shell:
+    cmd: "curl -1sLf 'https://dl.cloudsmith.io/public/caddy/xcaddy/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-xcaddy.list"
+    creates: /etc/apt/sources.list.d/caddy-xcaddy.list
+
+- name: install xcaddy
+  apt:
+    state: latest
+    name: xcaddy
+    update_cache: true
+
+- name: create /etc/sysconfig
+  file:
+    path: /etc/sysconfig
+    state: directory
+
+- name: copy /etc/sysconfig/caddy.env
+  template:
+    src: caddy.env.j2
+    dest: /etc/sysconfig/caddy.env
+  notify:
+    - restart caddy.service
+
+- name: create /etc/caddy
+  file:
+    path: /etc/caddy
+    state: directory
+  notify:
+    - restart caddy.service
+
+- name: copy /etc/caddy/Caddyfile
+  template:
+    src: Caddyfile.j2
+    dest: /etc/caddy/Caddyfile
+  notify:
+    - restart caddy.service
+
+- name: copy /usr/local/sbin/caddy.sh
+  template:
+    src: caddy.sh.j2
+    dest: /usr/local/sbin/caddy.sh
+    mode: a+x
+  notify:
+    - restart caddy.service
+
+- name: copy /etc/systemd/system/caddy.service
+  copy:
+    src: caddy.service
+    dest: /etc/systemd/system/caddy.service
+  notify:
+    - restart caddy.service
+
+- meta: flush_handlers
+
+- name: enable caddy.service
+  systemd:
+    name: caddy.service
+    state: started
+    enabled: true
+    daemon_reload: true

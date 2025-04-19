@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -euxo pipefail
+: "${HOME:=/root}"
+export HOME
+xcaddy build {{ caddy_version }} --output /usr/local/bin/caddy {{ caddy_xcaddy_build_args }}
+/usr/local/bin/caddy run --config /etc/caddy/Caddyfile

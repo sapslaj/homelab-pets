@@ -1,0 +1,14 @@
+[Unit]
+Description=Caddy
+After=network-online.target
+
+[Service]
+Type=simple
+EnvironmentFile=/etc/sysconfig/caddy.env
+WorkingDirectory=/etc/caddy
+ExecStart=/usr/local/sbin/caddy.sh
+Restart=always
+RestartSec=1
+
+[Install]
+WantedBy=multi-user.target
