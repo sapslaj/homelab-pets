@@ -15,7 +15,10 @@ jobs:
           node-version: 22.x
           cache: npm
           cache-dependency-path: package-lock.json
-      - run: npm ci
+          registry-url: https://npm.pkg.github.com
+      - run: npm ci --ignore-scripts
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GH_ACTIONS_READ_TOKEN }}
       - uses: pulumi/actions@v6
         with:
           command: up
