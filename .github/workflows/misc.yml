@@ -1,0 +1,26 @@
+name: misc
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/misc.yml
+      - misc/**
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+      - uses: pulumi/actions@v6
+        with:
+          command: up
+          stack-name: prod
+          cloud-url: s3://sapslaj-tf-state
+          work-dir: ./misc
+        env:
+          PULUMI_CONFIG_PASSPHRASE: ''
