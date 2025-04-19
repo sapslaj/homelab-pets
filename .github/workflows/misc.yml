@@ -23,7 +23,7 @@ jobs:
         with:
           command: up
           stack-name: prod
-          cloud-url: s3://sapslaj-tf-state
+          cloud-url: s3://sapslaj-tf-state?region=us-east-1
           work-dir: ./misc
         env:
           PULUMI_CONFIG_PASSPHRASE: ''
