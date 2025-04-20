@@ -13,6 +13,9 @@ env:
   PROXMOX_VE_USERNAME: ${{ vars.PROXMOX_VE_USERNAME }}
   PROXMOX_VE_PASSWORD: ${{ secrets.PROXMOX_VE_PASSWORD }}
   PROXMOX_VE_INSECURE: 'true'
+  VYOS_HOST: ${{ vars.VYOS_HOST }}
+  VYOS_USERNAME: ${{ vars.VYOS_USERNAME }}
+  VYOS_PASSWORD: ${{ secrets.VYOS_PASSWORD }}
 
 jobs:
   deploy:
