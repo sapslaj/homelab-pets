@@ -66,5 +66,3 @@ new AnsibleProvisioner("misc-setup", {
     },
   ],
 });
-
-export const connection = pulumi.unsecret(pulumi.output(vm.connection));
