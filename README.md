@@ -183,12 +183,6 @@ Let's Encrypt certs, but it sure would be nice to do so. I'm thinking about
 either implementing an ACME protocol proxy or something more simple like
 [acme-dns](https://github.com/joohoi/acme-dns) to make getting certs easier.
 
-### soju
-
-VM inside [mitsuru](#mitsuru).
-
-WIP IRC bouncer running [soju](https://soju.im/). Not finished yet.
-
 ### tohru
 
 VM inside [aqua](#aqua).

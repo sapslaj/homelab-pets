@@ -1,5 +1,0 @@
-name: homelab-pets-soju
-runtime:
-  name: nodejs
-  options:
-    packagemanager: npm
