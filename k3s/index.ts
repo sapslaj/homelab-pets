@@ -12,20 +12,30 @@ import { NodeGroup } from "./NodeGroup";
 const k3sVersion = "v1.31.5+k3s1";
 
 const controlPlane = new ControlPlane("k3s-control-plane", {
+  name: `k3s-${pulumi.getStack()}`,
   k3sVersion,
+  nodeLabels: {
+    "k3s.sapslaj.xyz/role": "control-plane",
+    "topology.kubernetes.io/region": "homelab",
+  },
+  nodeTaints: {
+    "k3s.sapslaj.xyz/role": "control-plane:NoSchedule",
+  },
   serverArgs: [
     "--disable-helm-controller",
     "--disable traefik",
     "--disable coredns",
     "--disable local-storage",
     "--disable metrics-server",
-    "--node-label k3s.sapslaj.xyz/role=control-plane",
-    "--node-taint k3s.sapslaj.xyz/role=control-plane:NoSchedule",
     "--write-kubeconfig-mode 644",
+    "--kubelet-arg '--cloud-provider=external'",
   ],
   nodeConfig: {
+    cpu: {
+      cores: 4,
+    },
     memory: {
-      dedicated: 1024,
+      dedicated: 2048,
     },
   },
 });
@@ -33,18 +43,34 @@ const controlPlane = new ControlPlane("k3s-control-plane", {
 export const server = controlPlane.server;
 
 const nodeGroup = new NodeGroup("k3s-node-group", {
+  name: `k3s-node-${pulumi.getStack()}`,
   k3sVersion,
   k3sToken: controlPlane.k3sToken,
   server: controlPlane.server,
+  nodeLabels: {
+    "topology.kubernetes.io/region": "homelab",
+  },
+  serverArgs: [
+    "--kubelet-arg '--cloud-provider=external'",
+  ],
+  nodeCount: 4,
   nodeConfig: {
+    cpu: {
+      cores: 8,
+    },
     memory: {
       dedicated: 8192,
     },
   },
-}, { dependsOn: [controlPlane] });
+}, {
+  dependsOn: [
+    controlPlane,
+  ],
+});
 
 const provider = new kubernetes.Provider("k3s", {
   kubeconfig: controlPlane.kubeconfig,
+  deleteUnreachable: true,
 });
 
 const prometheusOperatorCrds = new kubernetes.helm.v3.Chart("prometheus-operator-crds", {
@@ -52,7 +78,14 @@ const prometheusOperatorCrds = new kubernetes.helm.v3.Chart("prometheus-operator
   fetchOpts: {
     repo: "https://prometheus-community.github.io/helm-charts",
   },
-}, { provider });
+}, {
+  provider,
+  deletedWith: controlPlane,
+  dependsOn: [
+    controlPlane,
+    nodeGroup,
+  ],
+});
 
 const coredns = new kubernetes.helm.v3.Chart("coredns", {
   chart: "coredns",
@@ -62,7 +95,7 @@ const coredns = new kubernetes.helm.v3.Chart("coredns", {
     repo: "https://coredns.github.io/helm",
   },
   values: {
-    replicaCount: 3,
+    replicaCount: controlPlane.nodeCount,
     resources: {
       limits: {
         cpu: "1",
@@ -86,7 +119,10 @@ const coredns = new kubernetes.helm.v3.Chart("coredns", {
   },
 }, {
   provider,
+  deletedWith: controlPlane,
   dependsOn: [
+    controlPlane,
+    nodeGroup,
     prometheusOperatorCrds,
   ],
 });
