@@ -5,6 +5,15 @@ on:
     paths:
       - .github/workflows/misc.yml
       - misc/**
+
+env:
+  NODE_AUTH_TOKEN: ${{ secrets.GH_ACTIONS_READ_TOKEN }}
+  PULUMI_CONFIG_PASSPHRASE: ''
+  PROXMOX_VE_ENDPOINT: ${{ vars.PROXMOX_VE_ENDPOINT }}
+  PROXMOX_VE_USERNAME: ${{ vars.PROXMOX_VE_USERNAME }}
+  PROXMOX_VE_PASSWORD: ${{ secrets.PROXMOX_VE_PASSWORD }}
+  PROXMOX_VE_INSECURE: 'true'
+
 jobs:
   deploy:
     runs-on: self-hosted
@@ -17,13 +26,9 @@ jobs:
           cache-dependency-path: package-lock.json
           registry-url: https://npm.pkg.github.com
       - run: npm ci --ignore-scripts
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GH_ACTIONS_READ_TOKEN }}
       - uses: pulumi/actions@v6
         with:
           command: up
           stack-name: prod
           cloud-url: s3://sapslaj-tf-state?region=us-east-1&awssdk=v2&profile=default
           work-dir: ./misc
-        env:
-          PULUMI_CONFIG_PASSPHRASE: ''
