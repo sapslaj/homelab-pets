@@ -13,7 +13,8 @@ export interface IDistro {
 
 export class Distro implements IDistro {
   static UBUNTU_24_04 = new Distro({
-    url: "https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img",
+    // url: "https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img",
+    url: "https://misc.sapslaj.xyz/cloudimages/ubuntu/noble-server-cloudimg-amd64.img",
     username: "ubuntu",
     ansibleInstallCommand: [
       "export DEBIAN_FRONTEND=noninteractive",
@@ -25,7 +26,8 @@ export class Distro implements IDistro {
   static UBUNTU_NOBLE = Distro.UBUNTU_24_04;
 
   static DEBIAN_12 = new Distro({
-    url: "https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-genericcloud-amd64.qcow2",
+    // url: "https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-genericcloud-amd64.qcow2",
+    url: "https://misc.sapslaj.xyz/cloudimages/debian/debian-12-genericcloud-amd64.qcow2",
     username: "debian",
     ansibleInstallCommand: [
       "export DEBIAN_FRONTEND=noninteractive",
@@ -37,7 +39,8 @@ export class Distro implements IDistro {
   static DEBIAN_BOOKWORM = Distro.DEBIAN_12;
 
   static ALPINE_3_21_2 = new Distro({
-    url: "https://dl-cdn.alpinelinux.org/alpine/v3.21/releases/cloud/nocloud_alpine-3.21.2-x86_64-bios-tiny-r0.qcow2",
+    // url: "https://dl-cdn.alpinelinux.org/alpine/v3.21/releases/cloud/nocloud_alpine-3.21.2-x86_64-bios-tiny-r0.qcow2",
+    url: "https://misc.sapslaj.xyz/cloudimages/alpine/nocloud_alpine-3.21.2-x86_64-bios-tiny-r0.qcow2",
     username: "alpine",
     ansibleInstallCommand: "with_backoff sudo apk add ansible git",
   });

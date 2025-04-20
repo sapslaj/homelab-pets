@@ -59,6 +59,7 @@ export class CloudImageTrait implements ProxmoxVMTrait {
       parent,
       ignoreChanges: [
         "fileName",
+        "url",
       ],
     });
     parent._traitStore[CloudImageTrait.traitStore.file] = file;
