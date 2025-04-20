@@ -1,0 +1,37 @@
+name: shimiko
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/shimiko.yml
+      - shimiko/**
+
+env:
+  NODE_AUTH_TOKEN: ${{ secrets.GH_ACTIONS_READ_TOKEN }}
+  PULUMI_CONFIG_PASSPHRASE: ''
+  PROXMOX_VE_ENDPOINT: ${{ vars.PROXMOX_VE_ENDPOINT }}
+  PROXMOX_VE_USERNAME: ${{ vars.PROXMOX_VE_USERNAME }}
+  PROXMOX_VE_PASSWORD: ${{ secrets.PROXMOX_VE_PASSWORD }}
+  PROXMOX_VE_INSECURE: 'true'
+  VYOS_HOST: ${{ vars.VYOS_HOST }}
+  VYOS_USERNAME: ${{ vars.VYOS_USERNAME }}
+  VYOS_PASSWORD: ${{ secrets.VYOS_PASSWORD }}
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+          cache-dependency-path: package-lock.json
+          registry-url: https://npm.pkg.github.com
+      - run: npm ci --ignore-scripts
+      - uses: pulumi/actions@v6
+        with:
+          command: up
+          stack-name: prod
+          cloud-url: s3://sapslaj-tf-state?region=us-east-1&awssdk=v2&profile=default
+          work-dir: ./shimiko
