@@ -25,7 +25,7 @@ Physical server running Debian.
 
 Raspberry Pi 4 running Raspbian.
 
-Currently dead 💀
+~Currently dead 💀~ it's back (somehow?) but unused 💀
 
 ### homeassistant
 
@@ -105,6 +105,15 @@ need to do complicated container networking to make appropriate traffic flow thr
                            |            |
                            +------------+
 ```
+
+### misc
+
+VM inside [mitsuru](#mitsuru).
+
+A static file web server. No auth, no smarts. It's using Caddy as the server
+implementation for now, might change later if it pisses me off enough. It is
+rebuilt using [xcaddy](https://github.com/caddyserver/xcaddy) on every startup
+because Caddy's plugin system is fucking stupid.
 
 ### mitsuru
 
