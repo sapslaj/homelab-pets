@@ -36,6 +36,11 @@
 - hosts: all
   become: true
   roles:
+    - role: sapslaj.seaweedfs
+
+- hosts: all
+  become: true
+  roles:
     - role: stefangweichinger.ansible_rclone
       vars:
         _rclone_password1: !vault |

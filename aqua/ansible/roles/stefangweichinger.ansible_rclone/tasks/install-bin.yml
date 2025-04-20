@@ -51,6 +51,7 @@
     group: root
     remote_src: true
   become: true
+  ignore_errors: "{{ ansible_check_mode }}"
 
 - name: Make dir for local manpages
   file:
@@ -72,6 +73,7 @@
     remote_src: true
   become: true
   when: install_manpages
+  ignore_errors: "{{ ansible_check_mode }}"
 
 - name: Update mandb
   command: mandb
