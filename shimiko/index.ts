@@ -19,6 +19,7 @@ const vm = new ProxmoxVM("shimiko", {
   traits: [
     new BaseConfigTrait("base", {
       ansible: {
+        clean: false,
         base: {
           nasClient: production,
           rsyncBackup: production,
@@ -67,6 +68,7 @@ if (production) {
 
 new AnsibleProvisioner("shimiko-setup", {
   connection: vm.connection,
+  clean: false,
   rolePaths: [
     path.join(__dirname, "ansible/roles"),
   ],
