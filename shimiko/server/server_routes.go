@@ -20,6 +20,7 @@ func (s *Server) Routes() {
 	e.PUT("/v1/dns-records", s.UpsertDNSRecords)
 	e.PATCH("/v1/dns-records", s.UpsertDNSRecords)
 	e.DELETE("/v1/dns-records", s.DeleteDNSRecords)
+	e.POST("/v1/dns-records/refresh", s.RefreshDNSRecords)
 	e.GET("/v1/dns-records/:type/:name", s.ShowDNSRecord)
 	e.POST("/v1/dns-records/:type/:name", s.UpsertDNSRecord)
 	e.PUT("/v1/dns-records/:type/:name", s.UpsertDNSRecord)
@@ -438,4 +439,22 @@ func (s *Server) DeleteDNSRecord(c echo.Context) error {
 		Record: record,
 		Status: "OK",
 	})
+}
+
+func (s *Server) RefreshDNSRecords(c echo.Context) error {
+	logger := s.RequestLogger(c)
+	logger.InfoContext(c.Request().Context(), "starting record reconcile")
+	err := s.ReconcileAll(c.Request().Context())
+	if err == nil {
+		logger.InfoContext(c.Request().Context(), "finished record reconcile with no errors")
+		return c.JSON(200, map[string]any{
+			"status": "OK",
+		})
+	} else {
+		logger.WarnContext(c.Request().Context(), "finished record reconcile with errors", "error", err)
+		return c.JSON(500, map[string]any{
+			"status": "ERROR",
+			"error":  err.Error(),
+		})
+	}
 }

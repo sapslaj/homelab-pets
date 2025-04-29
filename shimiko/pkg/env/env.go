@@ -4,6 +4,7 @@ import (
 	"os"
 	"reflect"
 	"strconv"
+	"time"
 )
 
 func Get[T any](name string) (T, error) {
@@ -98,6 +99,12 @@ func Get[T any](name string) (T, error) {
 			return value, NewErrParsingWrapped(name, err)
 		}
 		elem.SetBool(valueBool)
+	case time.Duration:
+		valueDuration, err := time.ParseDuration(raw)
+		if err != nil {
+			return value, NewErrParsingWrapped(name, err)
+		}
+		elem.SetInt(int64(valueDuration))
 	default:
 		return value, NewErrUnsupportedType(name)
 	}

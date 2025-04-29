@@ -104,6 +104,8 @@ type Server struct {
 	Logger *slog.Logger
 	DB     *gorm.DB
 
+	ReconcileInterval time.Duration
+
 	HTTPPort  int
 	HTTPSPort int
 
@@ -120,6 +122,12 @@ func NewServer(ctx context.Context) (*Server, error) {
 	RegisterLegoLogger(s.Logger)
 
 	var err error
+
+	s.ReconcileInterval, err = env.GetDefault[time.Duration]("SHIMIKO_RECONCILE_INTERVAL", 0)
+	if err != nil {
+		return s, fmt.Errorf("error setting reconcile interval: %w", err)
+	}
+
 	s.HTTPPort, err = env.GetDefault("SHIMIKO_HTTP_PORT", 8080)
 	if err != nil {
 		return s, fmt.Errorf("error setting HTTP port: %w", err)
@@ -221,6 +229,7 @@ func NewServer(ctx context.Context) (*Server, error) {
 
 func RunServer(s *Server) error {
 	logger := s.Logger.With(
+		slog.Duration("reconcile_interval", s.ReconcileInterval),
 		slog.Int("http_port", s.HTTPPort),
 	)
 	if s.HTTPSPort != 0 {
@@ -228,13 +237,36 @@ func RunServer(s *Server) error {
 			slog.Int("https_port", s.HTTPSPort),
 		)
 	}
-	logger.Info(
-		"starting server",
-		slog.Int("http_port", s.HTTPPort),
-		slog.Int("https_port", s.HTTPSPort),
-	)
+	logger.Info("starting server")
 
 	errChan := make(chan error)
+
+	go func() {
+		if s.ReconcileInterval == 0 {
+			logger.Info("reconcile interval is 0, reconciliation disabled")
+			return
+		}
+
+		ctx := context.Background()
+		logger.InfoContext(ctx, "starting initial record reconcile")
+		err := s.ReconcileAll(ctx)
+		if err == nil {
+			logger.InfoContext(ctx, "finished initial record reconcile with no errors")
+		} else {
+			logger.WarnContext(ctx, "finished initial record reconcile with errors", "error", err)
+		}
+
+		for range time.Tick(s.ReconcileInterval) {
+			ctx := context.Background()
+			logger.InfoContext(ctx, "starting record reconcile")
+			err := s.ReconcileAll(ctx)
+			if err == nil {
+				logger.InfoContext(ctx, "finished record reconcile with no errors")
+			} else {
+				logger.WarnContext(ctx, "finished record reconcile with errors", "error", err)
+			}
+		}
+	}()
 
 	go func() {
 		errChan <- s.Echo.Start(fmt.Sprintf(":%d", s.HTTPPort))
@@ -261,4 +293,110 @@ func (s *Server) Run() error {
 
 func (s *Server) RequestLogger(c echo.Context) *slog.Logger {
 	return LoggerWithEchoContext(c, s.Logger)
+}
+
+func (s *Server) ReconcileAll(ctx context.Context) error {
+	logger := s.Logger.With("subsystem", "reconcile")
+
+	var records []*persistence.DNSRecord
+	result := s.DB.Unscoped().Find(&records)
+	if result.Error != nil {
+		logger.ErrorContext(ctx, "error querying DNS records", "error", result.Error)
+		return result.Error
+	}
+
+	var returnErrors error
+
+	logger.InfoContext(ctx, "starting persistence session for record deletions")
+	ps, err := persistence.NewSession(ctx, s.DB)
+	if err != nil {
+		logger.ErrorContext(ctx, "error creating persistence session", "error", err)
+		return err
+	}
+
+	// start by deleting any records
+	deleted := []*persistence.DNSRecord{}
+
+	for _, record := range records {
+		if record.DeletedAt.Time.IsZero() {
+			// skip records without delete marker for now
+			continue
+		}
+
+		recordLogger := logger.With(slog.Any("record", record))
+		recordLogger.InfoContext(ctx, "record is soft-deleted")
+
+		successfullyDeleted := true
+
+		err := ps.CoreDNS.DeleteRecord(ctx, record)
+		if err != nil {
+			recordLogger.WarnContext(ctx, "record failed to be deleted from CoreDNS", "error", err)
+			returnErrors = errors.Join(returnErrors, err)
+			successfullyDeleted = false
+		}
+
+		err = ps.Route53.DeleteRecord(ctx, record)
+		if err != nil {
+			recordLogger.WarnContext(ctx, "record failed to be deleted from Route53", "error", err)
+			returnErrors = errors.Join(returnErrors, err)
+			successfullyDeleted = false
+		}
+
+		if successfullyDeleted {
+			deleted = append(deleted, record)
+		}
+	}
+
+	err = ps.Finish(ctx)
+	if err != nil {
+		logger.WarnContext(ctx, "failed to finish persistence session for record deletions")
+		returnErrors = errors.Join(returnErrors, err)
+	} else {
+		logger.InfoContext(ctx, "finished persistence session for record deletions")
+		for _, record := range deleted {
+			logger.InfoContext(ctx, "deleting record permanently", "record_id", record.ID)
+			tx := s.DB.Unscoped().Delete(&record)
+			if tx.Error != nil {
+				logger.WarnContext(ctx, "failed to delete record permanently", "record_id", record.ID)
+				returnErrors = errors.Join(returnErrors, err)
+			}
+		}
+	}
+
+	logger.InfoContext(ctx, "starting persistence session for record updates")
+	ps, err = persistence.NewSession(ctx, s.DB)
+	if err != nil {
+		logger.ErrorContext(ctx, "error creating persistence session", "error", err)
+		return err
+	}
+
+	for _, record := range records {
+		if !record.DeletedAt.Time.IsZero() {
+			// skip deleted records
+			continue
+		}
+
+		recordLogger := logger.With(slog.Any("record", record))
+		recordLogger.InfoContext(ctx, "upserting record")
+
+		err := ps.CoreDNS.UpsertRecord(ctx, record, record)
+		if err != nil {
+			recordLogger.WarnContext(ctx, "record failed to be updated in CoreDNS", "error", err)
+			returnErrors = errors.Join(returnErrors, err)
+		}
+
+		err = ps.Route53.UpsertRecord(ctx, record, record)
+		if err != nil {
+			recordLogger.WarnContext(ctx, "record failed to be updated in Route53", "error", err)
+			returnErrors = errors.Join(returnErrors, err)
+		}
+	}
+
+	err = ps.Finish(ctx)
+	if err != nil {
+		logger.WarnContext(ctx, "failed to finish persistence session for record updates")
+		returnErrors = errors.Join(returnErrors, err)
+	}
+
+	return returnErrors
 }

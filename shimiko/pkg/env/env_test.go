@@ -2,6 +2,7 @@ package env_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 
@@ -97,6 +98,11 @@ func TestGet(t *testing.T) {
 	vBoolFalse, err := env.Get[bool]("TEST_BOOL_FALSE")
 	assert.NoError(t, err)
 	assert.Equal(t, false, vBoolFalse)
+
+	t.Setenv("TEST_DURATION", "5s")
+	vDuration, err := env.Get[time.Duration]("TEST_DURATION")
+	assert.NoError(t, err)
+	assert.Equal(t, 5 * time.Second, vDuration)
 
 	// Error cases
 

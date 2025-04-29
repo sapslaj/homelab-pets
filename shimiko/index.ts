@@ -92,6 +92,7 @@ new AnsibleProvisioner("shimiko-setup", {
           SHIMIKO_ACME_EMAIL: "alerts@sapslaj.com",
           SHIMIKO_ACME_URL: acmeURL,
           SHIMIKO_CERT_DOMAINS: dnsRecord.fullname,
+          SHIMIKO_RECONCILE_INTERVAL: production ? "1h" : "0s",
         },
       },
     },
