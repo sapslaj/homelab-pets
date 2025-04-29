@@ -1,0 +1,5 @@
+- name: restart zonepop.service
+  systemd:
+    name: zonepop.service
+    state: restarted
+    daemon_reload: true

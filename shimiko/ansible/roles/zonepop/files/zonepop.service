@@ -1,0 +1,13 @@
+[Unit]
+Description=ZonePop
+After=network-online.target
+
+[Service]
+Type=simple
+EnvironmentFile=/etc/sysconfig/zonepop.env
+ExecStart=/usr/local/bin/zonepop -config-file /etc/zonepop/config.lua
+Restart=always
+RestartSec=1
+
+[Install]
+WantedBy=multi-user.target

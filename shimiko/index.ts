@@ -98,6 +98,19 @@ new AnsibleProvisioner("shimiko-setup", {
         },
       },
     },
+    {
+      role: "zonepop",
+      vars: {
+        zonepop_env: {
+          AWS_REGION: "us-east-1",
+          AWS_ACCESS_KEY_ID: iamKey.id,
+          AWS_SECRET_ACCESS_KEY: iamKey.secret,
+          VYOS_HOST: "yor.sapslaj.xyz",
+          VYOS_USERNAME: process.env.VYOS_USERNAME, // FIXME: don't do this.
+          VYOS_PASSWORD: process.env.VYOS_PASSWORD, // FIXME: don't do this.
+        },
+      },
+    },
   ],
   triggers: [
     shimikoBinaryBuild.id,

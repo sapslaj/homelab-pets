@@ -1,0 +1,51 @@
+- name: create /etc/zonepop
+  file:
+    path: /etc/zonepop
+    state: directory
+
+- name: copy /etc/zonepop/config.lua
+  copy:
+    src: config.lua
+    dest: /etc/zonepop/config.lua
+  notify:
+    - restart zonepop.service
+
+- name: download and extract zonepop
+  unarchive:
+    src: https://github.com/sapslaj/zonepop/releases/download/v0.7.3/zonepop_Linux_x86_64.tar.gz
+    dest: /tmp
+    remote_src: true
+  notify:
+    - restart zonepop.service
+
+- name: copy zonepop to /usr/local/bin
+  copy:
+    src: /tmp/zonepop
+    dest: /usr/local/bin/zonepop
+    remote_src: true
+    mode: a+x
+  notify:
+    - restart zonepop.service
+
+- name: copy /etc/sysconfig/zonepop.env
+  template:
+    src: zonepop.env.j2
+    dest: /etc/sysconfig/zonepop.env
+  notify:
+    - restart zonepop.service
+
+- name: copy /etc/systemd/system/zonepop.service
+  copy:
+    src: zonepop.service
+    dest: /etc/systemd/system/zonepop.service
+  notify:
+    - restart zonepop.service
+
+- meta: flush_handlers
+
+- name: enable zonepop.service
+  systemd:
+    name: zonepop.service
+    state: started
+    enabled: true
+    daemon_reload: true
