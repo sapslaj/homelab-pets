@@ -7,5 +7,5 @@ resource "aws_route53_record" "cname" {
   ttl     = 300
   type    = "CNAME"
   zone_id = data.aws_route53_zone.sapslaj_xyz.zone_id
-  records = ["zerotwo.sapslaj.xyz"]
+  records = ["zerotwo.sapslaj.xyz."]
 }
