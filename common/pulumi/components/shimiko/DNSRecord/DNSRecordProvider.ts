@@ -25,7 +25,7 @@ export class DNSRecordProvider
 {
   constructor(public config: DNSRecordProviderConfig = {}) {
     if (!this.config.shimikoEndpoint) {
-      this.config.shimikoEndpoint = defaultEndpoint;
+      this.config.shimikoEndpoint = process.env.SHIMIKO_ENDPOINT ?? defaultEndpoint;
     }
   }
 
