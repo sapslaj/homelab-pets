@@ -17,8 +17,19 @@ var HostnameRegex = regexp.MustCompile(`^[a-z0-9][a-z0-9\.\-]+[a-z0-9]$`)
 var SupportedRecordTypes = []string{
 	"A",
 	"AAAA",
+	"CAA",
 	"CNAME",
+	"DS",
+	"HTTPS",
+	"MX",
+	"NAPTR",
 	"NS",
+	"PTR",
+	"SRV",
+	"SSHFP",
+	"SVCB",
+	"TLSA",
+	"TXT",
 }
 
 type DNSRecord struct {
