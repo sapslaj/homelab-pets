@@ -50,6 +50,7 @@ func (coreDNS *CoreDNS) MakeScpClient(host string) (*scp.Client, error) {
 
 func (coreDNS *CoreDNS) LoadZoneFileData(ctx context.Context) ([]byte, error) {
 	client, err := coreDNS.MakeScpClient(CoreDNSHosts[0])
+	defer client.Close()
 	if err != nil {
 		return nil, fmt.Errorf("error creating new scp client for CoreDNS: %w", err)
 	}
@@ -68,6 +69,7 @@ func (coreDNS *CoreDNS) LoadZoneFileData(ctx context.Context) ([]byte, error) {
 func (coreDNS *CoreDNS) SaveCoreDNSZoneFile(ctx context.Context, data []byte) error {
 	for _, host := range CoreDNSHosts {
 		client, err := coreDNS.MakeScpClient(host)
+		defer client.Close()
 		if err != nil {
 			return fmt.Errorf("error creating new scp client for CoreDNS: %w", err)
 		}
@@ -100,11 +102,6 @@ func (coreDNS *CoreDNS) Load(ctx context.Context) error {
 		return fmt.Errorf("error loading zone file data for CoreDNS: %w", err)
 	}
 	return coreDNS.LoadData(ctx, data)
-}
-
-func LoadCoreDNS(ctx context.Context) (*CoreDNS, error) {
-	coreDNS := &CoreDNS{}
-	return coreDNS, coreDNS.Load(ctx)
 }
 
 func (coreDNS *CoreDNS) ToBytes(ctx context.Context) ([]byte, error) {

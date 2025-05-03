@@ -2,6 +2,7 @@ package persistence
 
 import (
 	"context"
+	"errors"
 
 	"gorm.io/gorm"
 )
@@ -17,8 +18,8 @@ func NewSession(ctx context.Context, db *gorm.DB) (*PersistenceSession, error) {
 		DB: db,
 	}
 
-	var err error
-	ps.CoreDNS, err = LoadCoreDNS(ctx)
+	ps.CoreDNS = &CoreDNS{}
+	err := ps.CoreDNS.Load(ctx)
 	if err != nil {
 		return ps, err
 	}
@@ -34,15 +35,11 @@ func NewSession(ctx context.Context, db *gorm.DB) (*PersistenceSession, error) {
 }
 
 func FinishSession(ctx context.Context, session *PersistenceSession) error {
-	err := session.CoreDNS.Save(ctx)
-	if err != nil {
-		return err
-	}
-	_, err = session.Route53.FlushChangeBatch(ctx)
-	if err != nil {
-		return err
-	}
-	return nil
+	var err error
+	errors.Join(err, session.CoreDNS.Save(ctx))
+	_, r53err := session.Route53.FlushChangeBatch(ctx)
+	err = errors.Join(err, r53err)
+	return err
 }
 
 func (ps *PersistenceSession) Finish(ctx context.Context) error {
