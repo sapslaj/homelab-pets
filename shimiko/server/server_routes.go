@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/json"
 	"errors"
+	"net/http"
 
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
@@ -15,6 +16,7 @@ func (s *Server) Routes() {
 	e.GET("/", s.Root)
 	e.GET("/healthz", s.HealthzLiveness)
 	e.GET("/healthz/liveness", s.HealthzLiveness)
+	e.GET("/v1/zonepop/endpoints/forward", s.ZonePopEndpoints)
 	e.GET("/v1/dns-records", s.IndexDNSRecords)
 	e.POST("/v1/dns-records", s.UpsertDNSRecords)
 	e.PUT("/v1/dns-records", s.UpsertDNSRecords)
@@ -38,6 +40,27 @@ func (s *Server) HealthzLiveness(c echo.Context) error {
 	return c.JSON(200, map[string]any{
 		"msg": "OK",
 	})
+}
+
+func (s *Server) ZonePopEndpoints(c echo.Context) error {
+	logger := s.RequestLogger(c)
+	res, err := http.Get("http://localhost:9412/endpoints/forward")
+	if err != nil {
+		logger.ErrorContext(
+			c.Request().Context(),
+			"error sending request to ZonePop",
+			"error", err,
+		)
+		return c.JSON(502, map[string]any{
+			"msg": "error sending request to ZonePop",
+		})
+	}
+	contentType := res.Header.Get("Content-Type")
+	if contentType == "" {
+		contentType = "application/json"
+	}
+	defer res.Body.Close()
+	return c.Stream(res.StatusCode, contentType, res.Body)
 }
 
 func (s *Server) IndexDNSRecords(c echo.Context) error {
