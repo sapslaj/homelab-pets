@@ -21,8 +21,9 @@ import (
 )
 
 var CoreDNSHosts = []string{
-	"rem.sapslaj.xyz",
-	"ram.sapslaj.xyz",
+	// using IP addresses in the event we have a chicken-and-egg problem
+	"172.24.4.2", // rem.sapslaj.xyz
+	"172.24.4.3", // ram.sapslaj.xyz
 }
 
 type CoreDNS struct {
