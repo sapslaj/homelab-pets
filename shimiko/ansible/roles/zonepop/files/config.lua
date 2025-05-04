@@ -78,12 +78,13 @@ local rdns_zone_generate = function(zone, nameservers)
     local result = ""
     result = result .. "$ORIGIN " .. zone .. "\n"
     result = result .. "$TTL 300\n"
-    result = result .. zone .. " IN SOA " .. nameservers[1] .. " awsdns-hostmaster.amazon.com. 1 7200 900 1209600 8640" .. "\n"
+    local serial = math.floor(math.random(0, 65535))
+    result = result .. "@ IN SOA " .. nameservers[1] .. " awsdns-hostmaster.amazon.com. " .. serial .. " 7200 900 1209600 8640\n"
     for _, ns in pairs(nameservers) do
-      result = result .. zone .. " IN NS 172800 " .. ns .. "\n"
+      result = result .. "@ IN NS " .. ns .. "\n"
     end
     for _, ptr in pairs(ptr_records) do
-      result = result .. ptr.domain_name .. " IN PTR " .. ptr.full_hostname .. ".\n"
+      result = result .. ptr.rfc1035_domain_name .. " IN PTR " .. ptr.full_hostname .. ".\n"
     end
     return result
   end
@@ -100,10 +101,12 @@ local coredns_files_config = {
     zone = "24.172.in-addr.arpa.",
     record_suffix = ".sapslaj.xyz",
     generate = rdns_zone_generate("24.172.in-addr.arpa.", {
-      "ns-1239.awsdns-26.org.",
-      "ns-74.awsdns-09.com.",
-      "ns-1659.awsdns-15.co.uk.",
-      "ns-901.awsdns-48.net.",
+      "rem.sapslaj.xyz.",
+      "ram.sapslaj.xyz.",
+      -- "ns-1239.awsdns-26.org.",
+      -- "ns-74.awsdns-09.com.",
+      -- "ns-1659.awsdns-15.co.uk.",
+      -- "ns-901.awsdns-48.net.",
     })
   },
   {

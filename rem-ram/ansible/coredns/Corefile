@@ -2,17 +2,19 @@
   log
   errors
   prometheus 0.0.0.0:9153
-  hosts /etc/coredns/zonepop.hosts {
+  hosts /etc/coredns/zonepop.hosts sapslaj.xyz {
     reload 1m
+    ttl 60
+    no_reverse
     fallthrough
   }
-  file sapslaj.xyz.zone sapslaj.xyz {
+  file /etc/coredns/sapslaj.xyz.zone sapslaj.xyz {
     reload 1m
   }
-  file 24.172.in-addr.arpa.zone 24.172.in-addr.arpa {
+  file /etc/coredns/24.172.in-addr.arpa.zone 24.172.in-addr.arpa {
     reload 1m
   }
-  file 2.2.0.e.0.7.4.0.1.0.0.2.ip6.arpa.zone 2.2.0.e.0.7.4.0.1.0.0.2.ip6.arpa {
+  file /etc/coredns/2.2.0.e.0.7.4.0.1.0.0.2.ip6.arpa.zone 2.2.0.e.0.7.4.0.1.0.0.2.ip6.arpa {
     reload 1m
   }
   loadbalance round_robin
