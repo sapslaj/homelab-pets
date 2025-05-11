@@ -1,21 +1,20 @@
 import * as path from "path";
 
-import { remote } from "@pulumi/command";
 import * as pulumi from "@pulumi/pulumi";
 import * as random from "@pulumi/random";
 import * as tls from "@pulumi/tls";
 import { AnsibleProvisioner } from "@sapslaj/pulumi-ansible-provisioner";
 
-import { BaseConfigTrait } from "../common/pulumi/components/proxmox-vm/BaseConfigTrait";
-import { ProxmoxVM, ProxmoxVMProps } from "../common/pulumi/components/proxmox-vm/ProxmoxVM";
-import { DNSRecord } from "../common/pulumi/components/shimiko";
+import { BaseConfigTrait } from "../../common/pulumi/components/proxmox-vm/BaseConfigTrait";
+import { ProxmoxVM, ProxmoxVMProps } from "../../common/pulumi/components/proxmox-vm/ProxmoxVM";
 
-export interface ControlPlaneProps {
+export interface NodeGroupProps {
   name?: pulumi.Input<string>;
   k3sVersion: pulumi.Input<string>;
   nodeLabels?: Record<string, pulumi.Input<string>>;
   nodeTaints?: Record<string, pulumi.Input<string>>;
-  dnsName?: pulumi.Input<string>;
+  k3sToken: pulumi.Input<string>;
+  server: pulumi.Input<string>;
   nodeCount?: number;
   nodeConfig?: ProxmoxVMProps;
   serverArgs?: pulumi.Input<string>[];
@@ -28,32 +27,15 @@ export interface Node {
   provisioner: AnsibleProvisioner;
 }
 
-export class ControlPlane extends pulumi.ComponentResource {
-  k3sVersion: pulumi.Output<string>;
+export class NodeGroup extends pulumi.ComponentResource {
   name: pulumi.Output<string>;
-  dnsName: pulumi.Output<string>;
-  dnsFullname: pulumi.Output<string>;
-  nodeCount: number;
-  k3sToken: pulumi.Output<string>;
   nodes: Node[];
-  kubeconfig: pulumi.Output<string>;
-  dnsRecord: DNSRecord;
-  server: pulumi.Output<string>;
   privateKey: tls.PrivateKey;
 
-  constructor(id: string, props: ControlPlaneProps, opts: pulumi.ComponentResourceOptions = {}) {
-    super("sapslaj:k3s:ControlPlane", id, {}, opts);
+  constructor(id: string, props: NodeGroupProps, opts: pulumi.ComponentResourceOptions = {}) {
+    super("sapslaj:k3s:NodeGroup", id, {}, opts);
 
     this.name = pulumi.output(props.name ?? id);
-
-    this.k3sVersion = pulumi.output(props.k3sVersion);
-
-    this.k3sToken = new random.RandomPassword(`${id}-k3s-token`, {
-      length: 64,
-      special: false,
-    }, {
-      parent: this,
-    }).result;
 
     this.nodes = [];
 
@@ -62,63 +44,24 @@ export class ControlPlane extends pulumi.ComponentResource {
       ecdsaCurve: "P256",
     }, { parent: this });
 
-    this.dnsName = pulumi.output(props.dnsName ?? this.name);
+    const nodeCount = props.nodeCount ?? 1;
 
-    this.dnsFullname = this.dnsName.apply((dnsName) => {
-      if (dnsName.endsWith(".sapslaj.xyz")) {
-        return dnsName;
-      } else {
-        return `${dnsName}.sapslaj.xyz`;
-      }
-    });
-
-    this.server = this.dnsFullname.apply((dnsFullname) => {
-      return pulumi.interpolate`https://${dnsFullname}:6443`;
-    });
-
-    this.nodeCount = props.nodeCount ?? 3;
-
-    for (let i = 1; i <= this.nodeCount; i++) {
+    for (let i = 1; i <= nodeCount; i++) {
       const serverArgs: pulumi.Input<string>[] = [
         ...(props.serverArgs ?? []),
       ];
-      if (i == 1) {
-        serverArgs.push(
-          pulumi.all({ dnsName: this.dnsName, server: this.server }).apply(async ({ dnsName, server }) => {
-            const req = await fetch(`https://shimiko.sapslaj.xyz/v1/dns-records/A/${dnsName}`);
-            if (req.status === 404) {
-              return "--cluster-init";
-            }
 
-            if (req.status !== 200) {
-              throw new Error(`shimiko is wack (${req.status}): ${await req.text()}`);
-            }
-
-            return `--server ${server}`;
-          }),
-        );
-      } else {
-        serverArgs.push(
-          pulumi.all({ dnsName: this.dnsName, server: this.server, node1: this.nodes[0].vm.ipv4 }).apply(
-            async ({ dnsName, server, node1 }) => {
-              const req = await fetch(`https://shimiko.sapslaj.xyz/v1/dns-records/A/${dnsName}`);
-              if (req.status === 404) {
-                return `--server https://${node1}:6443`;
-              }
-
-              if (req.status !== 200) {
-                throw new Error(`shimiko is wack (${req.status}): ${await req.text()}`);
-              }
-
-              return `--server ${server}`;
-            },
-          ),
-        );
+      for (const [key, value] of Object.entries(props.nodeLabels ?? {})) {
+        serverArgs.push("--node-label", pulumi.interpolate`${key}=${value}`);
+      }
+      for (const [key, value] of Object.entries(props.nodeTaints ?? {})) {
+        serverArgs.push("--node-taint", pulumi.interpolate`${key}=${value}`);
       }
 
       const randomId = new random.RandomId(`${id}-${i}`, {
         byteLength: 8,
         keepers: {
+          "serial": "1",
           nodeLabels: pulumi.output(props.nodeLabels).apply((nodeLabels) => JSON.stringify(nodeLabels ?? {})),
           nodeTaints: pulumi.output(props.nodeTaints).apply((nodeTaints) => JSON.stringify(nodeTaints ?? {})),
         },
@@ -157,7 +100,7 @@ export class ControlPlane extends pulumi.ComponentResource {
             },
             cloudImage: {
               diskConfig: {
-                size: 32,
+                size: 64,
               },
             },
           }),
@@ -165,8 +108,19 @@ export class ControlPlane extends pulumi.ComponentResource {
         ...props.nodeConfig,
       }, {
         parent: this,
-        dependsOn: [
-          ...this.nodes.map((node) => node.provisioner),
+        replaceOnChanges: ["*"],
+        transforms: [
+          (args) => {
+            if (args.type === "sapslaj:pulumi-ansible-provisioner:AnsibleProvisioner") {
+              return {
+                props: args.props,
+                opts: pulumi.mergeOptions(args.opts, {
+                  replaceOnChanges: ["*"],
+                }),
+              };
+            }
+            return undefined;
+          },
         ],
       });
 
@@ -182,31 +136,34 @@ export class ControlPlane extends pulumi.ComponentResource {
         serverArgs.push("--node-taint", pulumi.interpolate`${key}=${value}`);
       }
 
-      serverArgs.push("--tls-san", this.dnsFullname);
       const provisioner = new AnsibleProvisioner(`${id}-${i}`, {
         connection: vm.connection,
         rolePaths: [
           path.join(__dirname, "./ansible/roles"),
         ],
         clean: false,
+        tasks: [
+          {
+            apt: {
+              name: "nfs-common",
+            },
+          },
+        ],
         roles: [
           {
-            role: "sapslaj.k3s_master",
+            role: "sapslaj.k3s_node",
             vars: {
               k3s_extra_server_args: pulumi.output(serverArgs).apply((args) => args.join(" ")),
+              k3s_url: props.server,
               k3s_version: props.k3sVersion,
-              k3s_env: {
-                K3S_TOKEN: this.k3sToken,
-                ...props.serverEnv,
-              },
+              k3s_token: props.k3sToken,
+              k3s_env: props.serverEnv,
             },
           },
         ],
       }, {
         parent: this,
-        dependsOn: [
-          vm,
-        ],
+        replaceOnChanges: ["*"],
       });
 
       this.nodes.push({
@@ -215,25 +172,5 @@ export class ControlPlane extends pulumi.ComponentResource {
         provisioner,
       });
     }
-
-    this.dnsRecord = new DNSRecord(id, {
-      name: this.dnsName,
-      type: "A",
-      records: this.nodes.map((node) => node.vm.ipv4),
-    }, {
-      parent: this,
-    });
-
-    const kubeconfigSlurp = new remote.Command(`${id}-kubeconfig`, {
-      connection: this.nodes[0].vm.connection,
-      create: "sudo cat /etc/rancher/k3s/k3s.yaml",
-    }, {
-      parent: this,
-      dependsOn: this.nodes.map((node) => node.vm),
-    });
-
-    this.kubeconfig = pulumi.all({ kubeconfig: kubeconfigSlurp.stdout, server: this.server }).apply((
-      { kubeconfig, server },
-    ) => kubeconfig.replace("https://127.0.0.1:6443", server));
   }
 }
