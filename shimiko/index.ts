@@ -35,6 +35,11 @@ const vm = new ProxmoxVM("shimiko", {
             : undefined,
         },
       },
+      cloudImage: {
+        diskConfig: {
+          size: 32,
+        },
+      },
     }),
   ],
 });
