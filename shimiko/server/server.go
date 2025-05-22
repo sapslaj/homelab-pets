@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net"
 	"net/http"
 	"os"
 	"path"
@@ -296,22 +297,22 @@ func (s *Server) RequestLogger(c echo.Context) *slog.Logger {
 }
 
 func (s *Server) ReconcileAll(ctx context.Context) error {
+	returnErrors := s.FixMyself(ctx)
+
 	logger := s.Logger.With("subsystem", "reconcile")
 
 	var records []*persistence.DNSRecord
 	result := s.DB.Unscoped().Find(&records)
 	if result.Error != nil {
 		logger.ErrorContext(ctx, "error querying DNS records", "error", result.Error)
-		return result.Error
+		return errors.Join(returnErrors, result.Error)
 	}
-
-	var returnErrors error
 
 	logger.InfoContext(ctx, "starting persistence session for record deletions")
 	ps, err := persistence.NewSession(ctx, s.DB)
 	if err != nil {
 		logger.ErrorContext(ctx, "error creating persistence session", "error", err)
-		return err
+		return errors.Join(returnErrors, err)
 	}
 
 	// start by deleting any records
@@ -399,4 +400,78 @@ func (s *Server) ReconcileAll(ctx context.Context) error {
 	}
 
 	return returnErrors
+}
+
+func (s *Server) FixMyself(ctx context.Context) error {
+	logger := s.Logger.With("subsystem", "reconcile")
+
+	envCertDomains, err := env.Get[string]("SHIMIKO_CERT_DOMAINS")
+	if err != nil {
+		logger.WarnContext(ctx, "could not fix myself: couldn't figure out what domains I'm supposed to use (╥_╥)", "error", err)
+		return err
+	}
+	domains := strings.Split(envCertDomains, ",")
+
+	if len(domains) == 0 {
+		logger.WarnContext(ctx, "could not fix myself: no domains configured to fix myself with <( ⸝⸝•̀ - •́⸝⸝)>")
+		return nil
+	}
+
+	conn, err := net.Dial("udp", "172.24.0.0:1")
+	if err != nil {
+		logger.WarnContext(ctx, "could not fix myself: Go doesn't want me to know my local IP address! ( ｡ •̀ ⤙ •́ ｡ )", "error", err)
+		return err
+	}
+	udpAddr, ok := conn.LocalAddr().(*net.UDPAddr)
+	if !ok {
+		err = fmt.Errorf("expected conn.LocalAddr() type to be *net.UDPAddr but got %T", conn.LocalAddr())
+		logger.WarnContext(ctx, "could not fix myself: I need a *net.UDPAddr but Go said no! (● w ● 🔪)", "error", err)
+		return err
+	}
+	address := strings.Split(udpAddr.String(), ":")[0]
+	logger = logger.With("address", address)
+
+	ps, err := persistence.NewSession(ctx, s.DB)
+	if err != nil {
+		logger.WarnContext(ctx, "could not fix myself: couldn't start a persistence session (╯︵╰,)✲", "error", err)
+		return err
+	}
+
+	var multierr error
+	for _, domain := range domains {
+		domainLogger := logger.With("domain", domain)
+
+		var dnsRecord *persistence.DNSRecord
+		ps.DB.Where("name = ? AND type = ?", strings.TrimSuffix(domain, ".sapslaj.xyz"), "A").First(&dnsRecord)
+
+		if dnsRecord == nil {
+			domainLogger.InfoContext(ctx, "no record registered for this domain; skipping")
+			continue
+		}
+
+		domainLogger.InfoContext(ctx, "updating record")
+
+		dnsRecord.Records = []string{address}
+
+		err := dnsRecord.Upsert(ctx, ps)
+		if err != nil {
+			multierr = errors.Join(multierr, err)
+			domainLogger.WarnContext(ctx, "could not update record", "error", "err")
+			continue
+		}
+
+		domainLogger.InfoContext(ctx, "record updated")
+	}
+
+	if multierr != nil {
+		logger.WarnContext(ctx, "could not fix myself: errors updating records (๑´•.̫ • `๑)", "error", multierr)
+	}
+
+	err = ps.Finish(ctx)
+	if err != nil {
+		multierr = errors.Join(multierr, err)
+		logger.WarnContext(ctx, "could not fix myself: couldn't finish persistence session (╯⌒︵⌒)╯", "error", err)
+	}
+
+	return multierr
 }
