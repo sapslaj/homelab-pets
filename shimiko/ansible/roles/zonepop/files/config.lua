@@ -15,7 +15,10 @@ local forward_lookup_filter = function(endpoint)
     log.info("endpoint is in LAN_Management, allowing", log_labels)
     return true
   elseif endpoint.source_properties.dhcp_pool == "LAN_Servers" then
-    local skip_hostnames = { "aqua" }
+    local skip_hostnames = {
+      "aqua",
+      "shimiko",
+    }
     for _, v in pairs(skip_hostnames) do
       if v == endpoint.hostname then
         log.info("endpoint is in LAN_Servers and should be skipped", log_labels)
