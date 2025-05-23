@@ -5,6 +5,7 @@ local forward_lookup_filter = function(endpoint)
   local log_labels = {
     filter_direction = "forward",
     hostname = endpoint.hostname,
+    source = endpoint.source_properties.source,
     dhcp_pool = endpoint.source_properties.dhcp_pool,
   }
   if endpoint.source_properties.static then
