@@ -129,7 +129,7 @@ return {
       config = {
         endpoints = function (_)
           local res = http.request({
-            url = "https://shimiko.sapslaj.xyz/v1/dns-records",
+            url = "http://localhost/v1/dns-records",
           })
           local allowed_names = {
             "aqua",
