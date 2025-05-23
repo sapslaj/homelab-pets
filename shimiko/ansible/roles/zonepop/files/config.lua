@@ -236,6 +236,79 @@ return {
         forward_lookup_filter = forward_lookup_filter,
       },
     },
+    shimiko = {
+      "custom",
+      config = {
+        forward_lookup_filter = forward_lookup_filter,
+        update_endpoints = function (config, endpoints)
+          for _, endpoint in pairs(endpoints) do
+            if #endpoint.ipv4s == 0 then
+              goto continue
+            end
+            local check = http.request({
+              url = "http://localhost/v1/dns-records/A/" .. endpoint.hostname,
+            })
+            if check.status_code == 404 then
+              goto continue
+            end
+            -- TODO: make this one big upsert request instead of a bajillon
+            -- tiny ones
+            local req = {
+              url = "http://localhost/v1/dns-records/A/" .. endpoint.hostname,
+              method = "POST",
+              json = {
+                record = {
+                  name = endpoint.hostname,
+                  type = "A",
+                  records = endpoint.ipv4s,
+                },
+              },
+            }
+            log.info("making request", {
+              request = {
+              url = "http://localhost/v1/dns-records/A/" .. endpoint.hostname,
+              method = "POST",
+              json = {
+                record = {
+                  name = endpoint.hostname,
+                  type = "A",
+                  records = endpoint.ipv4s,
+                },
+              },
+            },
+            })
+            local res = http.request({
+              url = "http://localhost/v1/dns-records/A/" .. endpoint.hostname,
+              method = "POST",
+              json = {
+                record = {
+                  name = endpoint.hostname,
+                  type = "A",
+                  records = endpoint.ipv4s,
+                },
+              },
+            })
+            if res.status_code ~= 200 then
+              log.error("got error response", {
+                request = req,
+                response = res,
+              })
+              error("shimiko request failed: status="..res.status_code..", body="..res.body)
+            end
+            log.info("got response", {
+              request = req,
+              response = {
+                status_code = res.status_code,
+                headers = res.headers,
+                body = res.body,
+                json = res.json(),
+              },
+            })
+            ::continue::
+          end
+        end
+      },
+    },
     prometheus = {
       "prometheus_metrics",
       config = {
