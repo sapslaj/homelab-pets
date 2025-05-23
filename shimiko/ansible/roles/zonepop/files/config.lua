@@ -240,9 +240,9 @@ return {
       "prometheus_metrics",
       config = {
         source_labels = {
-          "static",
           "dhcp_pool",
           "hardware_address",
+          "source",
         },
         provider_labels = {},
       },
