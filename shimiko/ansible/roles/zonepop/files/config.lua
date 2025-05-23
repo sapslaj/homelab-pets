@@ -131,6 +131,7 @@ return {
           local res = http.request({
             url = "http://localhost/v1/dns-records",
           })
+          assert(res.status_code == 200, "shimiko request failed: status="..res.status_code..", body="..res.body)
           local allowed_names = {
             "aqua",
             "daki",
