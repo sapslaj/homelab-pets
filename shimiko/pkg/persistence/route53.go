@@ -134,7 +134,7 @@ func (r53 *Route53) DeleteRecord(ctx context.Context, record *DNSRecord) error {
 				})
 			}
 		}
-		if existingQuery.IsTruncated {
+		if !existingQuery.IsTruncated {
 			break
 		}
 	}
