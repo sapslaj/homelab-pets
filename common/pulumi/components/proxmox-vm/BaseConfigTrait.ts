@@ -2,6 +2,7 @@ import { BaseConfig, BaseConfigBuilder } from "../ansible/BaseConfigBuilder";
 import { AnsibleTrait, AnsibleTraitConfig } from "./AnsibleTrait";
 import { CloudImageTrait, CloudImageTraitConfig, CloudImageTraitConfigDownloadFileConfig } from "./CloudImageTrait";
 import { DNSRecordTrait, DNSRecordTraitConfig } from "./DNSRecordTrait";
+import { PrivateKeyTrait, PrivateKeyTraitConfig } from "./PrivateKeyTrait";
 import { ProxmoxVM, ProxmoxVMProps } from "./ProxmoxVM";
 import { ProxmoxVMTrait } from "./ProxmoxVMTrait";
 
@@ -92,6 +93,8 @@ export interface BaseConfigTraitConfig {
   ansible?: boolean | BaseConfigTraitAnsibleConfig;
 
   dnsRecord?: boolean | DNSRecordTraitConfig;
+
+  privateKey?: boolean | PrivateKeyTraitConfig;
 }
 
 export const sapslajPasswd =
@@ -211,8 +214,22 @@ export class BaseConfigTrait implements ProxmoxVMTrait {
       if (ansibleConfig.ansibleInstallCommand === undefined) {
         ansibleConfig.ansibleInstallCommand = this.distro.ansibleInstallCommand;
       }
+      if (typeof this.config.privateKey === "object") {
+        ansibleConfig = {
+          ...ansibleConfig,
+          ...this.config.privateKey,
+        };
+      }
       newProps.traits.push(
         new AnsibleTrait(`${this.name}-ansible`, ansibleConfig),
+      );
+    } else if (this.config.privateKey !== false) {
+      let privateKeyConfig: PrivateKeyTraitConfig = {};
+      if (typeof this.config.privateKey === "object") {
+        privateKeyConfig = this.config.privateKey;
+      }
+      newProps.traits.push(
+        new PrivateKeyTrait(`${this.name}-private-key`, privateKeyConfig),
       );
     }
 
