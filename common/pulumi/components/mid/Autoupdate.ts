@@ -2,6 +2,8 @@ import * as pulumi from "@pulumi/pulumi";
 import * as mid from "@sapslaj/pulumi-mid";
 
 export interface AutoupdateProps {
+  connection?: mid.types.input.ConnectionArgs;
+  triggers?: mid.types.input.TriggersInputArgs;
   autoreboot?: boolean;
   onCalendar?: string;
   randomizedDelaySec?: number;
@@ -67,6 +69,8 @@ export class Autoupdate extends pulumi.ComponentResource {
     );
 
     const serviceFile = new mid.resource.File(`${name}-autoupdate-service`, {
+      connection: props.connection,
+      triggers: props.triggers,
       path: "/etc/systemd/system/autoupdate.service",
       content: serviceConfig.join("\n"),
     }, {
@@ -74,6 +78,8 @@ export class Autoupdate extends pulumi.ComponentResource {
     });
 
     const timerFile = new mid.resource.File(`${name}-autoupdate-timer`, {
+      connection: props.connection,
+      triggers: props.triggers,
       path: "/etc/systemd/system/autoupdate.timer",
       content: timerConfig.join("\n"),
     }, {
@@ -81,6 +87,7 @@ export class Autoupdate extends pulumi.ComponentResource {
     });
 
     this.timer = new mid.resource.SystemdService(`${name}-autoupdate`, {
+      connection: props.connection,
       name: "autoupdate.timer",
       ensure: "started",
       daemonReload: true,
@@ -88,7 +95,9 @@ export class Autoupdate extends pulumi.ComponentResource {
         refresh: [
           serviceFile.triggers.lastChanged,
           timerFile.triggers.lastChanged,
+          ...(props.triggers?.refresh ?? []) as any,
         ],
+        ...props.triggers,
       },
     }, {
       parent: this,

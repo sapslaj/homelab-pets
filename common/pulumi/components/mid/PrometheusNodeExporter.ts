@@ -2,6 +2,8 @@ import * as pulumi from "@pulumi/pulumi";
 import * as mid from "@sapslaj/pulumi-mid";
 
 export interface PrometheusNodeExporterProps {
+  connection?: mid.types.input.ConnectionArgs;
+  triggers?: mid.types.input.TriggersInputArgs;
   arch?: string;
   version?: string;
 }
@@ -15,6 +17,8 @@ export class PrometheusNodeExporter extends pulumi.ComponentResource {
 
     // TODO: mid: unarchive resource
     const install = new mid.resource.Exec(`${name}-install`, {
+      connection: props.connection,
+      triggers: props.triggers,
       create: {
         command: [
           "/bin/bash",
@@ -40,6 +44,8 @@ chmod +x /usr/local/bin/node_exporter
     });
 
     const systemdUnit = new mid.resource.File(`${name}-systemd-unit`, {
+      connection: props.connection,
+      triggers: props.triggers,
       path: "/etc/systemd/system/node_exporter.service",
       content: `[Unit]
 Description=Prometheus Node Exporter
@@ -68,6 +74,7 @@ WantedBy=multi-user.target
     });
 
     const systemdService = new mid.resource.SystemdService(`${name}-node_exporter`, {
+      connection: props.connection,
       name: "node_exporter.service",
       ensure: "started",
       enabled: true,
@@ -76,7 +83,9 @@ WantedBy=multi-user.target
         refresh: [
           systemdUnit.triggers.lastChanged,
           install.triggers.lastChanged,
+          ...(props.triggers?.refresh ?? []) as any,
         ],
+        ...props.triggers,
       },
     }, {
       parent: this,

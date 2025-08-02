@@ -26,6 +26,8 @@ export const defaultUsers: Record<string, UserDefinition> = {
 };
 
 export interface BaselineUsersProps {
+  connection?: mid.types.input.ConnectionArgs;
+  triggers?: mid.types.input.TriggersInputArgs;
   useBash?: boolean;
   users?: Record<string, UserDefinition>;
 }
@@ -49,6 +51,8 @@ export class BaselineUsers extends pulumi.ComponentResource {
     }
 
     new mid.resource.FileLine(`${name}-passwordless-sudo`, {
+      connection: props.connection,
+      triggers: props.triggers,
       path: "/etc/sudoers",
       line: "%admin ALL=(ALL) NOPASSWD:ALL",
       regexp: "^%admin ALL=(ALL)",
@@ -59,6 +63,8 @@ export class BaselineUsers extends pulumi.ComponentResource {
     });
 
     const adminGroup = new mid.resource.Group(`${name}-admin`, {
+      connection: props.connection,
+      triggers: props.triggers,
       name: "admin",
     }, {
       ...opts,
@@ -70,6 +76,8 @@ export class BaselineUsers extends pulumi.ComponentResource {
         continue;
       }
       const userArgs: mid.resource.UserArgs = {
+        connection: props.connection,
+        triggers: props.triggers,
         name: def.name ?? key,
         groupsExclusive: false,
         groups: [
@@ -92,6 +100,8 @@ export class BaselineUsers extends pulumi.ComponentResource {
         const sshDir = new mid.resource.File(
           `${name}-${key}/.ssh`,
           {
+            connection: props.connection,
+            triggers: props.triggers,
             path: pulumi.interpolate`/home/${user.name}/.ssh`,
             ensure: "directory",
             owner: user.name,
@@ -111,6 +121,8 @@ export class BaselineUsers extends pulumi.ComponentResource {
         const authorizedKeysFile = new mid.resource.File(
           `${name}-${key}/.ssh/authorized_keys`,
           {
+            connection: props.connection,
+            triggers: props.triggers,
             path: pulumi.interpolate`/home/${user.name}/.ssh/authorized_keys`,
             ensure: "file",
             owner: user.name,
@@ -130,6 +142,8 @@ export class BaselineUsers extends pulumi.ComponentResource {
         new mid.resource.FileLine(
           `${name}-${key}-ssh-key`,
           {
+            connection: props.connection,
+            triggers: props.triggers,
             path: pulumi.interpolate`/home/${user.name}/.ssh/authorized_keys`,
             line: def.sshKey,
           },
