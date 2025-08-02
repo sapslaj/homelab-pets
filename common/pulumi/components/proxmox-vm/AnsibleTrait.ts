@@ -2,6 +2,7 @@ import * as proxmoxve from "@muhlba91/pulumi-proxmoxve";
 import * as tls from "@pulumi/tls";
 
 import { AnsibleProvisioner, AnsibleProvisionerProps } from "@sapslaj/pulumi-ansible-provisioner";
+import { remote } from "@pulumi/command/types/input";
 
 import { PrivateKeyTrait, PrivateKeyTraitConfig } from "./PrivateKeyTrait";
 import { ProxmoxVM, ProxmoxVMProps } from "./ProxmoxVM";
@@ -61,7 +62,7 @@ export class AnsibleTrait implements ProxmoxVMTrait {
   ): void {
     const provisioner = new AnsibleProvisioner(`${name}-${this.name}`, {
       ...this.config,
-      connection: parent.connection,
+      connection: parent.connection as remote.ConnectionArgs,
     }, { parent });
     parent._traitStore[AnsibleTrait.traitStore.ansibleProvisioner] = provisioner;
   }

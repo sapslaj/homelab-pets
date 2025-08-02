@@ -1,10 +1,10 @@
 import * as proxmoxve from "@muhlba91/pulumi-proxmoxve";
 import * as proxmoxve_inputs from "@muhlba91/pulumi-proxmoxve/types/input";
 import { VirtualMachineArgs } from "@muhlba91/pulumi-proxmoxve/vm";
-import { remote as remote_inputs } from "@pulumi/command/types/input";
 import * as pulumi from "@pulumi/pulumi";
 import * as random from "@pulumi/random";
 import * as std from "@pulumi/std";
+import * as mid from "@sapslaj/pulumi-mid";
 
 import { GuestAgentHostLookup, IHostLookup, VyosLeasesHostLookup } from "./host-lookup";
 import { ProxmoxVMTrait } from "./ProxmoxVMTrait";
@@ -407,7 +407,7 @@ export interface ProxmoxVMTimeoutConfig {
 export interface ProxmoxVMProps extends Omit<proxmoxve.vm.VirtualMachineArgs, "cpu" | "disks" | "nodeName"> {
   hostLookup?: IHostLookup;
   traits?: ProxmoxVMTrait[];
-  connectionArgs?: Partial<remote_inputs.ConnectionArgs>;
+  connectionArgs?: Partial<mid.types.input.ConnectionArgs>;
   userData?: Record<string, any>;
   userDataFileConfig?: Partial<proxmoxve.storage.FileArgs>;
   acpi?: pulumi.Input<boolean>;
@@ -466,7 +466,7 @@ export class ProxmoxVM extends pulumi.ComponentResource {
 
   protected hostLookup: IHostLookup;
 
-  protected connectionArgs: Partial<remote_inputs.ConnectionArgs>;
+  protected connectionArgs: Partial<mid.types.input.ConnectionArgs>;
 
   private _ipv4: pulumi.Output<string> | undefined;
 
@@ -672,7 +672,7 @@ export class ProxmoxVM extends pulumi.ComponentResource {
     return this._ipv4;
   }
 
-  public get connection(): remote_inputs.ConnectionArgs {
+  public get connection(): mid.types.input.ConnectionArgs {
     return {
       host: this.ipv4,
       ...this.connectionArgs,
