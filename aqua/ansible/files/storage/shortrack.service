@@ -1,0 +1,13 @@
+[Unit]
+Description=Like Longhorn, but shit
+Requires=sys-kernel-config.mount modprobe@configfs.service modprobe@target_core_mod.service
+After=sys-kernel-config.mount network.target local-fs.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/shortrack sigma --volume-dir /mnt/exos/volumes/shortrack
+Restart=on-failure
+RestartSec=1
+
+[Install]
+WantedBy=multi-user.target

@@ -13,6 +13,7 @@
       - quota
       - software-properties-common
       - smartmontools
+
 - name: copy du_exporter
   copy:
     src: storage/du_exporter
@@ -20,16 +21,41 @@
     mode: a+x
   notify:
     - restart du_exporter service
+
 - name: copy du_exporter service
   copy:
     src: storage/du_exporter.service
     dest: /etc/systemd/system/du_exporter.service
   notify:
     - restart du_exporter service
+
+- name: copy shortrack
+  copy:
+    src: storage/shortrack
+    dest: /usr/local/bin/shortrack
+    mode: a+x
+  notify:
+    - restart shortrack service
+
+- name: copy shortrack service
+  copy:
+    src: storage/shortrack.service
+    dest: /etc/systemd/system/shortrack.service
+  notify:
+    - restart shortrack service
+
 - meta: flush_handlers
+
 - name: enable du_exporter service
   systemd:
     name: du_exporter.service
+    state: started
+    enabled: true
+    daemon_reload: yes
+
+- name: enable shortrack service
+  systemd:
+    name: shortrack.service
     state: started
     enabled: true
     daemon_reload: yes

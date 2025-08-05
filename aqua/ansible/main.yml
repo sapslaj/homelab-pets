@@ -21,6 +21,11 @@
         name: du_exporter.service
         state: restarted
         daemon_reload: yes
+    - name: restart shortrack service
+      systemd:
+        name: shortrack.service
+        state: restarted
+        daemon_reload: yes
     - name: restart libvirt_exporter service
       systemd:
         name: libvirt_exporter.service
