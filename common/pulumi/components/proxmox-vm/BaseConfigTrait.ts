@@ -1,4 +1,11 @@
+import * as proxmoxve from "@muhlba91/pulumi-proxmoxve";
+
 import { BaseConfig, BaseConfigBuilder } from "../ansible/BaseConfigBuilder";
+import { Autoupdate, AutoupdateProps } from "../mid/Autoupdate";
+import { BaselineUsers, BaselineUsersProps } from "../mid/BaselineUsers";
+import { MidTarget, MidTargetProps } from "../mid/MidTarget";
+import { PrometheusNodeExporter, PrometheusNodeExporterProps } from "../mid/PrometheusNodeExporter";
+import { Selfheal, SelfhealProps } from "../mid/Selfheal";
 import { AnsibleTrait, AnsibleTraitConfig } from "./AnsibleTrait";
 import { CloudImageTrait, CloudImageTraitConfig, CloudImageTraitConfigDownloadFileConfig } from "./CloudImageTrait";
 import { DNSRecordTrait, DNSRecordTraitConfig } from "./DNSRecordTrait";
@@ -73,6 +80,14 @@ export interface BaseConfigTraitAnsibleConfig extends AnsibleTraitConfig {
   roles?: any[];
 }
 
+export interface BaseConfigTraitMidConfig {
+  autoupdate?: AutoupdateProps & { enabled?: boolean };
+  baselineUsers?: BaselineUsersProps & { enabled?: boolean };
+  midTarget?: MidTargetProps & { enabled?: boolean };
+  prometheusNodeExporter?: PrometheusNodeExporterProps & { enabled?: boolean };
+  selfheal?: SelfhealProps & { enabled?: boolean };
+}
+
 export interface BaseConfigTraitConfig {
   /**
    * @default VLAN.SERVERS
@@ -91,6 +106,8 @@ export interface BaseConfigTraitConfig {
     };
 
   ansible?: boolean | BaseConfigTraitAnsibleConfig;
+
+  mid?: boolean | BaseConfigTraitMidConfig;
 
   dnsRecord?: boolean | DNSRecordTraitConfig;
 
@@ -293,5 +310,73 @@ export class BaseConfigTrait implements ProxmoxVMTrait {
     }
 
     return newProps;
+  }
+
+  forResource(
+    machine: proxmoxve.vm.VirtualMachine,
+    args: proxmoxve.vm.VirtualMachineArgs,
+    name: string,
+    parent: ProxmoxVM,
+  ): void {
+    if (this.config.mid !== false) {
+      let midBaseConfig: BaseConfigTraitMidConfig = {};
+      if (typeof this.config.mid === "object") {
+        midBaseConfig = this.config.mid;
+      }
+      let midTarget: MidTarget | undefined = undefined;
+      if (midBaseConfig.midTarget?.enabled !== false) {
+        midTarget = new MidTarget(`${name}-${this.name}`, {
+          connection: parent.connection,
+          ...midBaseConfig.midTarget,
+        }, {
+          deletedWith: machine,
+          parent,
+        });
+      }
+
+      if (midBaseConfig.baselineUsers?.enabled !== false) {
+        new BaselineUsers(`${name}-${this.name}`, {
+          connection: parent.connection,
+          ...midBaseConfig.baselineUsers,
+        }, {
+          deletedWith: machine,
+          dependsOn: midTarget,
+          parent,
+        });
+      }
+
+      if (midBaseConfig.prometheusNodeExporter?.enabled !== false) {
+        new PrometheusNodeExporter(`${name}-${this.name}`, {
+          connection: parent.connection,
+          ...midBaseConfig.prometheusNodeExporter,
+        }, {
+          deletedWith: machine,
+          dependsOn: midTarget,
+          parent,
+        });
+      }
+
+      if (midBaseConfig.autoupdate?.enabled !== false) {
+        new Autoupdate(`${name}-${this.name}`, {
+          connection: parent.connection,
+          ...midBaseConfig.autoupdate,
+        }, {
+          deletedWith: machine,
+          dependsOn: midTarget,
+          parent,
+        });
+      }
+
+      if (midBaseConfig.selfheal?.enabled === true) {
+        new Selfheal(`${name}-${this.name}`, {
+          connection: parent.connection,
+          ...midBaseConfig.selfheal,
+        }, {
+          deletedWith: machine,
+          dependsOn: midTarget,
+          parent,
+        });
+      }
+    }
   }
 }
