@@ -1,6 +1,7 @@
 import * as path from "path";
 
 import * as aws from "@pulumi/aws";
+import { remote as remote_inputs } from "@pulumi/command/types/input";
 import * as pulumi from "@pulumi/pulumi";
 import { AnsibleProvisioner } from "@sapslaj/pulumi-ansible-provisioner";
 
@@ -27,6 +28,7 @@ const vm = new ProxmoxVM("misc", {
   name: production ? "misc" : `misc-${pulumi.getStack()}`,
   traits: [
     new BaseConfigTrait("base", {
+      mid: false,
       ansible: {
         clean: false,
         base: {
@@ -43,7 +45,7 @@ const vm = new ProxmoxVM("misc", {
 });
 
 new AnsibleProvisioner("misc-setup", {
-  connection: vm.connection,
+  connection: vm.connection as remote_inputs.ConnectionArgs,
   rolePaths: [
     path.join(__dirname, "./ansible/roles"),
   ],
