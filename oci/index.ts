@@ -1,0 +1,169 @@
+import * as crypto from "crypto";
+import * as fs from "fs/promises";
+import * as path from "path";
+
+import * as aws from "@pulumi/aws";
+import * as docker from "@pulumi/docker";
+import * as pulumi from "@pulumi/pulumi";
+import * as mid from "@sapslaj/pulumi-mid";
+
+import { DockerContainer } from "../common/pulumi/components/mid/DockerContainer";
+import { DockerHost } from "../common/pulumi/components/mid/DockerHost";
+import { BaseConfigTrait } from "../common/pulumi/components/proxmox-vm/BaseConfigTrait";
+import { ProxmoxVM } from "../common/pulumi/components/proxmox-vm/ProxmoxVM";
+import { DNSRecord } from "../common/pulumi/components/shimiko";
+
+const vm = new ProxmoxVM("oci", {
+  name: pulumi.getStack() === "prod" ? "oci" : `oci-${pulumi.getStack()}`,
+  traits: [
+    new BaseConfigTrait("base", {
+      ansible: false,
+      mid: true,
+    }),
+  ],
+});
+
+const dockerInstall = new DockerHost("oci", {
+  connection: vm.connection,
+}, {
+  dependsOn: [
+    vm,
+  ],
+});
+
+const iamUser = new aws.iam.User("oci-traefik", {});
+const iamKey = new aws.iam.AccessKey("oci-traefik", {
+  user: iamUser.name,
+});
+new aws.iam.UserPolicyAttachment("oci-traefik-route53", {
+  user: iamUser.name,
+  policyArn: "arn:aws:iam::aws:policy/AmazonRoute53FullAccess",
+});
+
+[
+  // "docker-hub",
+  "traefik",
+].map((subdomain) => {
+  new DNSRecord(subdomain, {
+    name: pulumi.interpolate`${subdomain}.${vm.name}`,
+    records: [
+      pulumi.interpolate`${vm.name}.sapslaj.xyz.`,
+    ],
+    type: "CNAME",
+  });
+});
+
+new DockerContainer("traefik", {
+  connection: vm.connection,
+  name: "traefik",
+  image: "public.ecr.aws/docker/library/traefik:v3.5",
+  command: [
+    "--accesslog.fields.defaultmode=keep",
+    "--accesslog.fields.headers.defaultmode=drop",
+    "--accesslog.format=json",
+    "--accesslog=true",
+    "--api.dashboard=true",
+    "--certificatesresolvers.letsencrypt.acme.caServer=https://acme-v02.api.letsencrypt.org/directory",
+    "--certificatesresolvers.letsencrypt.acme.dnsChallenge.provider=route53",
+    "--certificatesresolvers.letsencrypt.acme.dnsChallenge.resolvers=1.1.1.1:53,8.8.8.8:53",
+    "--certificatesresolvers.letsencrypt.acme.email=alerts@sapslaj.com",
+    "--certificatesresolvers.letsencrypt.acme.storage=/data/acme.json",
+    "--entryPoints.metrics.address=:8082/tcp",
+    "--entryPoints.web.address=:80/tcp",
+    "--entryPoints.web.http.redirections.entryPoint.permanent=true",
+    "--entryPoints.web.http.redirections.entryPoint.scheme=https",
+    "--entryPoints.web.http.redirections.entryPoint.to=:443",
+    "--entryPoints.websecure.address=:443/tcp",
+    "--entryPoints.websecure.http.tls.certResolver=letsencrypt",
+    pulumi.interpolate`--entryPoints.websecure.http.tls.domains[0].main=${vm.name}.sapslaj.xyz`,
+    pulumi.interpolate`--entryPoints.websecure.http.tls.domains[0].sans=*.${vm.name}.sapslaj.xyz`,
+    "--entryPoints.websecure.http.tls=true",
+    "--log.format=json",
+    "--log.level=INFO",
+    "--metrics.prometheus.entrypoint=metrics",
+    "--metrics.prometheus=true",
+    "--ping=true",
+    "--providers.docker=true",
+  ],
+  env: {
+    AWS_REGION: "us-east-1",
+    AWS_ACCESS_KEY_ID: iamKey.id,
+    AWS_SECRET_ACCESS_KEY: iamKey.secret,
+  },
+  publishedPorts: [
+    "80:80",
+    "443:443",
+    "8082:8082",
+  ],
+  volumes: [
+    "/var/docker/volumes/traefik-data:/data",
+    "/var/run/docker.sock:/var/run/docker.sock",
+  ],
+  labels: {
+    "traefik.http.routers.dashboard.rule": "HostRegexp(`traefik\\..+`)",
+    "traefik.http.routers.dashboard.entrypoints": "websecure",
+    "traefik.http.routers.dashboard.service": "api@internal",
+  },
+}, {
+  dependsOn: [
+    dockerInstall,
+  ],
+});
+
+new DockerContainer("registry", {
+  connection: vm.connection,
+  name: "registry",
+  image: "public.ecr.aws/docker/library/registry:3",
+  restartPolicy: "unless-stopped",
+  env: {
+    OTEL_TRACES_EXPORTER: "none", // TODO: re-enable
+    REGISTRY_LOG_ACCESS_LOG_DISABLED: "false",
+    REGISTRY_LOG_FORMATTER: "json",
+    REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: "/var/lib/registry",
+  },
+  volumes: [
+    "/var/docker/volumes/registry-data:/var/lib/registry",
+  ],
+  publishedPorts: [
+    "5000:5000",
+  ],
+  labels: {
+    "traefik.http.routers.registry.rule": "HostRegexp(`.+`)",
+    "traefik.http.routers.registry.entrypoints": "websecure",
+    "traefik.http.services.registry.loadbalancer.server.port": "5000",
+  },
+}, {
+  dependsOn: [
+    dockerInstall,
+  ],
+});
+
+// new DockerContainer("docker-hub-registry", {
+//   connection: vm.connection,
+//   name: "docker-hub-registry",
+//   image: "public.ecr.aws/docker/library/registry:3",
+//   restartPolicy: "unless-stopped",
+//   env: {
+//     OTEL_TRACES_EXPORTER: "none", // TODO: re-enable
+//     REGISTRY_LOG_ACCESS_LOG_DISABLED: "false",
+//     REGISTRY_LOG_FORMATTER: "json",
+//     REGISTRY_PROXY_REMOTEURL: "https://registry-1.docker.io",
+//     REGISTRY_PROXY_TTL: "168h",
+//     REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: "/var/lib/registry",
+//   },
+//   volumes: [
+//     "/var/docker/volumes/docker-hub-registry-data:/var/lib/registry",
+//   ],
+//   publishedPorts: [
+//     "5001:5000",
+//   ],
+//   labels: {
+//     "traefik.http.routers.docker-hub-registry.rule": "HostRegexp(`docker\\-hub\\..+`)",
+//     "traefik.http.routers.docker-hub-registry.entrypoints": "websecure",
+//     "traefik.http.services.docker-hub-registry.loadbalancer.server.port": "5000",
+//   },
+// }, {
+//   dependsOn: [
+//     dockerInstall,
+//   ],
+// });
