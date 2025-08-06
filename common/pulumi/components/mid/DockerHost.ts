@@ -1,8 +1,3 @@
-import * as crypto from "crypto";
-import * as fs from "fs/promises";
-import * as os from "os";
-import * as path from "path";
-
 import * as pulumi from "@pulumi/pulumi";
 import * as mid from "@sapslaj/pulumi-mid";
 
@@ -242,6 +237,11 @@ export class DockerHost extends pulumi.ComponentResource {
             "NONE",
           ],
         },
+      }, {
+        parent: this,
+        dependsOn: [
+          this.service,
+        ],
       });
     }
   }
