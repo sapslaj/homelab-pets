@@ -2,6 +2,7 @@ import * as path from "path";
 
 import * as aws from "@pulumi/aws";
 import { local } from "@pulumi/command";
+import { remote as remote_inputs } from "@pulumi/command/types/input";
 import * as pulumi from "@pulumi/pulumi";
 import { AnsibleProvisioner } from "@sapslaj/pulumi-ansible-provisioner";
 
@@ -16,8 +17,13 @@ const production = config.getBoolean("production");
 
 const vm = new ProxmoxVM("shimiko", {
   name: production ? "shimiko" : undefined,
+  memory: {
+    dedicated: 4096,
+  },
   traits: [
     new BaseConfigTrait("base", {
+      mid: false,
+      dnsRecord: !production,
       ansible: {
         clean: false,
         base: {
@@ -44,7 +50,7 @@ const vm = new ProxmoxVM("shimiko", {
   ],
 });
 
-export const dnsRecord = DNSRecordTrait.dnsRecordFor(vm);
+const dnsRecord = DNSRecordTrait.dnsRecordFor(vm);
 
 export const ipv4 = vm.ipv4;
 
@@ -72,7 +78,7 @@ if (production) {
 }
 
 new AnsibleProvisioner("shimiko-setup", {
-  connection: vm.connection,
+  connection: vm.connection as remote_inputs.ConnectionArgs,
   clean: false,
   rolePaths: [
     path.join(__dirname, "ansible/roles"),
@@ -98,7 +104,7 @@ new AnsibleProvisioner("shimiko-setup", {
           VYOS_PASSWORD: process.env.VYOS_PASSWORD, // FIXME: don't do this.
           SHIMIKO_ACME_EMAIL: "alerts@sapslaj.com",
           SHIMIKO_ACME_URL: acmeURL,
-          SHIMIKO_CERT_DOMAINS: dnsRecord.fullname,
+          SHIMIKO_CERT_DOMAINS: production ? "shimiko.sapslaj.xyz" : dnsRecord.fullname,
           SHIMIKO_RECONCILE_INTERVAL: production ? "1h" : "0s",
         },
       },
