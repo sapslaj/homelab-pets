@@ -3,7 +3,6 @@ import * as fs from "fs/promises";
 import * as path from "path";
 
 import * as aws from "@pulumi/aws";
-import * as docker from "@pulumi/docker";
 import * as pulumi from "@pulumi/pulumi";
 import * as mid from "@sapslaj/pulumi-mid";
 
