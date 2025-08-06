@@ -1,5 +1,0 @@
-name: homelab-pets-iscsi-deez-nuts
-runtime:
-  name: nodejs
-  options:
-    packagemanager: npm
