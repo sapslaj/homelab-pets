@@ -1,7 +1,0 @@
-[Unit]
-Description=IPv6 UDP Shim
-After=network.target
-
-[Service]
-Type=simple
-ExecStart=/usr/bin/socat UDP6-LISTEN:%i,fork UDP4:127.0.0.1:%i
