@@ -31,9 +31,10 @@
 
 - name: copy shortrack
   copy:
-    src: storage/shortrack
+    src: /mnt/exos/volumes/misc/shortrack-binaries/shortrack
     dest: /usr/local/bin/shortrack
     mode: a+x
+    remote_src: true
   notify:
     - restart shortrack service
 
