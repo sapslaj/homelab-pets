@@ -6,6 +6,7 @@ import { BaselineUsers, BaselineUsersProps } from "../mid/BaselineUsers";
 import { MidTarget, MidTargetProps } from "../mid/MidTarget";
 import { PrometheusNodeExporter, PrometheusNodeExporterProps } from "../mid/PrometheusNodeExporter";
 import { Selfheal, SelfhealProps } from "../mid/Selfheal";
+import { Vector, VectorProps } from "../mid/Vector";
 import { AnsibleTrait, AnsibleTraitConfig } from "./AnsibleTrait";
 import { CloudImageTrait, CloudImageTraitConfig, CloudImageTraitConfigDownloadFileConfig } from "./CloudImageTrait";
 import { DNSRecordTrait, DNSRecordTraitConfig } from "./DNSRecordTrait";
@@ -86,6 +87,7 @@ export interface BaseConfigTraitMidConfig {
   midTarget?: MidTargetProps & { enabled?: boolean };
   prometheusNodeExporter?: PrometheusNodeExporterProps & { enabled?: boolean };
   selfheal?: SelfhealProps & { enabled?: boolean };
+  vector?: VectorProps & { enabled?: boolean };
 }
 
 export interface BaseConfigTraitConfig {
@@ -371,6 +373,17 @@ export class BaseConfigTrait implements ProxmoxVMTrait {
         new Selfheal(`${name}-${this.name}`, {
           connection: parent.connection,
           ...midBaseConfig.selfheal,
+        }, {
+          deletedWith: machine,
+          dependsOn: midTarget,
+          parent,
+        });
+      }
+
+      if (midBaseConfig.vector?.enabled !== false) {
+        new Vector(`${name}-${this.name}`, {
+          connection: parent.connection,
+          ...midBaseConfig.vector,
         }, {
           deletedWith: machine,
           dependsOn: midTarget,

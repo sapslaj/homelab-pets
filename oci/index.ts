@@ -1,10 +1,5 @@
-import * as crypto from "crypto";
-import * as fs from "fs/promises";
-import * as path from "path";
-
 import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
-import * as mid from "@sapslaj/pulumi-mid";
 
 import { DockerContainer } from "../common/pulumi/components/mid/DockerContainer";
 import { DockerHost } from "../common/pulumi/components/mid/DockerHost";
@@ -17,7 +12,35 @@ const vm = new ProxmoxVM("oci", {
   traits: [
     new BaseConfigTrait("base", {
       ansible: false,
-      mid: true,
+      mid: {
+        vector: {
+          enabled: true,
+          sources: {
+            metrics_docker: {
+              type: "prometheus_scrape",
+              endpoints: ["http://localhost:9323/metrics"],
+              scrape_interval_secs: 60,
+              scrape_timeout_secs: 45,
+            },
+            metrics_cadvisor: {
+              type: "prometheus_scrape",
+              endpoints: ["http://localhost:9338/metrics"],
+              scrape_interval_secs: 60,
+              scrape_timeout_secs: 45,
+            },
+            metrics_watchtower: {
+              type: "prometheus_scrape",
+              endpoints: ["http://localhost:9420/metrics"],
+              scrape_interval_secs: 60,
+              scrape_timeout_secs: 45,
+              auth: {
+                strategy: "bearer",
+                token: "adminadmin",
+              },
+            },
+          },
+        },
+      },
     }),
   ],
 });
