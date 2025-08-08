@@ -52,7 +52,6 @@ export class DockerHost extends pulumi.ComponentResource {
 
     const dockerPackages = new mid.resource.Apt(`${name}-docker-packages`, {
       connection: props.connection,
-      config: props.config,
       names: [
         "docker-ce",
         "docker-ce-cli",
@@ -62,6 +61,10 @@ export class DockerHost extends pulumi.ComponentResource {
       ],
       updateCache: true,
       ensure: "present",
+      config: {
+        ...props.config,
+        check: false,
+      },
       triggers: mergeTriggers(props.triggers, {
         refresh: [
           repoSetup.triggers.lastChanged,
@@ -97,7 +100,10 @@ export class DockerHost extends pulumi.ComponentResource {
 
     const connectionUserGroupAddition = new mid.resource.User(`${name}-docker-group-addition`, {
       connection: props.connection,
-      config: props.config,
+      config: {
+        ...props.config,
+        check: false,
+      },
       name: props.connection!.user!,
       groupsExclusive: false,
       groups: [dockerGroup.name],
