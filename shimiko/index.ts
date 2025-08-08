@@ -22,7 +22,36 @@ const vm = new ProxmoxVM("shimiko", {
   },
   traits: [
     new BaseConfigTrait("base", {
-      mid: false,
+      mid: {
+        midTarget: {
+          enabled: true
+        },
+        baselineUsers: {
+          // TODO: migrate from Ansible
+          enabled: false,
+        },
+        prometheusNodeExporter: {
+          // TODO: migrate from Ansible
+          enabled: false,
+        },
+        autoupdate: {
+          enabled: true,
+        },
+        selfheal: {
+          enabled: false,
+        },
+        vector: {
+          enabled: true,
+          sources: {
+            metrics_zonepop: {
+              type: "prometheus_scrape",
+              endpoints: ["http://localhost:9412/metrics"],
+              scrape_interval_secs: 60,
+              scrape_timeout_secs: 45,
+            }
+          }
+        },
+      },
       dnsRecord: !production,
       ansible: {
         clean: false,
