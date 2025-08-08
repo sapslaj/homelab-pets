@@ -117,62 +117,6 @@ export class Vector extends pulumi.ComponentResource {
       },
     };
 
-    //     const defaultTransforms: Record<string, Record<string, any>> = {
-    //       logs_journald_job: {
-    //         type: "remap",
-    //         inputs: [
-    //           "logs_journald",
-    //         ],
-    //         source: `.job = "host_vector/logs_journald"`,
-    //       },
-    //       logs_add_labels: {
-    //         type: "remap",
-    //         inputs: [
-    //           "logs_journald",
-    //           ...Object.keys(props.sources ?? {}).filter((key) => key.startsWith("logs_")),
-    //         ],
-    //         source: `
-    // .hostname = get_hostname!()
-    // `,
-    //       },
-    //       metrics_internal_job: {
-    //         type: "remap",
-    //         inputs: [
-    //           "metrics_internal",
-    //         ],
-    //         source: `.tags.job = "host_vector/metrics_internal"`,
-    //       },
-    //       metrics_host_job: {
-    //         type: "remap",
-    //         inputs: [
-    //           "metrics_host",
-    //         ],
-    //         source: `.tags.job = "host_vector/metrics_host"`,
-    //       },
-    //       metrics_node_exporter_job: {
-    //         type: "remap",
-    //         inputs: [
-    //           "metrics_node_exporter",
-    //         ],
-    //         source: `.tags.job = "host_vector/metrics_node_exporter"`,
-    //       },
-    //       metrics_add_labels: {
-    //         type: "remap",
-    //         inputs: [
-    //           "metrics_internal_job",
-    //           "metrics_host_job",
-    //           "metrics_node_exporter_job",
-    //           ...Object.keys(props.sources ?? {}).filter((key) => key.startsWith("logs_")),
-    //         ],
-    //         source: `
-    // .tags.hostname = get_hostname!()
-    // if .tags.instance == null {
-    //   .tags.instance = .tags.hostname
-    // }
-    // `,
-    //       },
-    //     };
-
     const defaultSinks: Record<string, Record<string, any>> = {
       victorialogs: {
         type: "elasticsearch",
@@ -271,22 +215,8 @@ if .tags.instance == null {
       }
     }
 
-    // for (const [key, value] of Object.entries(defaultTransforms)) {
-    //   const providedConfig = (props.transforms ?? {})[key] ?? {};
-    //   if (providedConfig.enabled !== false) {
-    //     config.transforms[key] = {
-    //       ...value,
-    //       ...providedConfig,
-    //       enabled: undefined,
-    //     };
-    //   } else {
-    //     delete config.transforms[key];
-    //   }
-    // }
-
     for (const [key, value] of Object.entries(defaultSinks)) {
       const providedConfig = (props.sinks ?? {})[key] ?? {};
-      console.log(key);
       let datatype = "";
       if (key === "victorialogs") {
         datatype = "logs";
