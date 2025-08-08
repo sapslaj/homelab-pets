@@ -136,7 +136,7 @@ export interface BaseConfig {
   rsyncBackupConfig?: BaseRsyncBackupConfig;
 
   /**
-   * @default true
+   * @default false
    */
   promtail?: boolean;
 
@@ -230,6 +230,7 @@ export class BaseConfigBuilder {
   selfHeal: boolean;
   rsyncBackup: boolean;
   promtailRole: boolean;
+  uninstallPromtailRole: boolean;
   rsyslogPromtail: boolean;
 
   dockerStandaloneConfig: BaseDockerStandaloneConfig;
@@ -254,7 +255,9 @@ export class BaseConfigBuilder {
 
     this.selfHeal = baseConfig.selfheal ?? false;
 
-    this.promtailRole = baseConfig.promtail ?? true;
+    this.promtailRole = baseConfig.promtail ?? false;
+
+    this.uninstallPromtailRole = !this.promtailRole;
 
     this.rsyncBackup = baseConfig.rsyncBackup ?? false;
 
@@ -389,6 +392,12 @@ export class BaseConfigBuilder {
       roles.push({
         role: "patrickjahns.promtail",
         vars: this.buildPromtailVars(),
+      });
+    }
+
+    if (this.uninstallPromtailRole) {
+      roles.push({
+        role: "sapslaj.uninstall_promtail",
       });
     }
 

@@ -1,0 +1,41 @@
+- name: stop and disable promtail.service
+  systemd:
+    name: promtail.service
+    state: stopped
+    enabled: false
+  ignore_errors: true
+
+- name: delete /etc/systemd/system/promtail.service
+  file:
+    path: /etc/systemd/system/promtail.service
+    state: absent
+
+- name: delete /usr/local/bin/promtail
+  file:
+    path: /usr/local/bin/promtail
+    state: absent
+
+- name: delete /opt/promtail
+  file:
+    path: /opt/promtail
+    state: absent
+
+- name: delete /opt/promtail
+  file:
+    path: /opt/promtail
+    state: absent
+
+- name: delete /etc/promtail
+  file:
+    path: /etc/promtail
+    state: absent
+
+- name: delete promtail user
+  user:
+    name: promtail
+    state: absent
+
+- name: delete promtail group
+  group:
+    name: promtail
+    state: absent
