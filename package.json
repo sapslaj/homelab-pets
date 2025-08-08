@@ -19,7 +19,7 @@
     "@pulumi/std": "^1.7.3",
     "@pulumi/tls": "^5.0.10",
     "@sapslaj/pulumi-ansible-provisioner": "^1.2.0",
-    "@sapslaj/pulumi-mid": "^0.0.10",
+    "@sapslaj/pulumi-mid": "^0.0.12",
     "dedent": "^1.5.3",
     "node-ssh": "^13.2.0",
     "yaml": "^2.7.0"
