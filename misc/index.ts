@@ -28,7 +28,36 @@ const vm = new ProxmoxVM("misc", {
   name: production ? "misc" : `misc-${pulumi.getStack()}`,
   traits: [
     new BaseConfigTrait("base", {
-      mid: false,
+      mid: {
+        midTarget: {
+          enabled: true,
+        },
+        baselineUsers: {
+          // TODO: migrate from Ansible
+          enabled: false,
+        },
+        prometheusNodeExporter: {
+          // TODO: migrate from Ansible
+          enabled: false,
+        },
+        autoupdate: {
+          enabled: true,
+        },
+        selfheal: {
+          enabled: false,
+        },
+        vector: {
+          enabled: true,
+          sources: {
+            metrics_caddy: {
+              type: "prometheus_scrape",
+              endpoints: ["http://localhost:2019/metrics"],
+              scrape_interval_secs: 60,
+              scrape_timeout_secs: 45,
+            },
+          },
+        },
+      },
       ansible: {
         clean: false,
         base: {
