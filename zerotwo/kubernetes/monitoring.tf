@@ -10,7 +10,6 @@ module "prometheus_ingress_dns" {
     "alertmanager",
     "blackbox-exporter",
     "prometheus",
-    "shelly-ht-report",
     "vm-vmsingle",
     "vm-vmalert",
     "vm-vmagent",
@@ -670,17 +669,6 @@ resource "helm_release" "blackbox_exporter" {
       }
     }),
   ]
-}
-
-module "shelly_ht_exporter" {
-  source = "./modules/shelly_ht_exporter"
-
-  namespace      = kubernetes_namespace_v1.monitoring.metadata[0].name
-  enable_ingress = true
-  ingress_hosts = [
-    "shelly-ht-report.sapslaj.xyz",
-  ]
-  enable_service_monitor = true
 }
 
 module "loki_ingress_dns" {
