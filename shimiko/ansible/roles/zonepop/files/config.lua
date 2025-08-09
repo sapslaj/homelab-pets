@@ -242,6 +242,27 @@ return {
         forward_lookup_filter = forward_lookup_filter,
         update_endpoints = function (config, endpoints)
           for _, endpoint in pairs(endpoints) do
+            local skip_hostnames = {
+              "aqua",
+              "daki",
+              "mitsuru",
+              "pdu1",
+              "pdu2",
+              "ram",
+              "rem",
+              "shiroko",
+              "taiga",
+              "ups1",
+              "yor",
+            }
+            for _, v in pairs(skip_hostnames) do
+              if v == endpoint.hostname then
+                log.info("skipping updating endpoint in shimiko", {
+                  hostname = endpoint.hostname,
+                })
+                goto continue
+              end
+            end
             if #endpoint.ipv4s == 0 then
               goto continue
             end
@@ -249,6 +270,27 @@ return {
               url = "http://localhost/v1/dns-records/A/" .. endpoint.hostname,
             })
             if check.status_code == 404 then
+              goto continue
+            end
+            local needs_update = false
+            local records = check.json().record.records
+            for _, ipv4 in pairs(endpoint.ipv4s) do
+              local matches = false
+              for _, record in pairs(records) do
+                if record == ipv4 then
+                  matches = true
+                end
+              end
+              if not matches then
+                needs_update = true
+              end
+            end
+            if not needs_update then
+              log.info("skipping noop shimiko update", {
+                hostname = endpoint.hostname,
+                endpoint_ipv4s = endpoint.ipv4s,
+                records = records,
+              })
               goto continue
             end
             -- TODO: make this one big upsert request instead of a bajillon
