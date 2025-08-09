@@ -1,10 +1,11 @@
 terraform {
-  backend "remote" {
-    hostname     = "app.terraform.io"
-    organization = "sapslaj"
-
-    workspaces {
-      name = "homelab-pets-zerotwo-kubernetes"
+  backend "s3" {
+    region         = "us-east-1"
+    bucket         = "sapslaj-tf-state"
+    key            = "homelab-pets/zerotwo/kubernetes.tfstate"
+    dynamodb_table = "sapslaj-tf-state"
+    assume_role = {
+      role_arn = "arn:aws:iam::040054058260:role/tf-state"
     }
   }
 }
