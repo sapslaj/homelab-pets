@@ -68,22 +68,37 @@
   become: true
   gather_facts: false
   roles:
-    - role: sapslaj.network_syslog_promtail
-      tags: syslog_promtail
+    - role: sapslaj.network_syslog_vector
+      tags: syslog_vector
       vars:
-        network_syslog_promtail_volumes_dir: /var/docker/volumes/syslog-promtail
-        network_syslog_promtail_push_url: http://loki.sapslaj.xyz/loki/api/v1/push
-        network_syslog_promtail_labels:
-          job: network-syslog
-        network_syslog_promtail_relabel_configs:
-          - source_labels: [__syslog_message_hostname]
-            target_label: hostname
-          - source_labels: [__syslog_message_severity]
-            target_label: syslog_severity
-          - source_labels: [__syslog_message_facility]
-            target_label: syslog_facility
-          - source_labels: [__syslog_message_app_name]
-            target_label: syslog_app_name
+        network_syslog_vector_volumes_dir: /var/docker/volumes/syslog-vector
+        network_syslog_vector_sinks:
+          victorialogs:
+            type: elasticsearch
+            inputs:
+              - syslog
+            api_version: v8
+            compression: gzip
+            endpoints:
+              - https://victoriametrics-vlinsert.sapslaj.xyz/insert/elasticsearch
+            healthcheck:
+              enabled: false
+            mode: bulk
+            request:
+              headers:
+                Authorization: "Basic {{ ('remotewrite:' + lookup('amazon.aws.aws_ssm', '/nekopara/victoria-metrics/ingress-user/remotewrite/password')) | b64encode }}"
+                AccountID: "0"
+                ProjectID: "0"
+                VL-Msg-Field: message,msg,_msg,log.msg,log.message,log
+                VL-Stream-Fields: stream,hostname
+                VL-Time-Field: timestamp
+          debug:
+            type: file
+            inputs:
+              - syslog
+            path: /var/lib/vector/vector-sink-debug.log
+            encoding:
+              codec: json
 
 # Syncthing
 - hosts: all

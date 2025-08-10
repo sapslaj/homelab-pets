@@ -1,0 +1,9 @@
+vector_config:
+  sources:
+    syslog:
+      type: syslog
+      address: 0.0.0.0:1514
+      mode: tcp
+      path: /syslog.sock
+  transforms: "{{ network_syslog_vector_transforms }}"
+  sinks: "{{ network_syslog_vector_sinks }}"
