@@ -1,3 +1,0 @@
-k3s_server_location: /var/lib/rancher/k3s
-k3s_systemd_dir: /etc/systemd/system
-k3s_env: {}
