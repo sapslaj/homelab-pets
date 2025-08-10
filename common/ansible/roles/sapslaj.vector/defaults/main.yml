@@ -2,4 +2,9 @@ vector_env:
   REMOTE_WRITE_USERNAME: remotewrite
   REMOTE_WRITE_PASSWORD: "{{ lookup('amazon.aws.aws_ssm', '/nekopara/victoria-metrics/ingress-user/remotewrite/password') }}"
   REMOTE_WRITE_AUTHORIZATION_HEADER: "Basic {{ ('remotewrite:' + lookup('amazon.aws.aws_ssm', '/nekopara/victoria-metrics/ingress-user/remotewrite/password')) | b64encode }}"
+vector_enable_dns: false
 vector_enable_docker: false
+vector_enable_du: false
+vector_enable_libvirt: false
+vector_enable_morbius: false
+vector_enable_qbittorrent: false

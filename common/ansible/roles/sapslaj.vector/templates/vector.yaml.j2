@@ -25,6 +25,22 @@ sources:
     scrape_interval_secs: 60
     scrape_timeout_secs: 45
 
+{% if vector_enable_dns %}
+  metrics_adguard:
+    type: prometheus_scrape
+    endpoints:
+      - http://localhost:9617/metrics
+    scrape_interval_secs: 60
+    scrape_timeout_secs: 45
+
+  metrics_coredns:
+    type: prometheus_scrape
+    endpoints:
+      - http://localhost:9153/metrics
+    scrape_interval_secs: 60
+    scrape_timeout_secs: 45
+{% endif %}
+
 {% if vector_enable_docker %}
   metrics_docker:
     type: prometheus_scrape
@@ -49,6 +65,42 @@ sources:
     auth:
       strategy: bearer
       token: adminadmin
+{% endif %}
+
+{% if vector_enable_du %}
+  metrics_du:
+    type: prometheus_scrape
+    endpoints:
+      - http://localhost:9477/metrics
+    scrape_interval_secs: 60
+    scrape_timeout_secs: 45
+{% endif %}
+
+{% if vector_enable_libvirt %}
+  metrics_libvirt:
+    type: prometheus_scrape
+    endpoints:
+      - http://localhost:9177/metrics
+    scrape_interval_secs: 60
+    scrape_timeout_secs: 45
+{% endif %}
+
+{% if vector_enable_morbius %}
+  metrics_morbius:
+    type: prometheus_scrape
+    endpoints:
+      - http://localhost:9269/metrics
+    scrape_interval_secs: 60
+    scrape_timeout_secs: 45
+{% endif %}
+
+{% if vector_enable_qbittorrent %}
+  metrics_qbittorrent:
+    type: prometheus_scrape
+    endpoints:
+      - http://localhost:9365/metrics
+    scrape_interval_secs: 60
+    scrape_timeout_secs: 45
 {% endif %}
 
 transforms:
@@ -101,6 +153,30 @@ transforms:
         .tags.instance = .tags.hostname
       }
 
+{% if vector_enable_dns %}
+  metrics_adguard_default_labels:
+    type: remap
+    inputs:
+      - metrics_adguard
+    source: |
+      .tags.job = "host_vector/metrics_adguard"
+      .tags.hostname = get_hostname!()
+      if .tags.instance == null {
+        .tags.instance = .tags.hostname
+      }
+
+  metrics_coredns_default_labels:
+    type: remap
+    inputs:
+      - metrics_coredns
+    source: |
+      .tags.job = "host_vector/metrics_coredns"
+      .tags.hostname = get_hostname!()
+      if .tags.instance == null {
+        .tags.instance = .tags.hostname
+      }
+{% endif %}
+
 {% if vector_enable_docker %}
   metrics_docker_default_labels:
     type: remap
@@ -130,6 +206,58 @@ transforms:
       - metrics_watchtower
     source: |
       .tags.job = "host_vector/metrics_watchtower"
+      .tags.hostname = get_hostname!()
+      if .tags.instance == null {
+        .tags.instance = .tags.hostname
+      }
+{% endif %}
+
+{% if vector_enable_du %}
+  metrics_du_default_labels:
+    type: remap
+    inputs:
+      - metrics_du
+    source: |
+      .tags.job = "host_vector/metrics_du"
+      .tags.hostname = get_hostname!()
+      if .tags.instance == null {
+        .tags.instance = .tags.hostname
+      }
+{% endif %}
+
+{% if vector_enable_libvirt %}
+  metrics_libvirt_default_labels:
+    type: remap
+    inputs:
+      - metrics_libvirt
+    source: |
+      .tags.job = "host_vector/metrics_libvirt"
+      .tags.hostname = get_hostname!()
+      if .tags.instance == null {
+        .tags.instance = .tags.hostname
+      }
+{% endif %}
+
+{% if vector_enable_morbius %}
+  metrics_morbius_default_labels:
+    type: remap
+    inputs:
+      - metrics_morbius
+    source: |
+      .tags.job = "host_vector/metrics_morbius"
+      .tags.hostname = get_hostname!()
+      if .tags.instance == null {
+        .tags.instance = .tags.hostname
+      }
+{% endif %}
+
+{% if vector_enable_qbittorrent %}
+  metrics_qbittorrent_default_labels:
+    type: remap
+    inputs:
+      - metrics_qbittorrent
+    source: |
+      .tags.job = "host_vector/metrics_qbittorrent"
       .tags.hostname = get_hostname!()
       if .tags.instance == null {
         .tags.instance = .tags.hostname
@@ -166,9 +294,30 @@ sinks:
       - metrics_node_exporter_default_labels
 
 {% if vector_enable_docker %}
+      - metrics_adguard
+      - metrics_coredns
+{% endif %}
+
+{% if vector_enable_docker %}
       - metrics_docker_default_labels
       - metrics_cadvisor_default_labels
       - metrics_watchtower_default_labels
+{% endif %}
+
+{% if vector_enable_du %}
+      - metrics_du
+{% endif %}
+
+{% if vector_enable_libvirt %}
+      - metrics_libvirt_default_labels
+{% endif %}
+
+{% if vector_enable_morbius %}
+      - metrics_morbius
+{% endif %}
+
+{% if vector_enable_qbittorrent %}
+      - metrics_qbittorrent_default_labels
 {% endif %}
 
     endpoint: https://victoriametrics-vminsert.sapslaj.xyz/insert/0/prometheus/api/v1/write
