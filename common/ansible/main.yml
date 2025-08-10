@@ -37,20 +37,6 @@
   roles:
     - role: sapslaj.qemu_guest
 
-- hosts: k3s
-  become: true
-  roles:
-    - role: sapslaj.rsync_backup
-      vars:
-        rsync_backup_timer:
-          on_calendar: hourly
-          randomized_delay_sec: 1800
-          fixed_random_delay: true
-        rsync_backup_jobs:
-          - src: /var/lib/rancher/k3s/
-            dest: /mnt/exos/volumes/{{ ansible_hostname }}/k3s-data/
-            additional_parameters: --exclude agent/
-
 - hosts: docker_standalone
   become: true
   roles:

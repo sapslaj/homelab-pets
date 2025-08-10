@@ -3,8 +3,6 @@ eris.sapslaj.xyz
 ram.sapslaj.xyz
 rem.sapslaj.xyz
 tohru.sapslaj.xyz
-zerotwo.sapslaj.xyz
-ichigo.sapslaj.xyz
 koyuki.sapslaj.xyz
 mitsuru.sapslaj.xyz
 
@@ -14,8 +12,6 @@ mitsuru.sapslaj.xyz
 [nas_clients]
 eris.sapslaj.xyz
 tohru.sapslaj.xyz
-zerotwo.sapslaj.xyz
-ichigo.sapslaj.xyz
 koyuki.sapslaj.xyz
 
 [bare_hosts]
@@ -30,11 +26,6 @@ mitsuru.sapslaj.xyz
 [qemu_guests]
 rem.sapslaj.xyz
 tohru.sapslaj.xyz
-zerotwo.sapslaj.xyz
-
-[k3s]
-zerotwo.sapslaj.xyz
-ichigo.sapslaj.xyz
 
 [docker_standalone]
 eris.sapslaj.xyz
