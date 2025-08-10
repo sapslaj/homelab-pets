@@ -92,6 +92,10 @@ func (record *DNSRecord) Validate() *DNSRecordValidation {
 
 func (record *DNSRecord) ShouldReplace(other *DNSRecord) bool {
 	if other != nil {
+		if other.Name == "" && other.Type == "" {
+			// FIXME: why
+			return false
+		}
 		if record.Name != other.Name || record.Type != other.Type {
 			return true
 		}

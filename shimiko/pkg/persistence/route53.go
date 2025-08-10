@@ -3,6 +3,7 @@ package persistence
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -117,7 +118,7 @@ func (r53 *Route53) DeleteRecord(ctx context.Context, record *DNSRecord) error {
 
 	var nextRecordIdentifier *string
 	// FIXME: figure out why this is infinite looping
-	for i := 0; i < 1000; i++ {
+	for range 10 {
 		existingQuery, err := r53.Client.ListResourceRecordSets(ctx, &route53.ListResourceRecordSetsInput{
 			HostedZoneId:          aws.String(Route53HostedZoneId),
 			StartRecordIdentifier: nextRecordIdentifier,
@@ -137,6 +138,7 @@ func (r53 *Route53) DeleteRecord(ctx context.Context, record *DNSRecord) error {
 		if !existingQuery.IsTruncated {
 			break
 		}
+		time.Sleep(100 * time.Millisecond)
 	}
 
 	if adhocChangeBatch {
