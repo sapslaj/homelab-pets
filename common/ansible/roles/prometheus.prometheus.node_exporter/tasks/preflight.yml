@@ -1,20 +1,18 @@
 ---
+- set_fact:
+    _common_web_listen_address: "{{ node_exporter_web_listen_address }}"
+
 - name: Assert usage of systemd as an init system
   ansible.builtin.assert:
-    that: ansible_service_mgr == 'systemd'
-    msg: "This role only works with systemd"
+    that: ansible_facts['service_mgr'] == 'systemd'
+    msg: "This module only works with systemd"
 
-- name: Install package fact dependencies
+- name: Install dependencies
   become: true
   ansible.builtin.package:
-    name: "{{ _pkg_fact_req }}"
+    name: "{{ _common_dependencies }}"
     state: present
-  when: (_pkg_fact_req)
-  vars:
-    _pkg_fact_req: "{% if (ansible_pkg_mgr == 'apt') %}\
-      {{ ('python-apt' if ansible_python_version is version('3', '<') else 'python3-apt') }}
-      {% else %}\
-      {% endif %}"
+  when: _common_dependencies is defined
 
 - name: Gather package facts
   ansible.builtin.package_facts:
@@ -23,7 +21,24 @@
 - name: Naive assertion of proper listen address
   ansible.builtin.assert:
     that:
-      - "':' in node_exporter_web_listen_address"
+      - >-
+        [_common_web_listen_address] |
+          flatten |
+          reject('match', '.+:\\d+$') |
+          list |
+          length == 0
+  when: _common_web_listen_address is defined
+
+- name: Assert that used version supports listen address type
+  ansible.builtin.assert:
+    that:
+      - >-
+        node_exporter_web_listen_address is string
+        or
+        (
+          node_exporter_version is version('1.5.0', '>=') and
+          node_exporter_web_listen_address | type_debug == "list"
+        )
 
 - name: Assert collectors are not both disabled and enabled at the same time
   ansible.builtin.assert:
@@ -53,53 +68,21 @@
     - name: Assert that TLS key and cert are present
       ansible.builtin.assert:
         that:
-          - "{{ __node_exporter_cert_file.stat.exists }}"
-          - "{{ __node_exporter_key_file.stat.exists }}"
-
-- name: Check if node_exporter is installed
-  ansible.builtin.stat:
-    path: "{{ node_exporter_binary_install_dir }}/node_exporter"
-  register: __node_exporter_is_installed
-  check_mode: false
-  tags:
-    - node_exporter_install
-
-- name: Gather currently installed node_exporter version (if any)
-  ansible.builtin.command: "{{ node_exporter_binary_install_dir }}/node_exporter --version"
-  changed_when: false
-  register: __node_exporter_current_version_output
-  check_mode: false
-  when: __node_exporter_is_installed.stat.exists
-  tags:
-    - node_exporter_install
+          - "__node_exporter_cert_file.stat.exists"
+          - "__node_exporter_key_file.stat.exists"
 
 - name: Discover latest version
   ansible.builtin.set_fact:
-    node_exporter_version: "{{ (lookup('url', 'https://api.github.com/repos/prometheus/node_exporter/releases/latest', headers=_github_api_headers,
+    node_exporter_version: "{{ (lookup('url', 'https://api.github.com/repos/{{ _node_exporter_repo }}/releases/latest', headers=_github_api_headers,
                             split_lines=False) | from_json).get('tag_name') | replace('v', '') }}"
   run_once: true
   until: node_exporter_version is version('0.0.0', '>=')
   retries: 10
   when:
     - node_exporter_version == "latest"
-    - node_exporter_binary_local_dir | length == 0
-    - not node_exporter_skip_install
-
-- name: Get node_exporter binary checksum
-  when:
-    - node_exporter_binary_local_dir | length == 0
-    - not node_exporter_skip_install
-  block:
-    - name: Get checksum list from github
-      ansible.builtin.set_fact:
-        __node_exporter_checksums: "{{ lookup('url', node_exporter_checksums_url, headers=_github_api_headers, wantlist=True) | list }}"
-      run_once: true
-      until: __node_exporter_checksums is search('linux-' + go_arch + '.tar.gz')
-      retries: 10
-
-    - name: "Get checksum for {{ go_arch }}"
-      ansible.builtin.set_fact:
-        __node_exporter_checksum: "{{ item.split(' ')[0] }}"
-      with_items: "{{ __node_exporter_checksums }}"
-      when:
-        - "('linux-' + go_arch + '.tar.gz') in item"
+  tags:
+    - node_exporter
+    - install
+    - node_exporter_install
+    - download
+    - node_exporter_download
