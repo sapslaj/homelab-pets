@@ -1,0 +1,4 @@
+- name: restart vector.service
+  systemd:
+    name: vector.service
+    state: restarted

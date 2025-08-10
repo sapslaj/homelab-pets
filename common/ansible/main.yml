@@ -4,7 +4,13 @@
     - role: sapslaj.ansible_target
     - role: sapslaj.unfuck_ubuntu
     - role: sapslaj.users
-    - role: patrickjahns.promtail
+
+- hosts: all
+  become: true
+  roles:
+    - role: sapslaj.vector
+      vars:
+        vector_enable_docker: "{{ 'docker_standalone' in group_names }}"
 
 - hosts: all,!proxmox_hosts
   become: true
