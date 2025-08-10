@@ -6,12 +6,19 @@
       APT::Install-Suggests "0";
   when: ansible_distribution in ["Debian", "Ubuntu", "Linux Mint", "OSMC"]
 
-- name: remove snapd (and associates) (Ubuntu)
+- name: remove Canonical malware (Ubuntu)
   apt:
     name:
-      - snapd
       - lxc
+      - lxd
+      - lxd-agent-loader
+      - lxd-installer
+      - motd-news-config
+      - snapd
       - ubuntu-pro-client
+      - ubuntu-release-upgrader-core
+      - unattended-upgrades
+      - update-notifier-common
     state: absent
     autoremove: true
     clean: true
@@ -26,6 +33,11 @@
       Pin: release a=*
       Pin-Priority: -10
   when: ansible_distribution in ["Ubuntu", "Linux Mint"]
+
+- name: disable motd advertisements
+  file:
+    path: /etc/update-motd.d/10-help-text
+    state: absent
 
 - name: check for motd-news
   stat:
