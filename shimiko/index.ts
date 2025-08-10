@@ -4,6 +4,7 @@ import * as aws from "@pulumi/aws";
 import { local } from "@pulumi/command";
 import { remote as remote_inputs } from "@pulumi/command/types/input";
 import * as pulumi from "@pulumi/pulumi";
+import * as time from "@pulumiverse/time";
 import { AnsibleProvisioner } from "@sapslaj/pulumi-ansible-provisioner";
 
 import { directoryHash } from "../common/pulumi/asset-utils";
@@ -24,7 +25,7 @@ const vm = new ProxmoxVM("shimiko", {
     new BaseConfigTrait("base", {
       mid: {
         midTarget: {
-          enabled: true
+          enabled: true,
         },
         baselineUsers: {
           // TODO: migrate from Ansible
@@ -48,8 +49,8 @@ const vm = new ProxmoxVM("shimiko", {
               endpoints: ["http://localhost:9412/metrics"],
               scrape_interval_secs: 60,
               scrape_timeout_secs: 45,
-            }
-          }
+            },
+          },
         },
       },
       dnsRecord: !production,
@@ -90,14 +91,35 @@ const shimikoBinaryBuild = new local.Command("shimiko-binary-build", {
   ],
 });
 
-const iamUser = new aws.iam.User("shimiko", {
+const iamKeyRotation = new time.Rotating("traefik-iam-key", {
+  rotationDays: 30,
+});
+
+const iamUserShimiko = new aws.iam.User("shimiko", {
   name: production ? "shimiko" : undefined,
 });
-const iamKey = new aws.iam.AccessKey("shimiko", {
-  user: iamUser.name,
+const iamKeyShimiko = new aws.iam.AccessKey("shimiko", {
+  user: iamUserShimiko.name,
+}, {
+  deleteBeforeReplace: false,
+  dependsOn: [iamKeyRotation],
 });
 new aws.iam.UserPolicyAttachment("shimiko-route53", {
-  user: iamUser.name,
+  user: iamUserShimiko.name,
+  policyArn: "arn:aws:iam::aws:policy/AmazonRoute53FullAccess",
+});
+
+const iamUserZonepop = new aws.iam.User("shimiko-zonepop", {
+  name: production ? "shimiko-zonepop" : undefined,
+});
+const iamKeyZonepop = new aws.iam.AccessKey("shimiko-zonepop", {
+  user: iamUserShimiko.name,
+}, {
+  deleteBeforeReplace: false,
+  dependsOn: [iamKeyRotation],
+});
+new aws.iam.UserPolicyAttachment("shimiko-zonepop-route53", {
+  user: iamUserZonepop.name,
   policyArn: "arn:aws:iam::aws:policy/AmazonRoute53FullAccess",
 });
 
@@ -127,8 +149,8 @@ new AnsibleProvisioner("shimiko-setup", {
       vars: {
         shimiko_env: {
           AWS_REGION: "us-east-1",
-          AWS_ACCESS_KEY_ID: iamKey.id,
-          AWS_SECRET_ACCESS_KEY: iamKey.secret,
+          AWS_ACCESS_KEY_ID: iamKeyShimiko.id,
+          AWS_SECRET_ACCESS_KEY: iamKeyShimiko.secret,
           VYOS_USERNAME: process.env.VYOS_USERNAME, // FIXME: don't do this.
           VYOS_PASSWORD: process.env.VYOS_PASSWORD, // FIXME: don't do this.
           SHIMIKO_ACME_EMAIL: "alerts@sapslaj.com",
@@ -143,8 +165,8 @@ new AnsibleProvisioner("shimiko-setup", {
       vars: {
         zonepop_env: {
           AWS_REGION: "us-east-1",
-          AWS_ACCESS_KEY_ID: iamKey.id,
-          AWS_SECRET_ACCESS_KEY: iamKey.secret,
+          AWS_ACCESS_KEY_ID: iamKeyZonepop.id,
+          AWS_SECRET_ACCESS_KEY: iamKeyZonepop.secret,
           VYOS_HOST: "yor.sapslaj.xyz",
           VYOS_USERNAME: process.env.VYOS_USERNAME, // FIXME: don't do this.
           VYOS_PASSWORD: process.env.VYOS_PASSWORD, // FIXME: don't do this.
