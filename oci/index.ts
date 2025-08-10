@@ -1,5 +1,6 @@
 import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
+import * as mid from "@sapslaj/pulumi-mid";
 
 import { DockerContainer } from "../common/pulumi/components/mid/DockerContainer";
 import { DockerHost } from "../common/pulumi/components/mid/DockerHost";
@@ -25,6 +26,12 @@ const vm = new ProxmoxVM("oci", {
             metrics_cadvisor: {
               type: "prometheus_scrape",
               endpoints: ["http://localhost:9338/metrics"],
+              scrape_interval_secs: 60,
+              scrape_timeout_secs: 45,
+            },
+            metrics_proxy_zot: {
+              type: "prometheus_scrape",
+              endpoints: ["http://localhost:9523/metrics"],
               scrape_interval_secs: 60,
               scrape_timeout_secs: 45,
             },
@@ -63,7 +70,7 @@ new aws.iam.UserPolicyAttachment("oci-traefik-route53", {
 });
 
 [
-  // "docker-hub",
+  "proxy",
   "traefik",
 ].map((subdomain) => {
   new DNSRecord(subdomain, {
@@ -160,32 +167,82 @@ new DockerContainer("registry", {
   ],
 });
 
-// new DockerContainer("docker-hub-registry", {
-//   connection: vm.connection,
-//   name: "docker-hub-registry",
-//   image: "public.ecr.aws/docker/library/registry:3",
-//   restartPolicy: "unless-stopped",
-//   env: {
-//     OTEL_TRACES_EXPORTER: "none", // TODO: re-enable
-//     REGISTRY_LOG_ACCESS_LOG_DISABLED: "false",
-//     REGISTRY_LOG_FORMATTER: "json",
-//     REGISTRY_PROXY_REMOTEURL: "https://registry-1.docker.io",
-//     REGISTRY_PROXY_TTL: "168h",
-//     REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: "/var/lib/registry",
-//   },
-//   volumes: [
-//     "/var/docker/volumes/docker-hub-registry-data:/var/lib/registry",
-//   ],
-//   publishedPorts: [
-//     "5001:5000",
-//   ],
-//   labels: {
-//     "traefik.http.routers.docker-hub-registry.rule": "HostRegexp(`docker\\-hub\\..+`)",
-//     "traefik.http.routers.docker-hub-registry.entrypoints": "websecure",
-//     "traefik.http.services.docker-hub-registry.loadbalancer.server.port": "5000",
-//   },
-// }, {
-//   dependsOn: [
-//     dockerInstall,
-//   ],
-// });
+const proxyZotConfigDir = new mid.resource.File("/var/docker/volumes/proxy-zot-config", {
+  connection: vm.connection,
+  path: "/var/docker/volumes/proxy-zot-config",
+  ensure: "directory",
+  recurse: true,
+});
+
+const proxyZotConfig = new mid.resource.File("/var/docker/volumes/proxy-zot-config/zot.json", {
+  connection: vm.connection,
+  path: "/var/docker/volumes/proxy-zot-config/zot.json",
+  content: JSON.stringify({
+    storage: {
+      rootDirectory: "/data",
+      gc: true,
+    },
+    http: {
+      address: "0.0.0.0",
+      port: 8080,
+    },
+    log: {
+      level: "debug",
+    },
+    extensions: {
+      metrics: {
+        enable: true,
+        prometheus: {
+          path: "/metrics",
+        },
+      },
+      sync: {
+        enable: true,
+        registries: [
+          {
+            urls: ["https://docker.io"],
+            content: [
+              {
+                prefix: "**",
+                destination: "/docker-hub",
+              },
+            ],
+            onDemand: true,
+            tlsVerify: true,
+          },
+        ],
+      },
+    },
+  }),
+}, {
+  dependsOn: [proxyZotConfigDir],
+});
+
+new DockerContainer("proxy", {
+  connection: vm.connection,
+  name: "proxy",
+  image: "ghcr.io/project-zot/zot:v2.1.7",
+  restartPolicy: "unless-stopped",
+  volumes: [
+    pulumi.interpolate`${proxyZotConfigDir.path}:/config`,
+    "/var/docker/volumes/proxy-zot-data:/data",
+  ],
+  publishedPorts: [
+    "9523:8080",
+  ],
+  labels: {
+    "config-hash": proxyZotConfig.stat.sha256Checksum!.apply((c) => c ?? "[unknown]"),
+    "traefik.http.routers.proxy.rule": "HostRegexp(`proxy\\..+`)",
+    "traefik.http.routers.proxy.entrypoints": "websecure",
+    "traefik.http.services.proxy.loadbalancer.server.port": "8080",
+  },
+  command: [
+    "serve",
+    "/config/zot.json",
+  ],
+}, {
+  dependsOn: [
+    dockerInstall,
+    proxyZotConfig,
+  ],
+});
