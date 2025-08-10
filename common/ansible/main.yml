@@ -11,7 +11,7 @@
   roles:
     - role: sapslaj.selfheal
     - role: sapslaj.waifu_motd
-    - role: sapslaj.rsyslog_promtail
+    - role: sapslaj.rsyslog_vector
 
 - hosts: nas_clients
   become: true
