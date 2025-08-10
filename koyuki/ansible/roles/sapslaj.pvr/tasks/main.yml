@@ -8,12 +8,14 @@
     - "{{ pvr_volumes_dir }}/radarr-config"
     - "{{ pvr_volumes_dir }}/readarr-config"
     - "{{ pvr_volumes_dir }}/sonarr-config"
+
 - name: flairsolverr container
   docker_container:
     name: flairsolverr
     image: ghcr.io/flaresolverr/flaresolverr:latest
     restart_policy: unless-stopped
     network_mode: container:{{ pvr_vpn_container }}
+
 - name: jackett container
   docker_container:
     name: jackett
@@ -26,6 +28,7 @@
       TZ: America/New_York
     volumes:
       - "{{ pvr_volumes_dir }}/jackett-config:/config"
+
 - name: lidarr container
   docker_container:
     name: lidarr
@@ -42,6 +45,7 @@
     volumes:
       - "{{ pvr_volumes_dir }}/lidarr-config:/config"
       - "{{ pvr_data_dir }}:/data"
+
 - name: prowlarr container
   docker_container:
     name: prowlarr
@@ -58,6 +62,7 @@
     volumes:
       - "{{ pvr_volumes_dir }}/prowlarr-config:/config"
       - "{{ pvr_data_dir }}:/data"
+
 - name: radarr container
   docker_container:
     name: radarr
@@ -74,22 +79,24 @@
     volumes:
       - "{{ pvr_volumes_dir }}/radarr-config:/config"
       - "{{ pvr_data_dir }}:/data"
-- name: readarr container
-  docker_container:
-    name: readarr
-    image: lscr.io/linuxserver/readarr:nightly
-    restart_policy: unless-stopped
-    links:
-      - "{{ pvr_vpn_container }}:jackett"
-    ports:
-      - 0.0.0.0:8787:8787
-      - "[::]:8787:8787"
-    env:
-      PUID: "0"
-      PGID: "0"
-    volumes:
-      - "{{ pvr_volumes_dir }}/readarr-config:/config"
-      - "{{ pvr_data_dir }}:/data"
+
+# - name: readarr container
+#   docker_container:
+#     name: readarr
+#     image: lscr.io/linuxserver/readarr:nightly
+#     restart_policy: unless-stopped
+#     links:
+#       - "{{ pvr_vpn_container }}:jackett"
+#     ports:
+#       - 0.0.0.0:8787:8787
+#       - "[::]:8787:8787"
+#     env:
+#       PUID: "0"
+#       PGID: "0"
+#     volumes:
+#       - "{{ pvr_volumes_dir }}/readarr-config:/config"
+#       - "{{ pvr_data_dir }}:/data"
+
 - name: sonarr container
   docker_container:
     name: sonarr
@@ -112,6 +119,7 @@
     src: selfheal.yml
     dest: /etc/selfheal/tasks/pvr.yml
   when: pvr_selfheal_enabled
+
 - name: remove selfheal task for pvr
   file:
     path: /etc/selfheal/tasks/pvr.yml

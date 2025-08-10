@@ -60,7 +60,6 @@
       "lidarr"
       "prowlarr"
       "radarr"
-      "readarr"
       "sonarr"
     )
     for app in ${apps[@]}; do
