@@ -4,6 +4,8 @@ import { BaseConfig, BaseConfigBuilder } from "../ansible/BaseConfigBuilder";
 import { Autoupdate, AutoupdateProps } from "../mid/Autoupdate";
 import { BaselineUsers, BaselineUsersProps } from "../mid/BaselineUsers";
 import { MidTarget, MidTargetProps } from "../mid/MidTarget";
+import { NASClient, NASClientProps } from "../mid/NASClient";
+import { OpenTelemetryCollector, OpenTelemetryCollectorProps } from "../mid/OpenTelemetryCollector";
 import { PrometheusNodeExporter, PrometheusNodeExporterProps } from "../mid/PrometheusNodeExporter";
 import { Selfheal, SelfhealProps } from "../mid/Selfheal";
 import { Vector, VectorProps } from "../mid/Vector";
@@ -85,6 +87,8 @@ export interface BaseConfigTraitMidConfig {
   autoupdate?: AutoupdateProps & { enabled?: boolean };
   baselineUsers?: BaselineUsersProps & { enabled?: boolean };
   midTarget?: MidTargetProps & { enabled?: boolean };
+  nasClient?: NASClientProps & { enabled?: boolean };
+  openTelemetryCollector?: OpenTelemetryCollectorProps & { enabled?: boolean };
   prometheusNodeExporter?: PrometheusNodeExporterProps & { enabled?: boolean };
   selfheal?: SelfhealProps & { enabled?: boolean };
   vector?: VectorProps & { enabled?: boolean };
@@ -336,6 +340,17 @@ export class BaseConfigTrait implements ProxmoxVMTrait {
         });
       }
 
+      if (midBaseConfig.autoupdate?.enabled !== false) {
+        new Autoupdate(`${name}-${this.name}`, {
+          connection: parent.connection,
+          ...midBaseConfig.autoupdate,
+        }, {
+          deletedWith: machine,
+          dependsOn: midTarget,
+          parent,
+        });
+      }
+
       if (midBaseConfig.baselineUsers?.enabled !== false) {
         new BaselineUsers(`${name}-${this.name}`, {
           connection: parent.connection,
@@ -347,10 +362,10 @@ export class BaseConfigTrait implements ProxmoxVMTrait {
         });
       }
 
-      if (midBaseConfig.prometheusNodeExporter?.enabled !== false) {
-        new PrometheusNodeExporter(`${name}-${this.name}`, {
+      if (midBaseConfig.nasClient?.enabled === true) {
+        new NASClient(`${name}-${this.name}`, {
           connection: parent.connection,
-          ...midBaseConfig.prometheusNodeExporter,
+          ...midBaseConfig.nasClient,
         }, {
           deletedWith: machine,
           dependsOn: midTarget,
@@ -358,10 +373,21 @@ export class BaseConfigTrait implements ProxmoxVMTrait {
         });
       }
 
-      if (midBaseConfig.autoupdate?.enabled !== false) {
-        new Autoupdate(`${name}-${this.name}`, {
+      if (midBaseConfig.openTelemetryCollector?.enabled !== false) {
+        new OpenTelemetryCollector(`${name}-${this.name}`, {
           connection: parent.connection,
-          ...midBaseConfig.autoupdate,
+          ...midBaseConfig.openTelemetryCollector,
+        }, {
+          deletedWith: machine,
+          dependsOn: midTarget,
+          parent,
+        });
+      }
+
+      if (midBaseConfig.prometheusNodeExporter?.enabled !== false) {
+        new PrometheusNodeExporter(`${name}-${this.name}`, {
+          connection: parent.connection,
+          ...midBaseConfig.prometheusNodeExporter,
         }, {
           deletedWith: machine,
           dependsOn: midTarget,
