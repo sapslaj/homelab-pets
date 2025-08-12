@@ -1,10 +1,8 @@
-import * as path from "path";
-
 import * as aws from "@pulumi/aws";
-import { remote as remote_inputs } from "@pulumi/command/types/input";
 import * as pulumi from "@pulumi/pulumi";
-import { AnsibleProvisioner } from "@sapslaj/pulumi-ansible-provisioner";
+import * as mid from "@sapslaj/pulumi-mid";
 
+import { SystemdUnit } from "../common/pulumi/components/mid/SystemdUnit";
 import { BaseConfigTrait } from "../common/pulumi/components/proxmox-vm/BaseConfigTrait";
 import { DNSRecordTrait } from "../common/pulumi/components/proxmox-vm/DNSRecordTrait";
 import { ProxmoxVM } from "../common/pulumi/components/proxmox-vm/ProxmoxVM";
@@ -29,18 +27,22 @@ const vm = new ProxmoxVM("misc", {
   traits: [
     new BaseConfigTrait("base", {
       mid: {
-        midTarget: {
+        autoupdate: {
           enabled: true,
         },
         baselineUsers: {
-          // TODO: migrate from Ansible
+          enabled: true,
+        },
+        midTarget: {
+          enabled: true,
+        },
+        nasClient: {
+          enabled: true,
+        },
+        openTelemetryCollector: {
           enabled: false,
         },
         prometheusNodeExporter: {
-          // TODO: migrate from Ansible
-          enabled: false,
-        },
-        autoupdate: {
           enabled: true,
         },
         selfheal: {
@@ -58,12 +60,7 @@ const vm = new ProxmoxVM("misc", {
           },
         },
       },
-      ansible: {
-        clean: false,
-        base: {
-          nasClient: true,
-        },
-      },
+      ansible: false,
       cloudImage: {
         diskConfig: {
           size: 32,
@@ -73,27 +70,193 @@ const vm = new ProxmoxVM("misc", {
   ],
 });
 
-new AnsibleProvisioner("misc-setup", {
-  connection: vm.connection as remote_inputs.ConnectionArgs,
-  rolePaths: [
-    path.join(__dirname, "./ansible/roles"),
+const xcaddyDeps = new mid.resource.Apt("xcaddy-deps", {
+  connection: vm.connection,
+  updateCache: true,
+  names: [
+    "apt-transport-https",
+    "curl",
+    "debian-archive-keyring",
+    "debian-keyring",
+    "golang-go",
   ],
-  clean: false,
-  roles: [
-    {
-      role: "sapslaj.caddy",
-      vars: {
-        caddy_hostname: DNSRecordTrait.dnsRecordFor(vm).fullname,
-        caddy_version: "v2.9.1",
-        caddy_xcaddy_build_args: [
-          "--with github.com/caddy-dns/route53@v1.5.0",
-        ].join(" "),
-        caddy_env: {
-          AWS_REGION: "us-east-1",
-          AWS_ACCESS_KEY_ID: iamKey.id,
-          AWS_SECRET_ACCESS_KEY: iamKey.secret,
-        },
-      },
-    },
+}, {
+  deletedWith: vm,
+  retainOnDelete: true,
+  dependsOn: [
+    vm,
+  ],
+});
+
+const cloudsmithGPGKey = new mid.resource.Exec("cloudsmith-gpg-key", {
+  connection: vm.connection,
+  create: {
+    command: [
+      "/bin/bash",
+      "-c",
+      "curl -1sLf 'https://dl.cloudsmith.io/public/caddy/xcaddy/gpg.key' | sudo gpg --dearmor -o /usr/share/keyrings/caddy-xcaddy-archive-keyring.gpg",
+    ],
+  },
+  delete: {
+    command: [
+      "rm",
+      "-f",
+      "/usr/share/keyrings/caddy-xcaddy-archive-keyring.gpg",
+    ],
+  },
+}, {
+  deletedWith: vm,
+  dependsOn: [
+    xcaddyDeps,
+  ],
+});
+
+const cloudsmithAptRepo = new mid.resource.Exec("cloudsmith-apt-repo", {
+  connection: vm.connection,
+  create: {
+    command: [
+      "/bin/bash",
+      "-c",
+      "curl -1sLf 'https://dl.cloudsmith.io/public/caddy/xcaddy/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-xcaddy.list",
+    ],
+  },
+  delete: {
+    command: [
+      "rm",
+      "-f",
+      "/etc/apt/sources.list.d/caddy-xcaddy.list",
+    ],
+  },
+}, {
+  deletedWith: vm,
+  dependsOn: [
+    xcaddyDeps,
+  ],
+});
+
+const xcaddyPackage = new mid.resource.Apt("xcaddy", {
+  connection: vm.connection,
+  config: {
+    check: false,
+  },
+  updateCache: true,
+  name: "xcaddy",
+}, {
+  deletedWith: vm,
+  dependsOn: [
+    cloudsmithGPGKey,
+    cloudsmithAptRepo,
+  ],
+});
+
+const etcSysconfig = new mid.resource.File("/etc/sysconfig", {
+  connection: vm.connection,
+  path: "/etc/sysconfig",
+  ensure: "directory",
+}, {
+  deletedWith: vm,
+  retainOnDelete: true,
+});
+
+const caddyEnv = new mid.resource.File("/etc/sysconfig/caddy.env", {
+  connection: vm.connection,
+  path: "/etc/sysconfig/caddy.env",
+  content: pulumi.concat(
+    ...Object.entries({
+      AWS_REGION: "us-east-1",
+      AWS_ACCESS_KEY_ID: iamKey.id,
+      AWS_SECRET_ACCESS_KEY: iamKey.secret,
+    }).map(([key, value]) => {
+      return pulumi.concat(key, "='", value, "'\n");
+    }),
+  ),
+}, {
+  deletedWith: vm,
+  dependsOn: [
+    etcSysconfig,
+  ],
+});
+
+const etcCaddy = new mid.resource.File("/etc/caddy", {
+  connection: vm.connection,
+  path: "/etc/caddy",
+  ensure: "directory",
+}, {
+  deletedWith: vm,
+});
+
+const caddyfile = new mid.resource.File("/etc/caddy/Caddyfile", {
+  connection: vm.connection,
+  path: "/etc/caddy/Caddyfile",
+  content: pulumi.interpolate`
+{
+  email alerts@sapslaj.com
+  acme_dns route53
+  metrics
+  admin
+}
+
+${DNSRecordTrait.dnsRecordFor(vm).fullname} {
+  root * /mnt/exos/volumes/misc/
+  file_server browse
+}
+`,
+}, {
+  deletedWith: vm,
+  dependsOn: [
+    etcCaddy,
+  ],
+});
+
+const caddyVersion = "v2.9.1";
+
+const buildArgs = [
+  "--with github.com/caddy-dns/route53@v1.5.0",
+].join(" ");
+
+const caddyEntrypoint = new mid.resource.File("/usr/local/sbin/caddy.sh", {
+  connection: vm.connection,
+  path: "/usr/local/sbin/caddy.sh",
+  mode: "a+x",
+  content: `#!/usr/bin/env bash
+set -euxo pipefail
+: "\${HOME:=/root}"
+export HOME
+xcaddy build ${caddyVersion} --output /usr/local/bin/caddy ${buildArgs}
+/usr/local/bin/caddy run --config /etc/caddy/Caddyfile
+`,
+}, {
+  deletedWith: vm,
+  dependsOn: [
+    etcCaddy,
+  ],
+});
+
+new SystemdUnit("caddy.service", {
+  connection: vm.connection,
+  name: "caddy.service",
+  ensure: "started",
+  enabled: true,
+  unit: {
+    "Description": "Caddy",
+  },
+  service: {
+    "Type": "simple",
+    "EnvironmentFile": caddyEnv.path,
+    "WorkingDirectory": etcCaddy.path,
+    "ExecStart": caddyEntrypoint.path,
+    "Restart": "always",
+    "RestartSec": "1",
+  },
+  install: {
+    "WantedBy": "multi-user.target",
+  },
+}, {
+  deletedWith: vm,
+  dependsOn: [
+    xcaddyPackage,
+    caddyEnv,
+    caddyfile,
+    caddyEntrypoint,
   ],
 });

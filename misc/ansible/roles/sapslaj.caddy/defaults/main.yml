@@ -1,4 +1,0 @@
-caddy_hostname:
-caddy_env: {}
-caddy_version: latest
-caddy_xcaddy_build_args: ''
