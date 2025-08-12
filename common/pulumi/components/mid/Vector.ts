@@ -40,7 +40,15 @@ export class Vector extends pulumi.ComponentResource {
           "eval \"$(curl -L https://setup.vector.dev)\"",
         ],
       },
-      // TODO: delete
+      delete: {
+        command: [
+          "rm",
+          "-rf",
+          "/etc/apt/sources.list.d/timber-vector.list",
+          "/etc/apt/trusted.gpg.d/datadog-archive-keyring.gpg",
+          "/usr/share/keyrings/datadog-archive-keyring.gpg",
+        ],
+      },
     }, {
       parent: this,
       dependsOn: [
