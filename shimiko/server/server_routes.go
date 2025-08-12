@@ -3,12 +3,16 @@ package server
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 	"gorm.io/gorm"
 
 	"github.com/sapslaj/homelab-pets/shimiko/pkg/persistence"
+	"github.com/sapslaj/homelab-pets/shimiko/pkg/telemetry"
 )
 
 func (s *Server) Routes() {
@@ -31,56 +35,82 @@ func (s *Server) Routes() {
 }
 
 func (s *Server) Root(c echo.Context) error {
+	_, span := telemetry.Tracer.Start(c.Request().Context(), "shimiko/server.Server.Root", trace.WithAttributes())
+	defer span.End()
+
+	span.SetStatus(codes.Ok, "")
 	return c.JSON(200, map[string]any{
 		"msg": "Hello, Sensei! It's Shimiko!",
 	})
 }
 
 func (s *Server) HealthzLiveness(c echo.Context) error {
+	_, span := telemetry.Tracer.Start(c.Request().Context(), "shimiko/server.Server.HealthzLiveness", trace.WithAttributes())
+	defer span.End()
+
+	span.SetStatus(codes.Ok, "")
 	return c.JSON(200, map[string]any{
 		"msg": "OK",
 	})
 }
 
 func (s *Server) ZonePopEndpoints(c echo.Context) error {
+	ctx, span := telemetry.Tracer.Start(c.Request().Context(), "shimiko/server.Server.ZonePopEndpoints", trace.WithAttributes())
+	defer span.End()
+
 	logger := s.RequestLogger(c)
+
 	res, err := http.Get("http://localhost:9412/endpoints/forward")
 	if err != nil {
 		logger.ErrorContext(
-			c.Request().Context(),
+			ctx,
 			"error sending request to ZonePop",
 			"error", err,
 		)
+		span.SetStatus(codes.Error, err.Error())
 		return c.JSON(502, map[string]any{
 			"msg": "error sending request to ZonePop",
 		})
 	}
+
 	contentType := res.Header.Get("Content-Type")
 	if contentType == "" {
 		contentType = "application/json"
 	}
 	defer res.Body.Close()
+
+	span.SetStatus(codes.Ok, "")
 	return c.Stream(res.StatusCode, contentType, res.Body)
 }
 
 func (s *Server) IndexDNSRecords(c echo.Context) error {
+	ctx, span := telemetry.Tracer.Start(c.Request().Context(), "shimiko/server.Server.IndexDNSRecords", trace.WithAttributes())
+	defer span.End()
+
 	logger := s.RequestLogger(c)
+
 	var records []*persistence.DNSRecord
 	result := s.DB.Find(&records)
 	if result.Error != nil {
 		logger.ErrorContext(
-			c.Request().Context(),
+			ctx,
 			"error retrieving DNSRecords",
 			"error", result.Error,
 		)
+		span.SetStatus(codes.Error, result.Error.Error())
 		return result.Error
 	}
+
+	span.SetStatus(codes.Ok, "")
 	return c.JSON(200, map[string]any{
 		"records": records,
 	})
 }
 
 func (s *Server) UpsertDNSRecords(c echo.Context) error {
+	ctx, span := telemetry.Tracer.Start(c.Request().Context(), "shimiko/server.Server.UpsertDNSRecords", trace.WithAttributes())
+	defer span.End()
+
 	logger := s.RequestLogger(c)
 
 	type bodyType struct {
@@ -90,11 +120,14 @@ func (s *Server) UpsertDNSRecords(c echo.Context) error {
 	decoder := json.NewDecoder(c.Request().Body)
 	err := decoder.Decode(&body)
 	if err != nil {
+		span.SetStatus(codes.Error, err.Error())
 		return c.JSON(400, map[string]any{
 			"msg":   "error parsing request body",
 			"error": err.Error(),
 		})
 	}
+	span.SetAttributes(telemetry.OtelJSON("http.request.body", body))
+
 	type responseResultType struct {
 		Record     *persistence.DNSRecord           `json:"record"`
 		Status     string                           `json:"status"`
@@ -109,13 +142,14 @@ func (s *Server) UpsertDNSRecords(c echo.Context) error {
 		Results: []responseResultType{},
 	}
 
-	ps, err := persistence.NewSession(c.Request().Context(), s.DB)
+	ps, err := persistence.NewSession(ctx, s.DB)
 	if err != nil {
 		logger.ErrorContext(
-			c.Request().Context(),
+			ctx,
 			"failed to start persistence session",
 			"error", err,
 		)
+		span.SetStatus(codes.Error, err.Error())
 		return c.JSON(500, map[string]any{
 			"msg":    "internal server error",
 			"status": "ERROR",
@@ -136,11 +170,11 @@ func (s *Server) UpsertDNSRecords(c echo.Context) error {
 			})
 			continue
 		}
-		err := record.Upsert(c.Request().Context(), ps)
+		err := record.Upsert(ctx, ps)
 		if err != nil {
 			hasError = true
 			logger.ErrorContext(
-				c.Request().Context(),
+				ctx,
 				"error upserting DNSRecord",
 				"error", err,
 				"dns_record", record,
@@ -158,10 +192,11 @@ func (s *Server) UpsertDNSRecords(c echo.Context) error {
 		}
 	}
 
-	err = ps.Finish(c.Request().Context())
+	err = ps.Finish(ctx)
 	if err != nil {
+		span.SetStatus(codes.Error, err.Error())
 		logger.ErrorContext(
-			c.Request().Context(),
+			ctx,
 			"failed to finish persistence session",
 			"error", err,
 		)
@@ -177,10 +212,20 @@ func (s *Server) UpsertDNSRecords(c echo.Context) error {
 	} else {
 		statusCode = 200
 	}
+
+	span.SetAttributes(telemetry.OtelJSON("http.response.body", response))
+	if statusCode >= 500 {
+		span.SetStatus(codes.Error, fmt.Sprintf("status code = %d", statusCode))
+	} else {
+		span.SetStatus(codes.Ok, "")
+	}
 	return c.JSON(statusCode, response)
 }
 
 func (s *Server) DeleteDNSRecords(c echo.Context) error {
+	ctx, span := telemetry.Tracer.Start(c.Request().Context(), "shimiko/server.Server.DeleteDNSRecords", trace.WithAttributes())
+	defer span.End()
+
 	logger := s.RequestLogger(c)
 
 	type bodyType struct {
@@ -195,6 +240,8 @@ func (s *Server) DeleteDNSRecords(c echo.Context) error {
 			"error": err.Error(),
 		})
 	}
+	span.SetAttributes(telemetry.OtelJSON("http.request.body", body))
+
 	type responseResultType struct {
 		Record *persistence.DNSRecord `json:"record"`
 		Status string                 `json:"status"`
@@ -208,13 +255,14 @@ func (s *Server) DeleteDNSRecords(c echo.Context) error {
 		Results: []responseResultType{},
 	}
 
-	ps, err := persistence.NewSession(c.Request().Context(), s.DB)
+	ps, err := persistence.NewSession(ctx, s.DB)
 	if err != nil {
 		logger.ErrorContext(
-			c.Request().Context(),
+			ctx,
 			"failed to start persistence session",
 			"error", err,
 		)
+		span.SetStatus(codes.Error, err.Error())
 		return c.JSON(500, map[string]any{
 			"msg":    "internal server error",
 			"status": "ERROR",
@@ -224,11 +272,11 @@ func (s *Server) DeleteDNSRecords(c echo.Context) error {
 
 	hasError := false
 	for _, record := range body.Records {
-		err := record.Delete(c.Request().Context(), ps)
+		err := record.Delete(ctx, ps)
 		if err != nil {
 			hasError = true
 			logger.ErrorContext(
-				c.Request().Context(),
+				ctx,
 				"error deleting DNSRecord",
 				"error", err,
 				"dns_record", record,
@@ -246,10 +294,10 @@ func (s *Server) DeleteDNSRecords(c echo.Context) error {
 		}
 	}
 
-	err = ps.Finish(c.Request().Context())
+	err = ps.Finish(ctx)
 	if err != nil {
 		logger.ErrorContext(
-			c.Request().Context(),
+			ctx,
 			"failed to finish persistence session",
 			"error", err,
 		)
@@ -263,10 +311,21 @@ func (s *Server) DeleteDNSRecords(c echo.Context) error {
 	} else {
 		statusCode = 200
 	}
+
+	span.SetAttributes(telemetry.OtelJSON("http.response.body", response))
+	if statusCode >= 500 {
+		span.SetStatus(codes.Error, fmt.Sprintf("status code = %d", statusCode))
+	} else {
+		span.SetStatus(codes.Ok, "")
+	}
+
 	return c.JSON(statusCode, response)
 }
 
 func (s *Server) ShowDNSRecord(c echo.Context) error {
+	ctx, span := telemetry.Tracer.Start(c.Request().Context(), "shimiko/server.Server.ShowDNSRecord", trace.WithAttributes())
+	defer span.End()
+
 	logger := s.RequestLogger(c)
 
 	typ := c.Param("type")
@@ -276,28 +335,35 @@ func (s *Server) ShowDNSRecord(c echo.Context) error {
 	tx := s.DB.Where("type = ? and name = ?", typ, name).First(&record)
 	if tx.Error != nil || record == nil {
 		if errors.Is(tx.Error, gorm.ErrRecordNotFound) {
+			span.SetStatus(codes.Ok, "")
 			return c.JSON(404, map[string]any{
 				"msg": "not found",
 			})
 		} else {
 			logger.ErrorContext(
-				c.Request().Context(),
+				ctx,
 				"error showing DNSRecord",
 				"error", tx.Error,
 				"dns_record", record,
 			)
+			span.SetStatus(codes.Error, tx.Error.Error())
 			return c.JSON(503, map[string]any{
 				"msg":   "error looking up DNS record",
 				"error": tx.Error.Error(),
 			})
 		}
 	}
+
+	span.SetStatus(codes.Ok, "")
 	return c.JSON(200, map[string]any{
 		"record": record,
 	})
 }
 
 func (s *Server) UpsertDNSRecord(c echo.Context) error {
+	ctx, span := telemetry.Tracer.Start(c.Request().Context(), "shimiko/server.Server.UpsertDNSRecord", trace.WithAttributes())
+	defer span.End()
+
 	logger := s.RequestLogger(c)
 
 	type responseResultType struct {
@@ -314,13 +380,16 @@ func (s *Server) UpsertDNSRecord(c echo.Context) error {
 	decoder := json.NewDecoder(c.Request().Body)
 	err := decoder.Decode(&body)
 	if err != nil {
+		span.SetStatus(codes.Error, err.Error())
 		return c.JSON(400, map[string]any{
 			"msg":   "error parsing request body",
 			"error": err.Error(),
 		})
 	}
+	span.SetAttributes(telemetry.OtelJSON("http.request.body", body))
 
 	if body.Record == nil {
+		span.SetStatus(codes.Ok, "")
 		return c.JSON(400, responseResultType{
 			Status: "ERROR",
 			Error:  "no record present in request body",
@@ -328,6 +397,7 @@ func (s *Server) UpsertDNSRecord(c echo.Context) error {
 	}
 
 	if body.Record.Type != c.Param("type") {
+		span.SetStatus(codes.Ok, "")
 		return c.JSON(400, responseResultType{
 			Record: body.Record,
 			Status: "ERROR",
@@ -335,6 +405,7 @@ func (s *Server) UpsertDNSRecord(c echo.Context) error {
 		})
 	}
 	if body.Record.Name != c.Param("name") {
+		span.SetStatus(codes.Ok, "")
 		return c.JSON(400, responseResultType{
 			Record: body.Record,
 			Status: "ERROR",
@@ -344,6 +415,7 @@ func (s *Server) UpsertDNSRecord(c echo.Context) error {
 
 	validationErr := body.Record.Validate()
 	if validationErr != nil {
+		span.SetStatus(codes.Ok, "")
 		return c.JSON(400, responseResultType{
 			Record:     body.Record,
 			Status:     "ERROR",
@@ -351,13 +423,14 @@ func (s *Server) UpsertDNSRecord(c echo.Context) error {
 		})
 	}
 
-	ps, err := persistence.NewSession(c.Request().Context(), s.DB)
+	ps, err := persistence.NewSession(ctx, s.DB)
 	if err != nil {
 		logger.ErrorContext(
-			c.Request().Context(),
+			ctx,
 			"failed to start persistence session",
 			"error", err,
 		)
+		span.SetStatus(codes.Error, err.Error())
 		return c.JSON(500, map[string]any{
 			"msg":    "internal server error",
 			"status": "ERROR",
@@ -365,14 +438,15 @@ func (s *Server) UpsertDNSRecord(c echo.Context) error {
 		})
 	}
 
-	err = body.Record.Upsert(c.Request().Context(), ps)
+	err = body.Record.Upsert(ctx, ps)
 	if err != nil {
 		logger.ErrorContext(
-			c.Request().Context(),
+			ctx,
 			"error upserting DNSRecord",
 			"error", err,
 			"dns_record", body.Record,
 		)
+		span.SetStatus(codes.Error, err.Error())
 		return c.JSON(500, responseResultType{
 			Record: body.Record,
 			Status: "ERROR",
@@ -380,13 +454,14 @@ func (s *Server) UpsertDNSRecord(c echo.Context) error {
 		})
 	}
 
-	err = ps.Finish(c.Request().Context())
+	err = ps.Finish(ctx)
 	if err != nil {
 		logger.ErrorContext(
-			c.Request().Context(),
+			ctx,
 			"failed to finish persistence session",
 			"error", err,
 		)
+		span.SetStatus(codes.Error, err.Error())
 		return c.JSON(500, responseResultType{
 			Record: body.Record,
 			Status: "ERROR",
@@ -394,6 +469,7 @@ func (s *Server) UpsertDNSRecord(c echo.Context) error {
 		})
 	}
 
+	span.SetStatus(codes.Ok, "")
 	return c.JSON(200, responseResultType{
 		Record: body.Record,
 		Status: "OK",
@@ -401,6 +477,9 @@ func (s *Server) UpsertDNSRecord(c echo.Context) error {
 }
 
 func (s *Server) DeleteDNSRecord(c echo.Context) error {
+	ctx, span := telemetry.Tracer.Start(c.Request().Context(), "shimiko/server.Server.DeleteDNSRecord", trace.WithAttributes())
+	defer span.End()
+
 	logger := s.RequestLogger(c)
 
 	type responseResultType struct {
@@ -410,13 +489,14 @@ func (s *Server) DeleteDNSRecord(c echo.Context) error {
 		Validation *persistence.DNSRecordValidation `json:"validation,omitempty"`
 	}
 
-	ps, err := persistence.NewSession(c.Request().Context(), s.DB)
+	ps, err := persistence.NewSession(ctx, s.DB)
 	if err != nil {
 		logger.ErrorContext(
-			c.Request().Context(),
+			ctx,
 			"failed to start persistence session",
 			"error", err,
 		)
+		span.SetStatus(codes.Error, err.Error())
 		return c.JSON(500, map[string]any{
 			"msg":    "internal server error",
 			"status": "ERROR",
@@ -429,14 +509,15 @@ func (s *Server) DeleteDNSRecord(c echo.Context) error {
 		Name: c.Param("name"),
 	}
 
-	err = record.Delete(c.Request().Context(), ps)
+	err = record.Delete(ctx, ps)
 	if err != nil {
 		logger.ErrorContext(
-			c.Request().Context(),
+			ctx,
 			"error deleting DNSRecord",
 			"error", err,
 			"dns_record", record,
 		)
+		span.SetStatus(codes.Error, err.Error())
 		return c.JSON(500, responseResultType{
 			Record: record,
 			Status: "ERROR",
@@ -444,13 +525,14 @@ func (s *Server) DeleteDNSRecord(c echo.Context) error {
 		})
 	}
 
-	err = ps.Finish(c.Request().Context())
+	err = ps.Finish(ctx)
 	if err != nil {
 		logger.ErrorContext(
-			c.Request().Context(),
+			ctx,
 			"failed to finish persistence session",
 			"error", err,
 		)
+		span.SetStatus(codes.Error, err.Error())
 		return c.JSON(500, responseResultType{
 			Record: record,
 			Status: "ERROR",
@@ -458,6 +540,7 @@ func (s *Server) DeleteDNSRecord(c echo.Context) error {
 		})
 	}
 
+	span.SetStatus(codes.Ok, "")
 	return c.JSON(200, responseResultType{
 		Record: record,
 		Status: "OK",
@@ -465,16 +548,21 @@ func (s *Server) DeleteDNSRecord(c echo.Context) error {
 }
 
 func (s *Server) RefreshDNSRecords(c echo.Context) error {
+	ctx, span := telemetry.Tracer.Start(c.Request().Context(), "shimiko/server.Server.RefreshDNSRecords", trace.WithAttributes())
+	defer span.End()
+
 	logger := s.RequestLogger(c)
-	logger.InfoContext(c.Request().Context(), "starting record reconcile")
-	err := s.ReconcileAll(c.Request().Context())
+	logger.InfoContext(ctx, "starting record reconcile")
+	err := s.ReconcileAll(ctx)
 	if err == nil {
-		logger.InfoContext(c.Request().Context(), "finished record reconcile with no errors")
+		logger.InfoContext(ctx, "finished record reconcile with no errors")
+		span.SetStatus(codes.Ok, "")
 		return c.JSON(200, map[string]any{
 			"status": "OK",
 		})
 	} else {
-		logger.WarnContext(c.Request().Context(), "finished record reconcile with errors", "error", err)
+		logger.WarnContext(ctx, "finished record reconcile with errors", "error", err)
+		span.SetStatus(codes.Error, err.Error())
 		return c.JSON(500, map[string]any{
 			"status": "ERROR",
 			"error":  err.Error(),

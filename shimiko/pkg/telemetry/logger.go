@@ -4,11 +4,22 @@ import (
 	"context"
 	"log/slog"
 	"os"
+
+	"github.com/go-slog/otelslog"
 )
 
-var DefaultLogger = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-	AddSource: true,
-}))
+var DefaultLogger = slog.New(
+	otelslog.NewHandler(
+		slog.NewJSONHandler(
+			os.Stdout,
+			&slog.HandlerOptions{
+				AddSource: true,
+			},
+		),
+	),
+).With(
+	slog.String("service.name", ServiceName),
+)
 
 const LoggerContextKey ContextKey = "sapslaj.shimiko.logger"
 

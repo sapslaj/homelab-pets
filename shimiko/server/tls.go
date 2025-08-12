@@ -25,6 +25,8 @@ import (
 	"github.com/go-acme/lego/v4/lego"
 	legoroute53 "github.com/go-acme/lego/v4/providers/dns/route53"
 	"github.com/go-acme/lego/v4/registration"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/sapslaj/homelab-pets/shimiko/pkg/telemetry"
 )
@@ -50,6 +52,11 @@ func (lcc *LegoCertConfig) GetPrivateKey() crypto.PrivateKey {
 }
 
 func GetOrGeneratePrivateKey(ctx context.Context, filename string) (crypto.PrivateKey, error) {
+	ctx, span := telemetry.Tracer.Start(ctx, "shimiko/server.GetOrGeneratePrivateKey", trace.WithAttributes(
+		attribute.String("filename", filename),
+	))
+	defer span.End()
+
 	logger := telemetry.LoggerFromContext(ctx).With(
 		slog.String("filename", filename),
 	)
@@ -114,6 +121,15 @@ func GetOrGeneratePrivateKey(ctx context.Context, filename string) (crypto.Priva
 }
 
 func GetOrGenerateACMECert(ctx context.Context, filename string, config *LegoCertConfig) error {
+	ctx, span := telemetry.Tracer.Start(ctx, "shimiko/server.GetOrGenerateACMECert", trace.WithAttributes(
+		attribute.String("acme_email", config.ACMEUrl),
+		attribute.String("acme_url", config.ACMEUrl),
+		attribute.StringSlice("domains", config.Domains),
+		attribute.String("route53_hosted_zone_id", config.Route53HostedZoneID),
+		attribute.String("filename", filename),
+	))
+	defer span.End()
+
 	logger := telemetry.LoggerFromContext(ctx).With(
 		slog.String("acme_email", config.Email),
 		slog.String("acme_url", config.ACMEUrl),
@@ -252,6 +268,12 @@ func GetOrGenerateACMECert(ctx context.Context, filename string, config *LegoCer
 }
 
 func GetOrGenerateSelfSignedCert(ctx context.Context, filename string, config *LegoCertConfig) error {
+	ctx, span := telemetry.Tracer.Start(ctx, "shimiko/server.GetOrGenerateSelfSignedCert", trace.WithAttributes(
+		attribute.String("filename", filename),
+		attribute.StringSlice("domains", config.Domains),
+	))
+	defer span.End()
+
 	logger := telemetry.LoggerFromContext(ctx).With(
 		slog.Any("domains", config.Domains),
 		slog.String("filename", filename),

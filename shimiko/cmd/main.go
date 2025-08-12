@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -9,6 +10,9 @@ import (
 )
 
 func main() {
+	stopTelemetry := telemetry.StartTelemetry(context.Background())
+	defer stopTelemetry()
+
 	rootCmd := &cobra.Command{
 		Use: "shimiko",
 	}

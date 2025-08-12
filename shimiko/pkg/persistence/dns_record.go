@@ -9,7 +9,12 @@ import (
 	"strings"
 	"time"
 
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 	"gorm.io/gorm"
+
+	"github.com/sapslaj/homelab-pets/shimiko/pkg/telemetry"
 )
 
 var HostnameRegex = regexp.MustCompile(`^[a-z0-9][a-z0-9\.\-]+[a-z0-9]$`)
@@ -104,16 +109,26 @@ func (record *DNSRecord) ShouldReplace(other *DNSRecord) bool {
 }
 
 func (record *DNSRecord) Upsert(ctx context.Context, ps *PersistenceSession) error {
+	ctx, span := telemetry.Tracer.Start(ctx, "shimiko/pkg/persistence.DNSRecord.Upsert", trace.WithAttributes(
+		telemetry.OtelJSON("record", record),
+	))
+	defer span.End()
+
 	var existing *DNSRecord
 	if record.ID == 0 {
 		if record.Name == "" || record.Type == "" {
 			return errors.New("DNS record must have name and type set")
 		}
-		ps.DB.Unscoped().Where("name = ? AND type = ?", record.Name, record.Type).First(&existing)
+		ps.DB.WithContext(ctx).Unscoped().Where("name = ? AND type = ?", record.Name, record.Type).First(&existing)
 	} else {
-		ps.DB.Where("id = ?", record.ID).First(&existing)
+		ps.DB.WithContext(ctx).Where("id = ?", record.ID).First(&existing)
 	}
+
 	if existing != nil {
+		span.SetAttributes(
+			telemetry.OtelJSON("existing", existing),
+			attribute.Bool("existing.exists", true),
+		)
 		if record.ID == 0 {
 			record.ID = existing.ID
 		}
@@ -133,40 +148,63 @@ func (record *DNSRecord) Upsert(ctx context.Context, ps *PersistenceSession) err
 		if record.TTL == 0 {
 			record.TTL = existing.TTL
 		}
+	} else {
+		span.SetAttributes(
+			attribute.Bool("existing.exists", true),
+		)
 	}
-	result := ps.DB.Save(&record)
+
+	result := ps.DB.WithContext(ctx).Save(&record)
 	if result.Error != nil {
+		span.SetStatus(codes.Error, result.Error.Error())
 		return result.Error
 	}
 
 	err := ps.CoreDNS.UpsertRecord(ctx, record, existing)
 	if err != nil {
+		span.SetStatus(codes.Error, err.Error())
 		return err
 	}
 
 	err = ps.Route53.UpsertRecord(ctx, record, existing)
 	if err != nil {
+		span.SetStatus(codes.Error, err.Error())
 		return err
 	}
 
+	span.SetStatus(codes.Ok, "")
 	return nil
 }
 
 func (record *DNSRecord) Delete(ctx context.Context, ps *PersistenceSession) error {
+	ctx, span := telemetry.Tracer.Start(ctx, "shimiko/pkg/persistence.DNSRecord.Upsert", trace.WithAttributes(
+		telemetry.OtelJSON("record", record),
+	))
+	defer span.End()
+
 	var existing *DNSRecord
 	if record.ID == 0 {
 		if record.Name == "" || record.Type == "" {
 			return errors.New("DNS record must have name and type set")
 		}
-		ps.DB.Where("name = ? AND type = ?", record.Name, record.Type).First(&existing)
+		ps.DB.WithContext(ctx).Where("name = ? AND type = ?", record.Name, record.Type).First(&existing)
 	} else {
-		ps.DB.Where("id = ?", record.ID).First(&existing)
+		ps.DB.WithContext(ctx).Where("id = ?", record.ID).First(&existing)
 	}
+
 	if existing != nil && existing.ID != 0 {
-		tx := ps.DB.Delete(&existing)
+		span.SetAttributes(
+			telemetry.OtelJSON("existing", existing),
+			attribute.Bool("existing.exists", true),
+		)
+		tx := ps.DB.WithContext(ctx).Delete(&existing)
 		if tx.Error != nil {
 			return tx.Error
 		}
+	} else {
+		span.SetAttributes(
+			attribute.Bool("existing.exists", false),
+		)
 	}
 
 	err := ps.CoreDNS.DeleteRecord(ctx, record)
@@ -179,5 +217,6 @@ func (record *DNSRecord) Delete(ctx context.Context, ps *PersistenceSession) err
 		return err
 	}
 
+	span.SetStatus(codes.Ok, "")
 	return nil
 }

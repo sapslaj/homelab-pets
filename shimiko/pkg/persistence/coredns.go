@@ -11,9 +11,13 @@ import (
 	"time"
 
 	"github.com/bramvdbogaerde/go-scp"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/crypto/ssh"
 
 	"github.com/sapslaj/homelab-pets/shimiko/pkg/env"
+	"github.com/sapslaj/homelab-pets/shimiko/pkg/telemetry"
 	"github.com/sapslaj/homelab-pets/shimiko/pkg/zonefile/ast"
 	"github.com/sapslaj/homelab-pets/shimiko/pkg/zonefile/lexer"
 	"github.com/sapslaj/homelab-pets/shimiko/pkg/zonefile/parser"
@@ -50,101 +54,196 @@ func (coreDNS *CoreDNS) MakeScpClient(host string) (*scp.Client, error) {
 }
 
 func (coreDNS *CoreDNS) LoadZoneFileData(ctx context.Context) ([]byte, error) {
+	ctx, span := telemetry.Tracer.Start(ctx, "shimiko/pkg/persistence.CoreDNS.LoadZoneFileData", trace.WithAttributes(
+		attribute.String("host", CoreDNSHosts[0]),
+	))
+	defer span.End()
+
 	client, err := coreDNS.MakeScpClient(CoreDNSHosts[0])
 	defer client.Close()
 	if err != nil {
-		return nil, fmt.Errorf("error creating new scp client for CoreDNS: %w", err)
+		err = fmt.Errorf("error creating new scp client for CoreDNS: %w", err)
+		span.SetStatus(codes.Error, err.Error())
+		return nil, err
 	}
 	err = client.Connect()
 	if err != nil {
-		return nil, fmt.Errorf("error connecting scp client for CoreDNS: %w", err)
+		err = fmt.Errorf("error connecting scp client for CoreDNS: %w", err)
+		span.SetStatus(codes.Error, err.Error())
+		return nil, err
 	}
 	buffer := &bytes.Buffer{}
 	err = client.CopyFromRemotePassThru(ctx, buffer, "/etc/coredns/sapslaj.xyz.zone", nil)
 	if err != nil {
-		return nil, fmt.Errorf("error copying file from remote '%s' for CoreDNS: %w", CoreDNSHosts[0], err)
+		err = fmt.Errorf("error copying file from remote '%s' for CoreDNS: %w", CoreDNSHosts[0], err)
+		span.SetStatus(codes.Error, err.Error())
+		return nil, err
 	}
+
+	span.SetStatus(codes.Ok, "")
 	return buffer.Bytes(), nil
 }
 
 func (coreDNS *CoreDNS) SaveCoreDNSZoneFile(ctx context.Context, data []byte) error {
+	ctx, span := telemetry.Tracer.Start(ctx, "shimiko/pkg/persistence.CoreDNS.SaveCoreDNSZoneFile", trace.WithAttributes(
+		telemetry.OtelJSON("data", data),
+	))
+	defer span.End()
+
 	for _, host := range CoreDNSHosts {
-		client, err := coreDNS.MakeScpClient(host)
-		defer client.Close()
+		err := func(host string) error {
+			subCtx, subSpan := telemetry.Tracer.Start(ctx, "shimiko/pkg/persistence.CoreDNS.SaveCoreDNSZoneFile.host", trace.WithAttributes(
+				telemetry.OtelJSON("host", host),
+			))
+			defer subSpan.End()
+
+			client, err := coreDNS.MakeScpClient(host)
+			if err != nil {
+				err = fmt.Errorf("error creating new scp client for CoreDNS: %w", err)
+				subSpan.SetStatus(codes.Error, err.Error())
+				return err
+			}
+			defer client.Close()
+
+			err = client.Connect()
+			if err != nil {
+				err = fmt.Errorf("error connecting scp client for CoreDNS: %w", err)
+				subSpan.SetStatus(codes.Error, err.Error())
+				return err
+			}
+
+			reader := bytes.NewReader(data)
+			err = client.CopyFile(subCtx, reader, "/etc/coredns/sapslaj.xyz.zone", "0644")
+			if err != nil {
+				err = fmt.Errorf("error copying file to remote '%s' for CoreDNS: %w", host, err)
+				subSpan.SetStatus(codes.Error, err.Error())
+				return err
+			}
+
+			subSpan.SetStatus(codes.Ok, "")
+			return nil
+		}(host)
 		if err != nil {
-			return fmt.Errorf("error creating new scp client for CoreDNS: %w", err)
-		}
-		err = client.Connect()
-		if err != nil {
-			return fmt.Errorf("error connecting scp client for CoreDNS: %w", err)
-		}
-		reader := bytes.NewReader(data)
-		err = client.CopyFile(ctx, reader, "/etc/coredns/sapslaj.xyz.zone", "0644")
-		if err != nil {
-			return fmt.Errorf("error copying file to remote '%s' for CoreDNS: %w", host, err)
+			span.SetStatus(codes.Error, err.Error())
+			return err
 		}
 	}
+
+	span.SetStatus(codes.Ok, "")
 	return nil
 }
 
 func (coreDNS *CoreDNS) LoadData(ctx context.Context, data []byte) error {
+	ctx, span := telemetry.Tracer.Start(ctx, "shimiko/pkg/persistence.CoreDNS.LoadData", trace.WithAttributes(
+		telemetry.OtelJSON("data", data),
+	))
+	defer span.End()
+
 	tokens := lexer.LexBytes(data).AllTokens()
 	entries, err := parser.ParseEntries(tokens)
 	if err != nil {
-		return fmt.Errorf("error parsing CoreDNS entries: %w", err)
+		err = fmt.Errorf("error parsing CoreDNS entries: %w", err)
+		span.SetStatus(codes.Error, err.Error())
+		return err
 	}
+
 	coreDNS.Entries = entries
+
+	span.SetStatus(codes.Ok, "")
 	return nil
 }
 
 func (coreDNS *CoreDNS) Load(ctx context.Context) error {
+	ctx, span := telemetry.Tracer.Start(ctx, "shimiko/pkg/persistence.CoreDNS.Load", trace.WithAttributes())
+	defer span.End()
+
 	data, err := coreDNS.LoadZoneFileData(ctx)
 	if err != nil {
-		return fmt.Errorf("error loading zone file data for CoreDNS: %w", err)
+		err = fmt.Errorf("error loading zone file data for CoreDNS: %w", err)
+		span.SetStatus(codes.Error, err.Error())
+		return err
 	}
+
+	span.SetStatus(codes.Ok, "")
 	return coreDNS.LoadData(ctx, data)
 }
 
 func (coreDNS *CoreDNS) ToBytes(ctx context.Context) ([]byte, error) {
+	ctx, span := telemetry.Tracer.Start(ctx, "shimiko/pkg/persistence.CoreDNS.ToBytes", trace.WithAttributes())
+	defer span.End()
+
 	tokens, err := parser.Tokenize(coreDNS.Entries)
 	if err != nil {
-		return nil, fmt.Errorf("error tokenizing CoreDNS zone file: %w", err)
+		err = fmt.Errorf("error tokenizing CoreDNS zone file: %w", err)
+		span.SetStatus(codes.Error, err.Error())
+		return nil, err
 	}
+
+	span.SetStatus(codes.Ok, "")
 	return token.RenderTokens(tokens), nil
 }
 
 func (coreDNS *CoreDNS) Save(ctx context.Context) error {
+	ctx, span := telemetry.Tracer.Start(ctx, "shimiko/pkg/persistence.CoreDNS.Save", trace.WithAttributes())
+	defer span.End()
+
 	err := coreDNS.FormatEntries()
 	if err != nil {
-		return fmt.Errorf("error formatting CoreDNS entries: %w", err)
+		err = fmt.Errorf("error formatting CoreDNS entries: %w", err)
+		span.SetStatus(codes.Error, err.Error())
+		return err
 	}
 	err = coreDNS.BumpSOASerial()
 	if err != nil {
-		return fmt.Errorf("error bumping CoreDNS zone file SOA serial: %w", err)
+		err = fmt.Errorf("error bumping CoreDNS zone file SOA serial: %w", err)
+		span.SetStatus(codes.Error, err.Error())
+		return err
 	}
 	data, err := coreDNS.ToBytes(ctx)
 	if err != nil {
-		return fmt.Errorf("error rendering CoreDNS zone file: %w", err)
+		err = fmt.Errorf("error rendering CoreDNS zone file: %w", err)
+		span.SetStatus(codes.Error, err.Error())
+		return err
 	}
-	return coreDNS.SaveCoreDNSZoneFile(ctx, data)
+
+	err = coreDNS.SaveCoreDNSZoneFile(ctx, data)
+	if err != nil {
+		span.SetStatus(codes.Error, err.Error())
+		return err
+	}
+
+	span.SetStatus(codes.Ok, "")
+	return nil
 }
 
 func (coreDNS *CoreDNS) UpsertRecord(ctx context.Context, record *DNSRecord, previous *DNSRecord) error {
+	ctx, span := telemetry.Tracer.Start(ctx, "shimiko/pkg/persistence.CoreDNS.UpsertRecord", trace.WithAttributes(
+		telemetry.OtelJSON("record", record),
+		telemetry.OtelJSON("previous", previous),
+	))
+	defer span.End()
+
 	if record == nil {
-		return errors.New("DNSRecord is null")
+		err := errors.New("DNSRecord is null")
+		span.SetStatus(codes.Error, err.Error())
+		return err
 	}
 
 	if record.ShouldReplace(previous) {
 		err := coreDNS.DeleteRecord(ctx, previous)
 		if err != nil {
-			return fmt.Errorf("error deleting previous record: %w", err)
+			err = fmt.Errorf("error deleting previous record: %w", err)
+			span.SetStatus(codes.Error, err.Error())
+			return err
 		}
 	}
 
 	// TODO: make this algo less shit
 	err := coreDNS.DeleteRecord(ctx, record)
 	if err != nil {
-		return fmt.Errorf("error deleting record: %w", err)
+		err = fmt.Errorf("error deleting record: %w", err)
+		span.SetStatus(codes.Error, err.Error())
+		return err
 	}
 	for _, value := range record.Records {
 		rrecord := ast.RRecord{
@@ -167,10 +266,23 @@ func (coreDNS *CoreDNS) UpsertRecord(ctx context.Context, record *DNSRecord, pre
 			},
 		})
 	}
+
+	span.SetStatus(codes.Ok, "")
 	return nil
 }
 
 func (coreDNS *CoreDNS) DeleteRecord(ctx context.Context, record *DNSRecord) error {
+	ctx, span := telemetry.Tracer.Start(ctx, "shimiko/pkg/persistence.CoreDNS.DeleteRecord", trace.WithAttributes(
+		telemetry.OtelJSON("record", record),
+	))
+	defer span.End()
+
+	if record == nil {
+		err := errors.New("DNSRecord is null")
+		span.SetStatus(codes.Error, err.Error())
+		return err
+	}
+
 	coreDNS.Entries = slices.DeleteFunc(coreDNS.Entries, func(node ast.Node) bool {
 		if !node.IsRREntry() {
 			return false
@@ -187,6 +299,8 @@ func (coreDNS *CoreDNS) DeleteRecord(ctx context.Context, record *DNSRecord) err
 		}
 		return false
 	})
+
+	span.SetStatus(codes.Ok, "")
 	return nil
 }
 

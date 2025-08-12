@@ -12,9 +12,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/labstack/echo-contrib/echoprometheus"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/ncruces/go-strftime"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
+	"go.opentelemetry.io/otel/codes"
 	"gorm.io/gorm"
 
 	"github.com/sapslaj/homelab-pets/shimiko/pkg/env"
@@ -107,8 +110,9 @@ type Server struct {
 
 	ReconcileInterval time.Duration
 
-	HTTPPort  int
-	HTTPSPort int
+	HTTPPort    int
+	HTTPSPort   int
+	MetricsPort int
 
 	TLSCertFile string
 	TLSKeyFile  string
@@ -120,23 +124,39 @@ func NewServer(ctx context.Context) (*Server, error) {
 		Logger: telemetry.LoggerFromContext(ctx),
 	}
 
+	ctx, span := telemetry.Tracer.Start(ctx, "shimiko/server.NewServer")
+	defer span.End()
+
 	RegisterLegoLogger(s.Logger)
 
 	var err error
 
 	s.ReconcileInterval, err = env.GetDefault[time.Duration]("SHIMIKO_RECONCILE_INTERVAL", 0)
 	if err != nil {
-		return s, fmt.Errorf("error setting reconcile interval: %w", err)
+		err = fmt.Errorf("error setting reconcile interval: %w", err)
+		span.SetStatus(codes.Error, err.Error())
+		return s, err
 	}
 
 	s.HTTPPort, err = env.GetDefault("SHIMIKO_HTTP_PORT", 8080)
 	if err != nil {
-		return s, fmt.Errorf("error setting HTTP port: %w", err)
+		err = fmt.Errorf("error setting HTTP port: %w", err)
+		span.SetStatus(codes.Error, err.Error())
+		return s, err
 	}
 
 	s.HTTPSPort, err = env.GetDefault("SHIMIKO_HTTPS_PORT", 0)
 	if err != nil {
-		return s, fmt.Errorf("error setting HTTPS port: %w", err)
+		err = fmt.Errorf("error setting HTTPS port: %w", err)
+		span.SetStatus(codes.Error, err.Error())
+		return s, err
+	}
+
+	s.MetricsPort, err = env.GetDefault("SHIMIKO_METRICS_PORT", 9245)
+	if err != nil {
+		err = fmt.Errorf("error setting metrics port: %w", err)
+		span.SetStatus(codes.Error, err.Error())
+		return s, err
 	}
 
 	if s.HTTPSPort != 0 {
@@ -148,11 +168,13 @@ func NewServer(ctx context.Context) (*Server, error) {
 
 		accountPrivateKey, err := GetOrGeneratePrivateKey(ctx, path.Join(certsPath, "shimiko-server.acme-account-key.pem"))
 		if err != nil {
+			span.SetStatus(codes.Error, err.Error())
 			return s, err
 		}
 
 		certificatePrivateKey, err := GetOrGeneratePrivateKey(ctx, s.TLSKeyFile)
 		if err != nil {
+			span.SetStatus(codes.Error, err.Error())
 			return s, err
 		}
 
@@ -163,6 +185,7 @@ func NewServer(ctx context.Context) (*Server, error) {
 
 		legoCertConfig.Email, err = env.Get[string]("SHIMIKO_ACME_EMAIL")
 		if err != nil && !env.IsErrVarNotFound(err) {
+			span.SetStatus(codes.Error, err.Error())
 			return s, err
 		}
 
@@ -172,6 +195,7 @@ func NewServer(ctx context.Context) (*Server, error) {
 			envCertDomains, err := env.Get[string]("SHIMIKO_CERT_DOMAINS")
 			if err != nil {
 				if !env.IsErrVarNotFound(err) {
+					span.SetStatus(codes.Error, err.Error())
 					return s, err
 				}
 				legoCertConfig.Domains = []string{"localhost"}
@@ -185,6 +209,7 @@ func NewServer(ctx context.Context) (*Server, error) {
 
 			err = GetOrGenerateSelfSignedCert(ctx, s.TLSCertFile, legoCertConfig)
 			if err != nil {
+				span.SetStatus(codes.Error, err.Error())
 				return s, err
 			}
 		} else {
@@ -192,6 +217,7 @@ func NewServer(ctx context.Context) (*Server, error) {
 
 			envCertDomains, err := env.Get[string]("SHIMIKO_CERT_DOMAINS")
 			if err != nil {
+				span.SetStatus(codes.Error, err.Error())
 				return s, err
 			}
 			legoCertConfig.Domains = strings.Split(envCertDomains, ",")
@@ -205,6 +231,7 @@ func NewServer(ctx context.Context) (*Server, error) {
 
 			err = GetOrGenerateACMECert(ctx, s.TLSCertFile, legoCertConfig)
 			if err != nil {
+				span.SetStatus(codes.Error, err.Error())
 				return s, err
 			}
 		}
@@ -213,6 +240,7 @@ func NewServer(ctx context.Context) (*Server, error) {
 	db, err := persistence.OpenDB(ctx)
 	s.DB = db
 	if err != nil {
+		span.SetStatus(codes.Error, err.Error())
 		return s, err
 	}
 
@@ -221,16 +249,20 @@ func NewServer(ctx context.Context) (*Server, error) {
 
 	s.Echo.Use(middleware.Recover())
 	s.Echo.Use(middleware.RequestID())
+	s.Echo.Use(echoprometheus.NewMiddleware("shimiko"))
+	s.Echo.Use(otelecho.Middleware(telemetry.ServiceName))
 	s.Echo.Use(NewRequestLoggerMiddleware(s.Logger))
 
 	s.Routes()
 
+	span.SetStatus(codes.Ok, "")
 	return s, nil
 }
 
 func RunServer(s *Server) error {
 	logger := s.Logger.With(
 		slog.Duration("reconcile_interval", s.ReconcileInterval),
+		slog.Int("metrics_port", s.MetricsPort),
 		slog.Int("http_port", s.HTTPPort),
 	)
 	if s.HTTPSPort != 0 {
@@ -270,6 +302,14 @@ func RunServer(s *Server) error {
 	}()
 
 	go func() {
+		metrics := echo.New()
+		metrics.HideBanner = true
+		metrics.HidePort = true
+		metrics.GET("/metrics", echoprometheus.NewHandler())
+		errChan <- metrics.Start(fmt.Sprintf(":%d", s.MetricsPort))
+	}()
+
+	go func() {
 		errChan <- s.Echo.Start(fmt.Sprintf(":%d", s.HTTPPort))
 	}()
 
@@ -297,6 +337,9 @@ func (s *Server) RequestLogger(c echo.Context) *slog.Logger {
 }
 
 func (s *Server) ReconcileAll(ctx context.Context) error {
+	ctx, span := telemetry.Tracer.Start(ctx, "shimiko/server.Server.ReconcileAll")
+	defer span.End()
+
 	returnErrors := s.FixMyself(ctx)
 
 	logger := s.Logger.With("subsystem", "reconcile")
@@ -305,14 +348,18 @@ func (s *Server) ReconcileAll(ctx context.Context) error {
 	result := s.DB.Unscoped().Find(&records)
 	if result.Error != nil {
 		logger.ErrorContext(ctx, "error querying DNS records", "error", result.Error)
-		return errors.Join(returnErrors, result.Error)
+		err := errors.Join(returnErrors, result.Error)
+		span.SetStatus(codes.Error, err.Error())
+		return err
 	}
 
 	logger.InfoContext(ctx, "starting persistence session for record deletions")
 	ps, err := persistence.NewSession(ctx, s.DB)
 	if err != nil {
 		logger.ErrorContext(ctx, "error creating persistence session", "error", err)
-		return errors.Join(returnErrors, err)
+		err := errors.Join(returnErrors, err)
+		span.SetStatus(codes.Error, err.Error())
+		return err
 	}
 
 	// start by deleting any records
@@ -368,6 +415,7 @@ func (s *Server) ReconcileAll(ctx context.Context) error {
 	ps, err = persistence.NewSession(ctx, s.DB)
 	if err != nil {
 		logger.ErrorContext(ctx, "error creating persistence session", "error", err)
+		span.SetStatus(codes.Error, err.Error())
 		return err
 	}
 
@@ -399,33 +447,45 @@ func (s *Server) ReconcileAll(ctx context.Context) error {
 		returnErrors = errors.Join(returnErrors, err)
 	}
 
+	if returnErrors != nil {
+		span.SetStatus(codes.Error, err.Error())
+	} else {
+		span.SetStatus(codes.Ok, "")
+	}
 	return returnErrors
 }
 
 func (s *Server) FixMyself(ctx context.Context) error {
+	ctx, span := telemetry.Tracer.Start(ctx, "shimiko/server.Server.FixMyself")
+	defer span.End()
+
 	logger := s.Logger.With("subsystem", "reconcile")
 
 	envCertDomains, err := env.Get[string]("SHIMIKO_CERT_DOMAINS")
 	if err != nil {
 		logger.WarnContext(ctx, "could not fix myself: couldn't figure out what domains I'm supposed to use (╥_╥)", "error", err)
+		span.SetStatus(codes.Error, err.Error())
 		return err
 	}
 	domains := strings.Split(envCertDomains, ",")
 
 	if len(domains) == 0 {
 		logger.WarnContext(ctx, "could not fix myself: no domains configured to fix myself with <( ⸝⸝•̀ - •́⸝⸝)>")
+		span.SetStatus(codes.Error, "no domains configured")
 		return nil
 	}
 
 	conn, err := net.Dial("udp", "172.24.0.0:1")
 	if err != nil {
 		logger.WarnContext(ctx, "could not fix myself: Go doesn't want me to know my local IP address! ( ｡ •̀ ⤙ •́ ｡ )", "error", err)
+		span.SetStatus(codes.Error, err.Error())
 		return err
 	}
 	udpAddr, ok := conn.LocalAddr().(*net.UDPAddr)
 	if !ok {
 		err = fmt.Errorf("expected conn.LocalAddr() type to be *net.UDPAddr but got %T", conn.LocalAddr())
 		logger.WarnContext(ctx, "could not fix myself: I need a *net.UDPAddr but Go said no! (● w ● 🔪)", "error", err)
+		span.SetStatus(codes.Error, err.Error())
 		return err
 	}
 	address := strings.Split(udpAddr.String(), ":")[0]
@@ -434,6 +494,7 @@ func (s *Server) FixMyself(ctx context.Context) error {
 	ps, err := persistence.NewSession(ctx, s.DB)
 	if err != nil {
 		logger.WarnContext(ctx, "could not fix myself: couldn't start a persistence session (╯︵╰,)✲", "error", err)
+		span.SetStatus(codes.Error, err.Error())
 		return err
 	}
 
@@ -442,7 +503,7 @@ func (s *Server) FixMyself(ctx context.Context) error {
 		domainLogger := logger.With("domain", domain)
 
 		var dnsRecord *persistence.DNSRecord
-		ps.DB.Where("name = ? AND type = ?", strings.TrimSuffix(domain, ".sapslaj.xyz"), "A").First(&dnsRecord)
+		ps.DB.WithContext(ctx).Where("name = ? AND type = ?", strings.TrimSuffix(domain, ".sapslaj.xyz"), "A").First(&dnsRecord)
 
 		if dnsRecord == nil {
 			domainLogger.InfoContext(ctx, "no record registered for this domain; skipping")
@@ -473,5 +534,10 @@ func (s *Server) FixMyself(ctx context.Context) error {
 		logger.WarnContext(ctx, "could not fix myself: couldn't finish persistence session (╯⌒︵⌒)╯", "error", err)
 	}
 
+	if multierr != nil {
+		span.SetStatus(codes.Error, multierr.Error())
+	} else {
+		span.SetStatus(codes.Ok, "")
+	}
 	return multierr
 }
