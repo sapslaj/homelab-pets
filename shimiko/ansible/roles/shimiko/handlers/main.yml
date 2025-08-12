@@ -1,5 +1,0 @@
-- name: restart shimiko-server.service
-  systemd:
-    name: shimiko-server.service
-    state: restarted
-    daemon_reload: true
