@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"regexp"
+	"slices"
 	"strings"
 	"time"
 
@@ -443,7 +445,7 @@ func (s *Server) ReconcileAll(ctx context.Context) error {
 
 	err = ps.Finish(ctx)
 	if err != nil {
-		logger.WarnContext(ctx, "failed to finish persistence session for record updates")
+		logger.WarnContext(ctx, "failed to finish persistence session for record updates", "error", err)
 		returnErrors = errors.Join(returnErrors, err)
 	}
 
@@ -481,6 +483,7 @@ func (s *Server) FixMyself(ctx context.Context) error {
 		span.SetStatus(codes.Error, err.Error())
 		return err
 	}
+	conn.Close()
 	udpAddr, ok := conn.LocalAddr().(*net.UDPAddr)
 	if !ok {
 		err = fmt.Errorf("expected conn.LocalAddr() type to be *net.UDPAddr but got %T", conn.LocalAddr())
@@ -488,8 +491,8 @@ func (s *Server) FixMyself(ctx context.Context) error {
 		span.SetStatus(codes.Error, err.Error())
 		return err
 	}
-	address := strings.Split(udpAddr.String(), ":")[0]
-	logger = logger.With("address", address)
+	ipv4Address := strings.Split(udpAddr.String(), ":")[0]
+	logger = logger.With("ipv4_address", ipv4Address)
 
 	ps, err := persistence.NewSession(ctx, s.DB)
 	if err != nil {
@@ -497,31 +500,80 @@ func (s *Server) FixMyself(ctx context.Context) error {
 		span.SetStatus(codes.Error, err.Error())
 		return err
 	}
-
 	var multierr error
+	var ipv6Address string
+
+	{
+		conn, err = net.Dial("udp", "[2606:4700:4700::1111]:1")
+		if err != nil {
+			multierr = errors.Join(multierr, err)
+			logger.WarnContext(ctx, "could not fix myself fully due to ipv6 being borked (╯⌒︵⌒)╯", "error", err)
+			goto updates
+		}
+
+		matches := slices.DeleteFunc(
+			regexp.MustCompile(`\[(.+)\]:.*`).FindStringSubmatch(conn.LocalAddr().String()),
+			func(addr string) bool {
+				return strings.HasPrefix(addr, "fe80")
+			},
+		)
+		if len(matches) != 2 {
+			logger.WarnContext(ctx, "could not fix myself fully to not finding a suitable ipv6 address <( ⸝⸝•̀ - •́⸝⸝)>")
+			goto updates
+		}
+		ipv6Address = matches[1]
+		logger = logger.With("ipv6_address", ipv6Address)
+	}
+
+updates:
 	for _, domain := range domains {
 		domainLogger := logger.With("domain", domain)
 
-		var dnsRecord *persistence.DNSRecord
-		ps.DB.WithContext(ctx).Where("name = ? AND type = ?", strings.TrimSuffix(domain, ".sapslaj.xyz"), "A").First(&dnsRecord)
+		var err error
+		var dnsARecord *persistence.DNSRecord
+		ps.DB.WithContext(ctx).Where("name = ? AND type = ?", strings.TrimSuffix(domain, ".sapslaj.xyz"), "A").First(&dnsARecord)
 
-		if dnsRecord == nil {
-			domainLogger.InfoContext(ctx, "no record registered for this domain; skipping")
-			continue
+		if dnsARecord == nil {
+			domainLogger.InfoContext(ctx, "no A record registered for this domain; skipping")
+			goto ipv6Update
 		}
 
-		domainLogger.InfoContext(ctx, "updating record")
+		domainLogger.InfoContext(ctx, "updating A record")
 
-		dnsRecord.Records = []string{address}
+		dnsARecord.Records = []string{ipv4Address}
 
-		err := dnsRecord.Upsert(ctx, ps)
+		err = dnsARecord.Upsert(ctx, ps)
 		if err != nil {
 			multierr = errors.Join(multierr, err)
-			domainLogger.WarnContext(ctx, "could not update record", "error", "err")
-			continue
+			domainLogger.WarnContext(ctx, "could not update A record", "error", "err")
+			goto ipv6Update
 		}
 
-		domainLogger.InfoContext(ctx, "record updated")
+		domainLogger.InfoContext(ctx, "A record updated")
+
+	ipv6Update:
+		if ipv6Address != "" {
+			var dnsAAAARecord *persistence.DNSRecord
+			ps.DB.WithContext(ctx).Where("name = ? AND type = ?", strings.TrimSuffix(domain, ".sapslaj.xyz"), "AAAA").First(&dnsAAAARecord)
+
+			if dnsAAAARecord == nil {
+				domainLogger.InfoContext(ctx, "no AAAA record registered for this domain; skipping")
+				continue
+			}
+
+			domainLogger.InfoContext(ctx, "updating AAAA record")
+
+			dnsAAAARecord.Records = []string{ipv6Address}
+
+			err := dnsAAAARecord.Upsert(ctx, ps)
+			if err != nil {
+				multierr = errors.Join(multierr, err)
+				domainLogger.WarnContext(ctx, "could not update AAAA record", "error", "err")
+				continue
+			}
+
+			domainLogger.InfoContext(ctx, "AAAA record updated")
+		}
 	}
 
 	if multierr != nil {
