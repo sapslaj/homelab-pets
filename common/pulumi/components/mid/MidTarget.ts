@@ -4,13 +4,13 @@ import * as mid from "@sapslaj/pulumi-mid";
 export interface MidTargetProps {
   connection?: mid.types.input.ConnectionArgs;
   triggers?: mid.types.input.TriggersInputArgs;
-  hostname?: string;
+  hostname?: pulumi.Input<string>;
   unfuckUbuntu?: {
     allowInstallRecommends?: boolean;
     allowSnap?: boolean;
     enableMotdNews?: boolean;
-    removeEsm?: boolean;
-    removeLxd?: boolean;
+    allowEsm?: boolean;
+    allowLxd?: boolean;
   };
 }
 
@@ -31,6 +31,8 @@ export class MidTarget extends pulumi.ComponentResource {
       retainOnDelete: true,
     });
 
+    let removePackages: string[] = [];
+
     if (props.hostname !== undefined) {
       new mid.resource.Exec("hostname", {
         connection: props.connection,
@@ -48,7 +50,7 @@ export class MidTarget extends pulumi.ComponentResource {
       });
     }
 
-    if (props.unfuckUbuntu?.allowInstallRecommends !== false) {
+    if (props.unfuckUbuntu?.allowInstallRecommends !== true) {
       new mid.resource.File(`${name}-no-install-recommends`, {
         connection: props.connection,
         triggers: props.triggers,
@@ -62,7 +64,7 @@ export class MidTarget extends pulumi.ComponentResource {
       });
     }
 
-    if (props.unfuckUbuntu?.allowSnap !== false) {
+    if (props.unfuckUbuntu?.allowSnap !== true) {
       new mid.resource.File(`${name}-no-snap`, {
         connection: props.connection,
         triggers: props.triggers,
@@ -76,41 +78,12 @@ export class MidTarget extends pulumi.ComponentResource {
         parent: this,
       });
 
-      new mid.resource.Apt(`${name}-no-snap`, {
-        connection: props.connection,
-        triggers: props.triggers,
-        name: "snapd",
-        ensure: "absent",
-        autoremove: true,
-        autoclean: true,
-        clean: true,
-        purge: true,
-      }, {
-        parent: this,
-        dependsOn: [
-          aptPrereqs,
-        ],
-      });
+      removePackages.push(
+        "snapd",
+      );
     }
 
-    if (props.unfuckUbuntu?.enableMotdNews !== false) {
-      new mid.resource.Apt(`${name}-uninstall-motd-news-config`, {
-        connection: props.connection,
-        triggers: props.triggers,
-        names: [
-          "motd-news-config",
-        ],
-        ensure: "absent",
-        autoremove: true,
-        autoclean: true,
-        purge: true,
-      }, {
-        parent: this,
-        dependsOn: [
-          aptPrereqs,
-        ],
-      });
-
+    if (props.unfuckUbuntu?.enableMotdNews !== true) {
       new mid.resource.File(`${name}-remove-motd-help-text`, {
         connection: props.connection,
         triggers: props.triggers,
@@ -119,46 +92,43 @@ export class MidTarget extends pulumi.ComponentResource {
       }, {
         parent: this,
       });
+
+      removePackages.push(
+        "motd-news-config",
+      );
     }
 
-    if (props.unfuckUbuntu?.removeEsm !== false) {
-      new mid.resource.Apt(`${name}-remove-esm`, {
+    if (props.unfuckUbuntu?.allowEsm !== true) {
+      removePackages.push(
+        "ubuntu-pro-client",
+        "ubuntu-release-upgrader-core",
+        "update-notifier-common",
+        "unattended-upgrades",
+      );
+    }
+
+    if (props.unfuckUbuntu?.allowLxd !== true) {
+      removePackages.push(
+        "lxc",
+        "lxd",
+        "lxd-agent-loader",
+        "lxd-installer",
+      );
+    }
+
+    if (removePackages.length > 0) {
+      new mid.resource.Apt(`${name}-remove-packages`, {
         connection: props.connection,
         triggers: props.triggers,
-        names: [
-          "ubuntu-pro-client",
-          "ubuntu-release-upgrader-core",
-          "update-notifier-common",
-          "unattended-upgrades",
-        ],
+        names: removePackages,
         ensure: "absent",
         autoremove: true,
         autoclean: true,
+        clean: true,
         purge: true,
       }, {
         parent: this,
-        dependsOn: [
-          aptPrereqs,
-        ],
-      });
-    }
-
-    if (props.unfuckUbuntu?.removeLxd !== false) {
-      new mid.resource.Apt(`${name}-remove-lxd`, {
-        connection: props.connection,
-        triggers: props.triggers,
-        names: [
-          "lxc",
-          "lxd",
-          "lxd-agent-loader",
-          "lxd-installer",
-        ],
-        ensure: "absent",
-        autoremove: true,
-        autoclean: true,
-        purge: true,
-      }, {
-        parent: this,
+        retainOnDelete: true,
         dependsOn: [
           aptPrereqs,
         ],

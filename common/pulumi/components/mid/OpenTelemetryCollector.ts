@@ -36,6 +36,8 @@ export class OpenTelemetryCollector extends pulumi.ComponentResource {
     const targetArch = mid.agent.execOutput({
       connection: props.connection,
       command: ["uname", "-m"],
+    }, {
+      parent: this,
     }).apply((arch) => {
       switch (arch.stdout.trim()) {
         case "arm":

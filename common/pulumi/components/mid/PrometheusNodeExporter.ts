@@ -29,6 +29,8 @@ export class PrometheusNodeExporter extends pulumi.ComponentResource {
     const targetArch = mid.agent.execOutput({
       connection: props.connection,
       command: ["uname", "-m"],
+    }, {
+      parent: this,
     }).apply((arch) => {
       switch (arch.stdout.trim()) {
         case "arm":
@@ -57,9 +59,24 @@ export class PrometheusNodeExporter extends pulumi.ComponentResource {
           "/bin/bash",
           "-c",
           pulumi.interpolate`set -euxo pipefail
+            if curl -h 2 &>/dev/null; then
+              nettool="curl"
+            elif wget -h 2 &>/dev/null; then
+              nettool="wget"
+            else
+              echo "ERROR: wget or curl not installed and required"
+              exit 1
+            fi
             systemctl stop node_exporter.service || true
             killall node_exporter || true
-            wget -O ./prometheus-node-exporter.tar.gz '${downloadURL}'
+            case "$nettool" in
+            wget*)
+              wget -O ./prometheus-node-exporter.tar.gz '${downloadURL}'
+              ;;
+            curl*)
+              curl -sL -o ./prometheus-node-exporter.tar.gz '${downloadURL}'
+              ;;
+            esac
             tar xzvf ./prometheus-node-exporter.tar.gz
             cp ./node_exporter-${version}.linux-${targetArch}/node_exporter /usr/local/bin/node_exporter
             chmod +x /usr/local/bin/node_exporter
