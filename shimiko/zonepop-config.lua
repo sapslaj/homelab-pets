@@ -8,6 +8,10 @@ local forward_lookup_filter = function(endpoint)
     source = endpoint.source_properties.source,
     dhcp_pool = endpoint.source_properties.dhcp_pool,
   }
+  if endpoint.source_properties.source == "shimiko" then
+    log.info("skipping updating forward lookup record for shimiko-managed record", log_labels)
+    return false
+  end
   if endpoint.source_properties.static then
     log.info("endpoint is static, allowing", log_labels)
     return true
@@ -149,7 +153,7 @@ return {
             "ups1",
             "yor",
           }
-          local endpoints = {}
+          local endpoint_map = {}
           for _, record in pairs(res.json()["records"]) do
             local log_labels = {
               record_name = record.name,
@@ -169,19 +173,59 @@ return {
               log.info("shimiko record is not A or AAAA, skipping", log_labels)
               goto continue
             end
-            local endpoint = {
-              hostname = record.name,
-            }
+            if endpoint_map[record.name] == nil then
+              endpoint_map[record.name] = {
+                ipv4s = {},
+                ipv6s = {},
+              }
+            end
             if record.ttl ~= nil then
-              endpoint.ttl = record.ttl
+              endpoint_map[record.name].ttl = record.ttl
             end
             if record.type == "A" then
-              endpoint.ipv4s = record.records
+              for _, value in pairs(record.records) do
+                endpoint_map[record.name].ipv4s[value] = true
+              end
             else
-              endpoint.ipv6s = record.records
+              for _, value in pairs(record.records) do
+                endpoint_map[record.name].ipv6s[value] = true
+              end
             end
-            table.insert(endpoints, endpoint)
             ::continue::
+          end
+
+          local endpoints = {}
+
+          for hostname, data in pairs(endpoint_map) do
+            local endpoint = {
+              hostname = hostname,
+            }
+
+            if data.ttl ~= nil then
+              endpoint.ttl = data.ttl
+            end
+
+            for ipv4, marker in pairs(data.ipv4s) do
+              if endpoint.ipv4s == nil then
+                endpoint.ipv4s = {}
+              end
+              if marker == true then
+                table.insert(endpoint.ipv4s, ipv4)
+              end
+              table.sort(endpoint.ipv4s)
+            end
+
+            for ipv6, marker in pairs(data.ipv6s) do
+              if endpoint.ipv6s == nil then
+                endpoint.ipv6s = {}
+              end
+              if marker == true then
+                table.insert(endpoint.ipv6s, ipv6)
+              end
+              table.sort(endpoint.ipv6s)
+            end
+
+            table.insert(endpoints, endpoint)
           end
 
           return endpoints
@@ -308,16 +352,16 @@ return {
             }
             log.info("making request", {
               request = {
-              url = "http://localhost/v1/dns-records/A/" .. endpoint.hostname,
-              method = "POST",
-              json = {
-                record = {
-                  name = endpoint.hostname,
-                  type = "A",
-                  records = endpoint.ipv4s,
+                url = "http://localhost/v1/dns-records/A/" .. endpoint.hostname,
+                method = "POST",
+                json = {
+                  record = {
+                    name = endpoint.hostname,
+                    type = "A",
+                    records = endpoint.ipv4s,
+                  },
                 },
               },
-            },
             })
             local res = http.request({
               url = "http://localhost/v1/dns-records/A/" .. endpoint.hostname,
