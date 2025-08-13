@@ -60,7 +60,6 @@ const vm = new ProxmoxVM("misc", {
           },
         },
       },
-      ansible: false,
       cloudImage: {
         diskConfig: {
           size: 32,

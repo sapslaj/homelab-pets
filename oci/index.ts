@@ -12,7 +12,6 @@ const vm = new ProxmoxVM("oci", {
   name: pulumi.getStack() === "prod" ? "oci" : `oci-${pulumi.getStack()}`,
   traits: [
     new BaseConfigTrait("base", {
-      ansible: false,
       mid: {
         vector: {
           enabled: true,

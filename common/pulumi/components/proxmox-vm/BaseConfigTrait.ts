@@ -1,6 +1,5 @@
 import * as proxmoxve from "@muhlba91/pulumi-proxmoxve";
 
-import { BaseConfig, BaseConfigBuilder } from "../ansible/BaseConfigBuilder";
 import { Autoupdate, AutoupdateProps } from "../mid/Autoupdate";
 import { BaselineUsers, BaselineUsersProps } from "../mid/BaselineUsers";
 import { MidTarget, MidTargetProps } from "../mid/MidTarget";
@@ -9,7 +8,6 @@ import { OpenTelemetryCollector, OpenTelemetryCollectorProps } from "../mid/Open
 import { PrometheusNodeExporter, PrometheusNodeExporterProps } from "../mid/PrometheusNodeExporter";
 import { Selfheal, SelfhealProps } from "../mid/Selfheal";
 import { Vector, VectorProps } from "../mid/Vector";
-import { AnsibleTrait, AnsibleTraitConfig } from "./AnsibleTrait";
 import { CloudImageTrait, CloudImageTraitConfig, CloudImageTraitConfigDownloadFileConfig } from "./CloudImageTrait";
 import { DNSRecordTrait, DNSRecordTraitConfig } from "./DNSRecordTrait";
 import { PrivateKeyTrait, PrivateKeyTraitConfig } from "./PrivateKeyTrait";
@@ -78,11 +76,6 @@ export enum VLAN {
   INTERNAL = 5,
 }
 
-export interface BaseConfigTraitAnsibleConfig extends AnsibleTraitConfig {
-  base?: BaseConfig;
-  roles?: any[];
-}
-
 export interface BaseConfigTraitMidConfig {
   autoupdate?: AutoupdateProps & { enabled?: boolean };
   baselineUsers?: BaselineUsersProps & { enabled?: boolean };
@@ -111,8 +104,6 @@ export interface BaseConfigTraitConfig {
       downloadFileConfig?: Partial<CloudImageTraitConfigDownloadFileConfig>;
     };
 
-  ansible?: boolean | BaseConfigTraitAnsibleConfig;
-
   mid?: boolean | BaseConfigTraitMidConfig;
 
   dnsRecord?: boolean | DNSRecordTraitConfig;
@@ -126,62 +117,6 @@ export const sapslajSSHKey =
   "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDALIs2j0FT1nlmRdIoaGt+gzyn8iOgHDQS1lg5ivSYDpU3tKsLQgFB9l+q0zB0hODNaVSiJfekMi43gkULnUf20g5M0ysAgjowDKIeGsFQIKWifO9J7aXSEdAaupIcPDZt8oWqJysxqpxL5pICbQzU1+f7yk2L8bC5rd1mQGgoDWvRkwUCtAdL5pGndDpZ7xke2eYvTwglDEjr32F0zQf1u2t7XNGWPJhIbvvipEsRZY68W0HAgNKo3qWA/Q2jdbFvgNWXeEvvHKT+13exjhZrXFUaA3XCkZx0WZanCn5MMShENhVgn01HGGrKOLCm5jk49lJIesYHRkYfx5PzZT6B saps.laj@gmail.com";
 export const ciSSHKey =
   "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCmJsCb5da9gTwpettT9ba8cGQwlnKDUNZuwr64KnaLufzCkRaiSBFgsLC3UvFCrmnONZFnwXYruaQXRukKxThOvfRvCPz/ieiD/udzvgXRR/BHyhWUcLSs3IthNF7ic5EAqStL1Fo6Y6oEot43MvD/5W0IonF70J6bjjgxq5kajaubW7EKNUdhbzmycNc0orkEHO4NQSr7OWOULuXd9asVi/W4xG2kOqKEkZ9i5HtHcYsdHW8sbYVVQy/JlXm0I+UdpCQ6XrlasW/QuUrdT/qPKYC4b8a1jvyY1z8I8TMFahQq0UMCdm+QubMWKJCwkc0GskvezfwRO0GCmaNYKFus04qDzk6d5fAji1P8xJsmbm2I0GDD0snxNQ/+1cY+4Dc9g86Hh50HjeR6rCX+fvH5LG/m9G1uT7VbBxRQCpl0QfcKMn0U6w5FcGZIb/SfdXU8erKalAoPow3kCBZ8bwGc7SdWaBEpxpz4SorcDWn5wso+o/AH8dlY42fv7D81yrk= ci@sapslaj.com";
-
-export function buildAnsibleTraitConfig(
-  config: BaseConfigTraitConfig,
-  props: ProxmoxVMProps,
-): AnsibleTraitConfig {
-  const ansibleConfig = typeof config.ansible === "boolean" ? {} : config.ansible ?? {};
-  const baseConfig = ansibleConfig.base ?? {};
-  const builder = new BaseConfigBuilder(baseConfig);
-
-  if (builder.promtailConfig.scrapeConfigs?.journal !== false) {
-    builder.addPromtailScrapeConfig(BaseConfigBuilder.journalPromtailScrapeConfig);
-  }
-
-  if (builder.promtailConfig.scrapeConfigs?.syslog !== false) {
-    builder.addPromtailScrapeConfig(BaseConfigBuilder.syslogPromtailScrapeConfig);
-    builder.rsyslogPromtail = true;
-  }
-
-  if (baseConfig.qemuGuest !== false && props.agent?.enabled) {
-    builder.qemuGuest = true;
-  }
-
-  if (builder.dockerStandalone) {
-    if (baseConfig.selfheal !== false) {
-      builder.selfHeal = true;
-    }
-    if (builder.dockerStandaloneConfig.enableSelfheal !== false) {
-      builder.dockerStandaloneConfig.enableSelfheal = builder.selfHeal;
-    }
-    if (baseConfig.rsyncBackup !== false) {
-      builder.rsyncBackup = true;
-      builder.addRsyncBackupJob({
-        src: "/var/docker/volumes",
-        dest: "/mnt/exos/volumes/{{ ansible_hostname }}/docker-volumes",
-        ...builder.dockerStandaloneConfig.rsyncBackupJob,
-      });
-    }
-    builder.addPromtailScrapeConfig(BaseConfigBuilder.dockerPromtailScrapeConfig);
-  }
-
-  if (baseConfig.nasClient !== false && builder.rsyncBackup) {
-    builder.nasClient = true;
-  }
-
-  const roles = builder.buildRoles();
-  const rolePaths = builder.buildRolePaths();
-
-  ansibleConfig?.rolePaths?.forEach((rolePath) => rolePaths.push(rolePath));
-  ansibleConfig?.roles?.forEach((role) => roles.push(role));
-
-  return {
-    ...ansibleConfig,
-    rolePaths,
-    roles,
-  };
-}
 
 export class BaseConfigTrait implements ProxmoxVMTrait {
   distro: IDistro;
@@ -226,27 +161,7 @@ export class BaseConfigTrait implements ProxmoxVMTrait {
       newProps.traits.push(new DNSRecordTrait(`${this.name}-dns-record`, dnsRecordTraitConfig));
     }
 
-    if (this.config.ansible !== false) {
-      let ansibleConfig = buildAnsibleTraitConfig(this.config, newProps);
-      if (!newProps.connectionArgs?.user) {
-        newProps.connectionArgs = {
-          user: this.distro.username,
-          ...newProps.connectionArgs,
-        };
-      }
-      if (ansibleConfig.ansibleInstallCommand === undefined) {
-        ansibleConfig.ansibleInstallCommand = this.distro.ansibleInstallCommand;
-      }
-      if (typeof this.config.privateKey === "object") {
-        ansibleConfig = {
-          ...ansibleConfig,
-          ...this.config.privateKey,
-        };
-      }
-      newProps.traits.push(
-        new AnsibleTrait(`${this.name}-ansible`, ansibleConfig),
-      );
-    } else if (this.config.privateKey !== false) {
+    if (this.config.privateKey !== false) {
       let privateKeyConfig: PrivateKeyTraitConfig = {};
       if (typeof this.config.privateKey === "object") {
         privateKeyConfig = this.config.privateKey;

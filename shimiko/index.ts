@@ -68,7 +68,6 @@ const vm = new ProxmoxVM("shimiko", {
         },
       },
       dnsRecord: !production,
-      ansible: false,
       cloudImage: {
         diskConfig: {
           size: 32,
