@@ -21,37 +21,41 @@ export class OpenTelemetryCollector extends pulumi.ComponentResource {
 
     const listenHost = props.listenHost ?? "127.0.0.1";
 
-    const version: pulumi.Input<string> = pulumi.output(
-      props.version
-        ?? fetch("https://api.github.com/repos/open-telemetry/opentelemetry-collector-releases/releases/latest")
-          .then((res) => res.json())
-          .then((res) => res["tag_name"]),
-    ).apply((v) => {
-      if (v.startsWith("v")) {
-        return v.replace(/^v/, "");
-      }
-      return v;
-    });
+    const version: pulumi.Input<string> = pulumi.unsecret(
+      pulumi.output(
+        props.version
+          ?? fetch("https://api.github.com/repos/open-telemetry/opentelemetry-collector-releases/releases/latest")
+            .then((res) => res.json())
+            .then((res) => res["tag_name"]),
+      ).apply((v) => {
+        if (v.startsWith("v")) {
+          return v.replace(/^v/, "");
+        }
+        return v;
+      }),
+    );
 
-    const targetArch = mid.agent.execOutput({
-      connection: props.connection,
-      command: ["uname", "-m"],
-    }, {
-      parent: this,
-    }).apply((arch) => {
-      switch (arch.stdout.trim()) {
-        case "arm":
-          return "armv7";
-        case "aarch64":
-          return "arm64";
-        case "i386":
-        case "i686":
-          return "386";
-        case "x86_64":
-          return "amd64";
-      }
-      throw new Error(`unsupported architecture: ${arch.stdout.trim()}`);
-    });
+    const targetArch = pulumi.unsecret(
+      mid.agent.execOutput({
+        connection: props.connection,
+        command: ["uname", "-m"],
+      }, {
+        parent: this,
+      }).apply((arch) => {
+        switch (arch.stdout.trim()) {
+          case "arm":
+            return "armv7";
+          case "aarch64":
+            return "arm64";
+          case "i386":
+          case "i686":
+            return "386";
+          case "x86_64":
+            return "amd64";
+        }
+        throw new Error(`unsupported architecture: ${arch.stdout.trim()}`);
+      }),
+    );
 
     const downloadURL = pulumi.all({ version, targetArch }).apply(({ version, targetArch }) => {
       return `https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v${version}/otelcol_${version}_linux_${targetArch}.deb`;

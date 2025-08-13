@@ -14,37 +14,41 @@ export class PrometheusNodeExporter extends pulumi.ComponentResource {
   constructor(name: string, props: PrometheusNodeExporterProps = {}, opts: pulumi.ComponentResourceOptions = {}) {
     super("sapslaj:mid:PrometheusNodeExporter", name, {}, opts);
 
-    const version: pulumi.Input<string> = pulumi.output(
-      props.version
-        ?? fetch("https://api.github.com/repos/prometheus/node_exporter/releases/latest")
-          .then((res) => res.json())
-          .then((res) => res["tag_name"]),
-    ).apply((v) => {
-      if (v.startsWith("v")) {
-        return v.replace(/^v/, "");
-      }
-      return v;
-    });
+    const version: pulumi.Input<string> = pulumi.unsecret(
+      pulumi.output(
+        props.version
+          ?? fetch("https://api.github.com/repos/prometheus/node_exporter/releases/latest")
+            .then((res) => res.json())
+            .then((res) => res["tag_name"]),
+      ).apply((v) => {
+        if (v.startsWith("v")) {
+          return v.replace(/^v/, "");
+        }
+        return v;
+      }),
+    );
 
-    const targetArch = mid.agent.execOutput({
-      connection: props.connection,
-      command: ["uname", "-m"],
-    }, {
-      parent: this,
-    }).apply((arch) => {
-      switch (arch.stdout.trim()) {
-        case "arm":
-          return "armv7";
-        case "aarch64":
-          return "arm64";
-        case "i386":
-        case "i686":
-          return "386";
-        case "x86_64":
-          return "amd64";
-      }
-      throw new Error(`unsupported architecture: ${arch.stdout.trim()}`);
-    });
+    const targetArch = pulumi.unsecret(
+      mid.agent.execOutput({
+        connection: props.connection,
+        command: ["uname", "-m"],
+      }, {
+        parent: this,
+      }).apply((arch) => {
+        switch (arch.stdout.trim()) {
+          case "arm":
+            return "armv7";
+          case "aarch64":
+            return "arm64";
+          case "i386":
+          case "i686":
+            return "386";
+          case "x86_64":
+            return "amd64";
+        }
+        throw new Error(`unsupported architecture: ${arch.stdout.trim()}`);
+      }),
+    );
 
     const downloadURL = pulumi.all({ version, targetArch }).apply(({ version, targetArch }) => {
       return `https://github.com/prometheus/node_exporter/releases/download/v${version}/node_exporter-${version}.linux-${targetArch}.tar.gz`;
