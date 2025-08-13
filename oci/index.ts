@@ -86,6 +86,7 @@ new DockerContainer("traefik", {
   connection: vm.connection,
   name: "traefik",
   image: "public.ecr.aws/docker/library/traefik:v3.5",
+  restartPolicy: "unless-stopped",
   command: [
     "--accesslog.fields.defaultmode=keep",
     "--accesslog.fields.headers.defaultmode=drop",
