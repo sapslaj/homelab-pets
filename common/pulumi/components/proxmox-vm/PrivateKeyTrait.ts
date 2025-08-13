@@ -18,7 +18,7 @@ export class PrivateKeyTrait implements ProxmoxVMTrait {
     return vm._traitStore[PrivateKeyTrait.traitStore.privateKey] as tls.PrivateKey | undefined;
   }
 
-  constructor(public name: string, public config: PrivateKeyTraitConfig) {}
+  constructor(public name: string, public config: PrivateKeyTraitConfig = {}) {}
 
   forProps(props: ProxmoxVMProps, name: string, parent: ProxmoxVM): ProxmoxVMProps {
     let newProps = { ...props };
