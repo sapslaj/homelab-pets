@@ -11,13 +11,13 @@ export function mergeTriggers(
       if (conf.refresh !== undefined) {
         result.refresh = [
           ...(result.refresh ?? []),
-          conf.refresh,
+          ...conf.refresh,
         ];
       }
       if (conf.replace !== undefined) {
         result.replace = [
           ...(result.replace ?? []),
-          conf.replace,
+          ...conf.replace,
         ];
       }
     }
