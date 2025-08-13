@@ -16,14 +16,54 @@ import { ProxmoxVM, ProxmoxVMProps } from "./ProxmoxVM";
 import { ProxmoxVMTrait } from "./ProxmoxVMTrait";
 
 export interface BaseConfigTraitMidConfig {
-  autoupdate?: AutoupdateProps & { enabled?: boolean };
-  baselineUsers?: BaselineUsersProps & { enabled?: boolean };
-  midTarget?: MidTargetProps & { enabled?: boolean };
-  nasClient?: NASClientProps & { enabled?: boolean };
-  openTelemetryCollector?: OpenTelemetryCollectorProps & { enabled?: boolean };
-  prometheusNodeExporter?: PrometheusNodeExporterProps & { enabled?: boolean };
-  selfheal?: SelfhealProps & { enabled?: boolean };
-  vector?: VectorProps & { enabled?: boolean };
+  autoupdate?: AutoupdateProps & {
+    /**
+     * @default true
+     */
+    enabled?: boolean;
+  };
+  baselineUsers?: BaselineUsersProps & {
+    /**
+     * @default true
+     */
+    enabled?: boolean;
+  };
+  midTarget?: MidTargetProps & {
+    /**
+     * @default true
+     */
+    enabled?: boolean;
+  };
+  nasClient?: NASClientProps & {
+    /**
+     * @default false
+     */
+    enabled?: boolean;
+  };
+  openTelemetryCollector?: OpenTelemetryCollectorProps & {
+    /**
+     * @default true
+     */
+    enabled?: boolean;
+  };
+  prometheusNodeExporter?: PrometheusNodeExporterProps & {
+    /**
+     * @default true
+     */
+    enabled?: boolean;
+  };
+  selfheal?: SelfhealProps & {
+    /**
+     * @default false
+     */
+    enabled?: boolean;
+  };
+  vector?: VectorProps & {
+    /**
+     * @default true
+     */
+    enabled?: boolean;
+  };
 }
 
 export interface BaseConfigTraitConfig {
