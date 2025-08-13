@@ -1,6 +1,30 @@
 local log = require("log")
 local http = require("http")
 
+local reverse_lookup_filter = function (endpoint)
+  local log_labels = {
+    filter_direction = "reverse",
+    hostname = endpoint.hostname,
+    source = endpoint.source_properties.source,
+    dhcp_pool = endpoint.source_properties.dhcp_pool,
+  }
+  if endpoint.hostname == "" then
+    log.info("endpoint hostname is blank", log_labels)
+    return false
+  end
+  local skip_hostnames = {
+    "ubuntu",
+    "sync",
+  }
+  for _, v in pairs(skip_hostnames) do
+    if v == endpoint.hostname then
+      log.info("endpoint's hostname is in the skip list", log_labels)
+      return false
+    end
+  end
+  return true
+end
+
 local forward_lookup_filter = function(endpoint)
   local log_labels = {
     filter_direction = "forward",
@@ -23,6 +47,7 @@ local forward_lookup_filter = function(endpoint)
     local skip_hostnames = {
       "aqua",
       "shimiko",
+      "ubuntu",
     }
     for _, v in pairs(skip_hostnames) do
       if v == endpoint.hostname then
@@ -248,6 +273,7 @@ return {
       "file",
       config = {
         forward_lookup_filter = forward_lookup_filter,
+        reverse_lookup_filter = reverse_lookup_filter,
         files = coredns_files_config,
         ssh = {
           host = "rem.sapslaj.xyz",
@@ -260,6 +286,7 @@ return {
       "file",
       config = {
         forward_lookup_filter = forward_lookup_filter,
+        reverse_lookup_filter = reverse_lookup_filter,
         files = coredns_files_config,
         ssh = {
           host = "ram.sapslaj.xyz",
@@ -278,6 +305,7 @@ return {
         clean_ipv4_reverse_zone = true,
         clean_ipv6_reverse_zone = true,
         forward_lookup_filter = forward_lookup_filter,
+        reverse_lookup_filter = reverse_lookup_filter,
       },
     },
     shimiko = {
