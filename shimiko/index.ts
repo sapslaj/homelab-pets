@@ -1,3 +1,6 @@
+import * as fs from "fs/promises";
+import * as path from "path";
+
 import * as aws from "@pulumi/aws";
 import { local } from "@pulumi/command";
 import * as pulumi from "@pulumi/pulumi";
@@ -270,7 +273,9 @@ const etcZonepop = new mid.resource.File("/etc/zonepop", {
 const zonepopConfig = new mid.resource.File("/etc/zonepop/config.lua", {
   connection: vm.connection,
   path: "/etc/zonepop/config.lua",
-  source: new pulumi.asset.FileAsset("./zonepop-config.lua"),
+  content: fs.readFile(path.join(__dirname, "zonepop-config.lua"), {
+    encoding: "utf8",
+  }),
 }, {
   deletedWith: vm,
   dependsOn: [
