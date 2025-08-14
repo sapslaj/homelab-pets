@@ -47,18 +47,18 @@ func FinishSession(ctx context.Context, session *PersistenceSession) error {
 	ctx, span := telemetry.Tracer.Start(ctx, "shimiko/pkg/persistence.FinishSession", trace.WithAttributes())
 	defer span.End()
 
-	var err error
-	errors.Join(err, session.CoreDNS.Save(ctx))
+	coreDNSErr := session.CoreDNS.Save(ctx)
 	_, r53err := session.Route53.FlushChangeBatch(ctx)
-	err = errors.Join(err, r53err)
+
+	err := errors.Join(coreDNSErr, r53err)
 
 	if err != nil {
 		span.SetStatus(codes.Error, err.Error())
-	} else {
-		span.SetStatus(codes.Ok, "")
+		return err
 	}
 
-	return err
+	span.SetStatus(codes.Ok, "")
+	return nil
 }
 
 func (ps *PersistenceSession) Finish(ctx context.Context) error {
