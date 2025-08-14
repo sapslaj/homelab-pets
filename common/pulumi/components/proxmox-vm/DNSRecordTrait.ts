@@ -24,7 +24,7 @@ export class DNSRecordTrait implements ProxmoxVMTrait {
   constructor(public name: string, public config: DNSRecordTraitConfig = {}) {}
 
   forResource(
-    _machine: proxmoxve.vm.VirtualMachine,
+    machine: proxmoxve.vm.VirtualMachine,
     _args: proxmoxve.vm.VirtualMachineArgs,
     name: string,
     parent: ProxmoxVM,
@@ -68,6 +68,8 @@ export class DNSRecordTrait implements ProxmoxVMTrait {
             environment: {
               IPV4: parent.ipv4,
             },
+          }, {
+            dependsOn: machine,
           }).stdout.apply((output) => {
             if (output.length === 0) {
               return [];
