@@ -18,6 +18,7 @@ export interface DNSRecordInputs {
   type: pulumi.Input<DNSRecordType>;
   records: pulumi.Input<pulumi.Input<string>[]>;
   ttl?: pulumi.Input<number>;
+  noopOnEmpty?: pulumi.Input<boolean>;
 }
 
 export interface DNSRecordOutputs {
@@ -29,7 +30,7 @@ export interface DNSRecordOutputs {
   updatedAt: pulumi.Output<string>;
 }
 
-export class DNSRecord extends pulumi.dynamic.Resource {
+export class DNSRecord extends pulumi.dynamic.Resource implements DNSRecordOutputs {
   public readonly name!: pulumi.Output<string>;
   public readonly type!: pulumi.Output<DNSRecordType>;
   public readonly records!: pulumi.Output<string[]>;

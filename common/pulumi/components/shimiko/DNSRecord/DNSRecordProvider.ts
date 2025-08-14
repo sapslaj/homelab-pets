@@ -11,6 +11,7 @@ export interface DNSRecordProviderInputs {
   type: DNSRecordType;
   records: string[];
   ttl?: number;
+  noopOnEmpty?: boolean;
 }
 
 export interface DNSRecordProviderOutputs extends DNSRecordProviderInputs {
@@ -102,27 +103,38 @@ export class DNSRecordProvider
   }
 
   async create(inputs: DNSRecordProviderInputs): Promise<pulumi.dynamic.CreateResult<DNSRecordProviderOutputs>> {
+    let { noopOnEmpty, ...record } = inputs;
+    if (inputs.noopOnEmpty === true && record.records.length === 0) {
+      return {
+        id: this.recordId(inputs),
+        outs: stripUndefined({
+          ...record,
+          createdAt: "",
+          updatedAt: "",
+        }),
+      };
+    }
     const req = await fetch(this.shimikoEndpoint + `v1/dns-records/${inputs.type}/${inputs.name}`, {
       method: "POST",
       body: JSON.stringify({
-        record: inputs,
+        record: record,
       }),
     });
     const body = await req.json();
     if (req.status !== 200 || body.status !== "OK") {
       throw new Error(`error creating DNS record: ${JSON.stringify(body)}`);
     }
-    const record = body.record;
+    const outRecord = body.record;
     const outs: DNSRecordProviderOutputs = {
       ...inputs,
-      name: record.name,
-      type: record.type,
-      records: record.records,
-      createdAt: record.created_at,
-      updatedAt: record.updated_at,
+      name: outRecord.name,
+      type: outRecord.type,
+      records: outRecord.records,
+      createdAt: outRecord.created_at,
+      updatedAt: outRecord.updated_at,
     };
-    if (record.ttl) {
-      outs.ttl = record.ttl;
+    if (outRecord.ttl) {
+      outs.ttl = outRecord.ttl;
     }
     return {
       id: this.recordId(inputs),
@@ -164,9 +176,15 @@ export class DNSRecordProvider
 
   async update(
     _id: pulumi.ID,
-    _olds: DNSRecordProviderInputs,
+    olds: DNSRecordProviderOutputs,
     inputs: DNSRecordProviderInputs,
   ): Promise<pulumi.dynamic.UpdateResult<DNSRecordProviderOutputs>> {
+    let { noopOnEmpty, ...record } = inputs;
+    if (inputs.noopOnEmpty === true && record.records.length === 0) {
+      return {
+        outs: olds,
+      };
+    }
     const req = await fetch(this.shimikoEndpoint + `v1/dns-records/${inputs.type}/${inputs.name}`, {
       method: "POST",
       body: JSON.stringify({
@@ -177,17 +195,17 @@ export class DNSRecordProvider
     if (req.status !== 200 || body.status !== "OK") {
       throw new Error(`error updating DNS record: ${JSON.stringify(body)}`);
     }
-    const record = body.record;
+    const outRecord = body.record;
     const outs: DNSRecordProviderOutputs = {
       ...inputs,
-      name: record.name,
-      type: record.type,
-      records: record.records,
-      createdAt: record.created_at,
-      updatedAt: record.updated_at,
+      name: outRecord.name,
+      type: outRecord.type,
+      records: outRecord.records,
+      createdAt: outRecord.created_at,
+      updatedAt: outRecord.updated_at,
     };
-    if (record.ttl) {
-      outs.ttl = record.ttl;
+    if (outRecord.ttl) {
+      outs.ttl = outRecord.ttl;
     }
     return {
       outs: stripUndefined(outs),
@@ -196,7 +214,7 @@ export class DNSRecordProvider
 
   async delete(
     id: pulumi.ID,
-    inputs: DNSRecordProviderInputs,
+    inputs: DNSRecordProviderOutputs,
   ): Promise<void> {
     let type = inputs.type;
     let name = inputs.name;

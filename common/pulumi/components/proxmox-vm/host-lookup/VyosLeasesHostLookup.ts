@@ -4,10 +4,41 @@ import { Config as SSHConfig, NodeSSH } from "node-ssh";
 
 import { IHostLookup } from "./IHostLookup";
 
+export enum NUD {
+  PERMANENT = "PERMANENT",
+  NOARP = "NOARP",
+  REACHABLE = "REACHABLE",
+  STALE = "STALE",
+  NONE = "NONE",
+  INCOMPLETE = "INCOMPLETE",
+  DELAY = "DELAY",
+  PROBE = "PROBE",
+  FAILED = "FAILED",
+}
+
+export const ValidNUDs = [
+  NUD.PERMANENT.toString(),
+  NUD.NOARP.toString(),
+  NUD.REACHABLE.toString(),
+  NUD.STALE.toString(),
+  NUD.NONE.toString(),
+  NUD.INCOMPLETE.toString(),
+  NUD.DELAY.toString(),
+  NUD.PROBE.toString(),
+  NUD.FAILED.toString(),
+];
+
+export interface Neighbor {
+  to: string;
+  dev: string;
+  lladdr: string;
+  nud: NUD;
+}
+
 export class VyosLeasesHostLookup implements IHostLookup {
   constructor(public options: { sshConfig: SSHConfig; timeout?: number }) {}
 
-  resolve(machine: proxmoxve.vm.VirtualMachine): pulumi.Input<string> {
+  resolveIpv4(machine: proxmoxve.vm.VirtualMachine): pulumi.Input<string> {
     return pulumi.all({ networkDevices: machine.networkDevices }).apply(async ({ networkDevices }) => {
       if (!networkDevices) {
         throw new Error("cannot lookup host without network devices");
@@ -36,6 +67,72 @@ export class VyosLeasesHostLookup implements IHostLookup {
         }
       }
       throw new Error("could not determine IP for host");
+    });
+  }
+
+  resolveIpv6(machine: proxmoxve.vm.VirtualMachine): pulumi.Input<string | undefined> {
+    return pulumi.all({ networkDevices: machine.networkDevices }).apply(async ({ networkDevices }) => {
+      if (!networkDevices) {
+        throw new Error("cannot lookup host without network devices");
+      }
+      const ssh = new NodeSSH();
+      const conn = await ssh.connect(this.options.sshConfig);
+      const timeout = new Date().getTime() + (this.options.timeout ?? 60000);
+      while (timeout > new Date().getTime()) {
+        const out = await conn.exec("ip", ["-f", "inet6", "neigh", "show"]);
+        const neighbors = this.neighborsParse(out);
+        for (const networkDevice of networkDevices) {
+          const matched = neighbors.filter((neighbor) => {
+            if (neighbor.lladdr && networkDevice.macAddress) {
+              return neighbor.lladdr.toLowerCase() === networkDevice.macAddress.toLowerCase();
+            } else {
+              return false;
+            }
+          });
+          console.log(networkDevice.macAddress.toLowerCase());
+          for (const found of matched) {
+            if (found && found.to && found.to !== "") {
+              conn.dispose();
+              ssh.dispose();
+              return found.to;
+            }
+          }
+        }
+      }
+      return undefined;
+    });
+  }
+
+  neighborsParse(input: string): Neighbor[] {
+    return input.split("\n").map((line) => {
+      let neighbor: Neighbor = {
+        to: "",
+        dev: "",
+        lladdr: "",
+        nud: NUD.FAILED,
+      };
+      const parts = line.split(" ");
+      for (let i = 0; i < parts.length; i++) {
+        if (i === 0) {
+          neighbor.to = parts[i];
+          continue;
+        }
+        if (parts[i] === "dev") {
+          i++;
+          neighbor.dev = parts[i];
+          continue;
+        }
+        if (parts[i] === "lladdr") {
+          i++;
+          neighbor.lladdr = parts[i];
+        }
+        const maybeNUD = parts[i].toUpperCase();
+        if (ValidNUDs.includes(maybeNUD)) {
+          neighbor.nud = maybeNUD as NUD;
+          continue;
+        }
+      }
+      return neighbor;
     });
   }
 

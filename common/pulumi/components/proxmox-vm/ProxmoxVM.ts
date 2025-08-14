@@ -464,11 +464,12 @@ export class ProxmoxVM extends pulumi.ComponentResource {
     }
   };
 
-  protected hostLookup: IHostLookup;
+  hostLookup: IHostLookup;
 
-  protected connectionArgs: Partial<mid.types.input.ConnectionArgs>;
+  connectionArgs: Partial<mid.types.input.ConnectionArgs>;
 
-  private _ipv4: pulumi.Output<string> | undefined;
+  _ipv4: pulumi.Output<string> | undefined;
+  _ipv6: pulumi.Output<string | undefined> | undefined;
 
   constructor(id: string, props: ProxmoxVMProps = {}, opts: pulumi.ComponentResourceOptions = {}) {
     super("sapslaj:promxmox-vm:ProxmoxVM", id, {}, opts);
@@ -669,12 +670,25 @@ export class ProxmoxVM extends pulumi.ComponentResource {
 
   public get ipv4(): pulumi.Output<string> {
     if (!this._ipv4) {
-      this._ipv4 = pulumi.output(this.hostLookup.resolve(this.machine));
+      this._ipv4 = pulumi.output(this.hostLookup.resolveIpv4(this.machine));
     }
     return this._ipv4;
   }
 
+  public get ipv6(): pulumi.Output<string | undefined> {
+    if (!this._ipv6) {
+      if (this.hostLookup.resolveIpv6 === undefined) {
+        return pulumi.output(undefined) as pulumi.Output<undefined>;
+      }
+      this._ipv6 = pulumi.output(this.hostLookup.resolveIpv6(this.machine));
+    }
+    return this._ipv6;
+  }
+
   public get connection(): mid.types.input.ConnectionArgs {
+    if (this.connectionArgs.host !== undefined) {
+      return this.connectionArgs;
+    }
     return {
       host: this.ipv4,
       ...this.connectionArgs,
