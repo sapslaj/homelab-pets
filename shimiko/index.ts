@@ -190,7 +190,7 @@ if (production) {
 const shimikoBinary = new mid.resource.File("/usr/local/bin/shimiko", {
   connection: vm.connection,
   path: "/usr/local/bin/shimiko",
-  source: shimikoBinaryBuild.assets!.apply((assets) => assets!.shimiko),
+  source: shimikoBinaryBuild.assets?.apply((assets) => assets?.shimiko),
   mode: "a+x",
 }, {
   deletedWith: vm,
