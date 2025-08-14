@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - .github/workflows/oci.yml
+      - common/pulumi/**
       - oci/**
 
 env:

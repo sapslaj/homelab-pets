@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - .github/workflows/shimiko.yml
+      - common/pulumi/**
       - shimiko/**
 
 env:

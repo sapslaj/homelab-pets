@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - .github/workflows/misc.yml
+      - common/pulumi/**
       - misc/**
 
 env:
