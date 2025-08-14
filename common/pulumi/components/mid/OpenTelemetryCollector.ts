@@ -66,9 +66,6 @@ export class OpenTelemetryCollector extends pulumi.ComponentResource {
       triggers: props.triggers,
       deb: downloadURL,
     }, {
-      // FIXME: deleting a deb is borked in mid right now, will be fixed in the
-      // next version.
-      retainOnDelete: true,
       parent: this,
     });
 
