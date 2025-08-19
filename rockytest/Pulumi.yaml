@@ -1,0 +1,5 @@
+name: homelab-pets-rockytest
+runtime:
+  name: nodejs
+  options:
+    packagemanager: npm

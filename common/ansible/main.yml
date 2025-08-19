@@ -17,7 +17,7 @@
         vector_enable_morbius: "{{ 'morbius_hosts' in group_names }}"
         vector_enable_qbittorrent: "{{ 'qbittorrent_hosts' in group_names }}"
 
-- hosts: all,!proxmox_hosts
+- hosts: all
   become: true
   roles:
     - role: sapslaj.selfheal

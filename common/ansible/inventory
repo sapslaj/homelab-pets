@@ -4,7 +4,6 @@ ram.sapslaj.xyz
 rem.sapslaj.xyz
 tohru.sapslaj.xyz
 koyuki.sapslaj.xyz
-mitsuru.sapslaj.xyz
 
 [libvirt_hosts]
 aqua.sapslaj.xyz
@@ -17,9 +16,6 @@ koyuki.sapslaj.xyz
 
 [morbius_hosts]
 koyuki.sapslaj.xyz
-
-[proxmox_hosts]
-mitsuru.sapslaj.xyz
 
 [dns_servers]
 ram.sapslaj.xyz
@@ -37,7 +33,6 @@ ram.sapslaj.xyz
 rem.sapslaj.xyz
 tohru.sapslaj.xyz
 koyuki.sapslaj.xyz
-mitsuru.sapslaj.xyz
 
 [qemu_guests]
 rem.sapslaj.xyz
