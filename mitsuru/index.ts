@@ -1,4 +1,6 @@
+import * as fs from "fs";
 import * as os from "os";
+import * as path from "path";
 
 import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
@@ -10,43 +12,46 @@ import { MidTarget } from "../common/pulumi/components/mid/MidTarget";
 import { PrometheusNodeExporter } from "../common/pulumi/components/mid/PrometheusNodeExporter";
 import { Vector } from "../common/pulumi/components/mid/Vector";
 
-const provider = new mid.Provider("mitsuru", {
-  connection: {
-    host: "mitsuru.sapslaj.xyz",
-    port: 22,
-    user: os.userInfo().username,
-    sshAgent: true,
-  },
-  deleteUnreachable: true,
+const connection: mid.types.input.ConnectionArgs = {
+  host: "mitsuru.sapslaj.xyz",
+  port: 22,
+  user: os.userInfo().username,
+  // TODO: fix SSH agent in CI
+  privateKey: fs.readFileSync(path.join(os.userInfo().homedir, ".ssh", "id_rsa"), { encoding: "utf8" }),
+};
+
+const midTarget = new MidTarget("mitsuru", {
+  connection,
 });
 
-const midTarget = new MidTarget("mitsuru", {}, { provider });
-
-new BaselineUsers("mitsuru", {}, {
-  provider,
+new BaselineUsers("mitsuru", {
+  connection,
+}, {
   dependsOn: [
     midTarget,
   ],
 });
 
-new PrometheusNodeExporter("mitsuru", {}, {
-  provider,
+new PrometheusNodeExporter("mitsuru", {
+  connection,
+}, {
   dependsOn: [
     midTarget,
   ],
 });
 
-new Vector("mitsuru", {}, {
-  provider,
+new Vector("mitsuru", {
+  connection,
+}, {
   dependsOn: [
     midTarget,
   ],
 });
 
 new Autoupdate("mitsuru", {
+  connection,
   autoreboot: false,
 }, {
-  provider,
   dependsOn: [
     midTarget,
   ],
