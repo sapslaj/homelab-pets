@@ -44,9 +44,7 @@ const vm = new ProxmoxVM("shimiko", {
           enabled: production,
         },
         openTelemetryCollector: {
-          // TODO: re-enable once Jaeger is back up
-          // enabled: true,
-          enabled: false,
+          enabled: true,
         },
         prometheusNodeExporter: {
           enabled: true,
@@ -204,7 +202,7 @@ const shimikoEnv = new mid.resource.File("/etc/sysconfig/shimiko.env", {
       AWS_ACCESS_KEY_ID: iamKeyShimiko.id,
       AWS_REGION: "us-east-1",
       AWS_SECRET_ACCESS_KEY: iamKeyShimiko.secret,
-      // OTEL_EXPORTER_OTLP_ENDPOINT: "http://localhost:4317/v1/traces",
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://localhost:4317/v1/traces",
       SHIMIKO_ACME_EMAIL: "alerts@sapslaj.com",
       SHIMIKO_ACME_URL: acmeURL,
       SHIMIKO_CERT_DOMAINS: production ? "shimiko.sapslaj.xyz" : dnsRecord.fullname,
