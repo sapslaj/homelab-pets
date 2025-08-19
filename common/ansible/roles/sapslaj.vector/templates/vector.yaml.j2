@@ -294,8 +294,8 @@ sinks:
       - metrics_node_exporter_default_labels
 
 {% if vector_enable_dns %}
-      - metrics_adguard
-      - metrics_coredns
+      - metrics_adguard_default_labels
+      - metrics_coredns_default_labels
 {% endif %}
 
 {% if vector_enable_docker %}
@@ -305,7 +305,7 @@ sinks:
 {% endif %}
 
 {% if vector_enable_du %}
-      - metrics_du
+      - metrics_du_default_labels
 {% endif %}
 
 {% if vector_enable_libvirt %}
@@ -313,7 +313,7 @@ sinks:
 {% endif %}
 
 {% if vector_enable_morbius %}
-      - metrics_morbius
+      - metrics_morbius_default_labels
 {% endif %}
 
 {% if vector_enable_qbittorrent %}
