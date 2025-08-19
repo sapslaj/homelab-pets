@@ -10,6 +10,7 @@ import { Autoupdate } from "../common/pulumi/components/mid/Autoupdate";
 import { BaselineUsers } from "../common/pulumi/components/mid/BaselineUsers";
 import { MidTarget } from "../common/pulumi/components/mid/MidTarget";
 import { PrometheusNodeExporter } from "../common/pulumi/components/mid/PrometheusNodeExporter";
+import { SystemdUnit } from "../common/pulumi/components/mid/SystemdUnit";
 import { Vector } from "../common/pulumi/components/mid/Vector";
 
 const connection: mid.types.input.ConnectionArgs = {
@@ -54,5 +55,37 @@ new Autoupdate("mitsuru", {
 }, {
   dependsOn: [
     midTarget,
+  ],
+});
+
+const shortrackBinary = new mid.resource.File("/usr/local/bin/shortrack", {
+  connection,
+  path: "/usr/local/bin/shortrack",
+  remoteSource: "https://misc.sapslaj.xyz/shortrack-binaries/shortrack",
+  mode: "a+x",
+});
+
+new SystemdUnit("shortrack.service", {
+  connection,
+  name: "shortrack.service",
+  ensure: "started",
+  enabled: true,
+  unit: {
+    Description: "Like Longhorn, but shit",
+    Requires: "sys-kernel-config.mount modprobe@configfs.service modprobe@target_core_mod.service",
+    After: "sys-kernel-config.mount network.target local-fs.target",
+  },
+  service: {
+    Type: "simple",
+    ExecStart: "/usr/local/bin/shortrack sigma --volume-dir /red/shortrack",
+    Restart: "on-failure",
+    RestartSec: "1",
+  },
+  install: {
+    WantedBy: "multi-user.target",
+  },
+}, {
+  dependsOn: [
+    shortrackBinary,
   ],
 });
