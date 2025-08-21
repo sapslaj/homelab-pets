@@ -47,6 +47,11 @@ const vm = new ProxmoxVM("oci", {
           },
         },
       },
+      cloudImage: {
+        diskConfig: {
+          size: 128,
+        },
+      },
     }),
   ],
 });
