@@ -13,6 +13,7 @@ export interface DockerHostProps {
   enableCadvisor?: boolean;
   enableWatchtower?: boolean;
   cadvisorImage?: pulumi.Input<string>;
+  watchtowerImage?: pulumi.Input<string>;
   watchtowerHTTPAPIToken?: pulumi.Input<string>;
   watchtowerPort?: pulumi.Input<number>;
 }
@@ -190,7 +191,7 @@ export class DockerHost extends pulumi.ComponentResource {
         config: props.config,
         triggers: props.triggers,
         name: "watchtower",
-        image: "containrrr/watchtower",
+        image: props.watchtowerImage ?? "proxy.oci.sapslaj.xyz/docker-hub/containrrr/watchtower",
         restartPolicy: "unless-stopped",
         env: {
           WATCHTOWER_POLL_INTERVAL: "86400", // One day

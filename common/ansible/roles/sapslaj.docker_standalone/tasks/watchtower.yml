@@ -3,7 +3,7 @@
     - name: watchtower - create watchtower container
       docker_container:
         name: watchtower
-        image: containrrr/watchtower
+        image: proxy.oci.sapslaj.xyz/docker-hub/containrrr/watchtower
         restart_policy: unless-stopped
         env:
           WATCHTOWER_POLL_INTERVAL: "86400" # One Day

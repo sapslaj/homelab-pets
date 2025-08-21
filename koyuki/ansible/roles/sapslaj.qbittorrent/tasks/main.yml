@@ -15,7 +15,7 @@
 - name: qbittorrent exporter container
   docker_container:
     name: qbittorrent-exporter
-    image: esanchezm/prometheus-qbittorrent-exporter
+    image: proxy.oci.sapslaj.xyz/docker-hub/esanchezm/prometheus-qbittorrent-exporter
     restart_policy: unless-stopped
     env: "{{ qbittorrent_exporter_env }}"
     ports:

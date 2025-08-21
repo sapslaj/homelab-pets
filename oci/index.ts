@@ -53,6 +53,8 @@ const vm = new ProxmoxVM("oci", {
 
 const dockerInstall = new DockerHost("oci", {
   connection: vm.connection,
+  // default is the proxy, but _we're_ the proxy so we can't proxy ourselves.
+  watchtowerImage: "containrrr/watchtower",
 }, {
   dependsOn: [
     vm,
