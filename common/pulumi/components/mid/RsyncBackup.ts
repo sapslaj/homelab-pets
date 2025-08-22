@@ -36,6 +36,9 @@ export class RsyncBackup extends pulumi.ComponentResource {
       connection: props.connection,
       triggers: props.triggers,
       name: "rsync",
+      config: {
+        check: false,
+      },
     }, {
       parent: this,
       retainOnDelete: props.retainRsyncPackageOnDelete,

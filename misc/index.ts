@@ -79,6 +79,9 @@ const xcaddyDeps = new mid.resource.Apt("xcaddy-deps", {
     "debian-keyring",
     "golang-go",
   ],
+  config: {
+    check: false,
+  },
 }, {
   deletedWith: vm,
   retainOnDelete: true,

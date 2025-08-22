@@ -25,6 +25,9 @@ export class Vector extends pulumi.ComponentResource {
       connection: props.connection,
       triggers: props.triggers,
       name: "curl",
+      config: {
+        check: false,
+      },
     }, {
       parent: this,
       retainOnDelete: true,

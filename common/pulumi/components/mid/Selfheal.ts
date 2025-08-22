@@ -19,6 +19,9 @@ export class Selfheal extends pulumi.ComponentResource {
       connection: props.connection,
       triggers: props.triggers,
       name: "ansible",
+      config: {
+        check: false,
+      },
     }, {
       parent: this,
     });

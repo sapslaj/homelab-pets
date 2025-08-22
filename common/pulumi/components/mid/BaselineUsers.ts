@@ -78,6 +78,9 @@ export class BaselineUsers extends pulumi.ComponentResource {
       const userArgs: mid.resource.UserArgs = {
         connection: props.connection,
         triggers: props.triggers,
+        config: {
+          check: false,
+        },
         name: def.name ?? key,
         groupsExclusive: false,
         groups: [
@@ -102,6 +105,9 @@ export class BaselineUsers extends pulumi.ComponentResource {
           {
             connection: props.connection,
             triggers: props.triggers,
+            config: {
+              check: false,
+            },
             path: pulumi.interpolate`/home/${user.name}/.ssh`,
             ensure: "directory",
             owner: user.name,
@@ -123,6 +129,9 @@ export class BaselineUsers extends pulumi.ComponentResource {
           {
             connection: props.connection,
             triggers: props.triggers,
+            config: {
+              check: false,
+            },
             path: pulumi.interpolate`/home/${user.name}/.ssh/authorized_keys`,
             ensure: "file",
             owner: user.name,
@@ -144,6 +153,9 @@ export class BaselineUsers extends pulumi.ComponentResource {
           {
             connection: props.connection,
             triggers: props.triggers,
+            config: {
+              check: false,
+            },
             path: pulumi.interpolate`/home/${user.name}/.ssh/authorized_keys`,
             line: def.sshKey,
           },

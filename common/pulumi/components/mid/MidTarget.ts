@@ -26,6 +26,9 @@ export class MidTarget extends pulumi.ComponentResource {
       names: [
         "python3-apt",
       ],
+      config: {
+        check: false,
+      },
     }, {
       parent: this,
       retainOnDelete: true,
@@ -126,6 +129,9 @@ export class MidTarget extends pulumi.ComponentResource {
         autoclean: true,
         clean: true,
         purge: true,
+        config: {
+          check: false,
+        },
       }, {
         parent: this,
         retainOnDelete: true,

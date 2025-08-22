@@ -13,7 +13,10 @@ export class NASClient extends pulumi.ComponentResource {
 
     const packages = new mid.resource.Apt(name, {
       connection: props.connection,
-      config: props.config,
+      config: {
+        check: false,
+        ...props.config,
+      },
       triggers: props.triggers,
       names: [
         "nfs-common",

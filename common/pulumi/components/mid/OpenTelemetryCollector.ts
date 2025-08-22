@@ -65,6 +65,9 @@ export class OpenTelemetryCollector extends pulumi.ComponentResource {
       connection: props.connection,
       triggers: props.triggers,
       deb: downloadURL,
+      config: {
+        check: false,
+      },
     }, {
       parent: this,
     });
