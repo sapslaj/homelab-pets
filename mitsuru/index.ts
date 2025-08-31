@@ -89,3 +89,43 @@ new SystemdUnit("shortrack.service", {
     shortrackBinary,
   ],
 });
+
+const nfsPackages = new mid.resource.Apt("nfs", {
+  connection,
+  names: [
+    "nfs-kernel-server",
+  ],
+}, {
+  dependsOn: [
+    midTarget,
+  ],
+});
+
+const nfsExports = new mid.resource.File("/etc/exports", {
+  connection,
+  path: "/etc/exports",
+  content: `/red 172.24.4.0/24(rw,sync,no_root_squash,no_subtree_check)\n`,
+}, {
+  retainOnDelete: true,
+  dependsOn: [
+    nfsPackages,
+  ],
+});
+
+new mid.resource.SystemdService("nfs-kernel-server.service", {
+  connection,
+  name: "nfs-kernel-server.service",
+  enabled: true,
+  ensure: "started",
+  triggers: {
+    refresh: [
+      nfsExports.triggers.lastChanged,
+    ],
+  },
+}, {
+  retainOnDelete: true,
+  dependsOn: [
+    nfsPackages,
+    nfsExports,
+  ],
+});
