@@ -20,7 +20,7 @@
     "@pulumi/tailscale": "^0.21.0",
     "@pulumi/tls": "^5.0.10",
     "@pulumiverse/time": "^0.1.1",
-    "@sapslaj/pulumi-mid": "^0.0.15",
+    "@sapslaj/pulumi-mid": "^0.0.16",
     "dedent": "^1.5.3",
     "node-ssh": "^13.2.0",
     "yaml": "^2.7.0"
