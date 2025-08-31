@@ -12,6 +12,10 @@ export interface MidTargetProps {
     allowEsm?: boolean;
     allowLxd?: boolean;
   };
+  sysctlTweaks?: {
+    enableMaxUserInstances?: boolean;
+    enableMaxUserWatches?: boolean;
+  };
 }
 
 export class MidTarget extends pulumi.ComponentResource {
@@ -138,6 +142,45 @@ export class MidTarget extends pulumi.ComponentResource {
         dependsOn: [
           aptPrereqs,
         ],
+      });
+    }
+
+    const sysctlTweakTasks: mid.types.input.resource.AnsibleTaskListArgsTaskArgs[] = [];
+
+    if (props.sysctlTweaks?.enableMaxUserInstances !== false) {
+      sysctlTweakTasks.push({
+        module: "sysctl",
+        args: {
+          name: "fs.inotify.max_user_instances",
+          value: "8192",
+          state: "present",
+          sysctl_set: true,
+        },
+      });
+    }
+
+    if (props.sysctlTweaks?.enableMaxUserWatches !== false) {
+      sysctlTweakTasks.push({
+        module: "sysctl",
+        args: {
+          name: "fs.inotify.max_user_watches",
+          value: "524288",
+          state: "present",
+          sysctl_set: true,
+        },
+      });
+    }
+
+    if (sysctlTweakTasks.length > 0) {
+      new mid.resource.AnsibleTaskList(`${name}-sysctl-tweaks`, {
+        connection: props.connection,
+        triggers: props.triggers,
+        tasks: {
+          create: sysctlTweakTasks,
+        },
+      }, {
+        parent: this,
+        retainOnDelete: true,
       });
     }
   }

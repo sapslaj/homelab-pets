@@ -22,5 +22,5 @@ export function mergeTriggers(
       }
     }
     return result;
-  })
+  });
 }
