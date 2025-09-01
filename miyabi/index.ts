@@ -175,6 +175,18 @@ new mid.resource.SystemdService("tailscaled.service", {
   ],
 });
 
+const tailscaleup = [
+  pulumi.concat(
+    "--advertise-routes=",
+    [
+      "172.24.0.0/16",
+      "2001:470:e022::/56",
+    ].join(","),
+  ),
+  "--advertise-exit-node",
+  "--snat-subnet-routes=false",
+];
+
 new mid.resource.Exec("tailscale-up", {
   connection: vm.connection,
   create: {
@@ -182,14 +194,14 @@ new mid.resource.Exec("tailscale-up", {
       "tailscale",
       "up",
       pulumi.concat("--auth-key=", tailnetKey.key),
-      pulumi.concat(
-        "--advertise-routes=",
-        [
-          "172.24.0.0/16",
-        ].join(","),
-      ),
-      "--advertise-exit-node",
-      "--snat-subnet-routes=false",
+      ...tailscaleup,
+    ],
+  },
+  update: {
+    command: [
+      "tailscale",
+      "up",
+      ...tailscaleup,
     ],
   },
 }, {
