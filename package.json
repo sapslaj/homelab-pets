@@ -8,9 +8,11 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "@ediri/vultr": "2.26.0",
     "@muhlba91/pulumi-proxmoxve": "^7.0.0",
     "@nodesecure/fs-walk": "^2.0.0",
     "@pulumi/aws": "^6.68.0",
+    "@pulumi/cloudflare": "^6.8.0",
     "@pulumi/command": "^1.0.1",
     "@pulumi/dynamic": "^1.0.0-alpha.1657294496",
     "@pulumi/kubernetes": "^4.21.1",
