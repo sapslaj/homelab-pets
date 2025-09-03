@@ -1,6 +1,6 @@
 import * as proxmoxve from "@muhlba91/pulumi-proxmoxve";
 
-import { Distro, IDistro, VLAN } from "../../homelab-config";
+import { Distro, IDistro, VLAN } from "../homelab-config";
 import { Autoupdate, AutoupdateProps } from "../mid/Autoupdate";
 import { BaselineUsers, BaselineUsersProps } from "../mid/BaselineUsers";
 import { MidTarget, MidTargetProps } from "../mid/MidTarget";

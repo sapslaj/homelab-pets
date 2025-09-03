@@ -3,9 +3,9 @@ import * as pulumi from "@pulumi/pulumi";
 import * as tailscale from "@pulumi/tailscale";
 import * as mid from "@sapslaj/pulumi-mid";
 
+import { VLAN } from "../common/pulumi/components/homelab-config";
 import { BaseConfigTrait } from "../common/pulumi/components/proxmox-vm/BaseConfigTrait";
 import { ProxmoxVM, ProxmoxVMCPUType } from "../common/pulumi/components/proxmox-vm/ProxmoxVM";
-import { VLAN } from "../common/pulumi/homelab-config";
 
 const config = new pulumi.Config();
 

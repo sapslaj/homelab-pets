@@ -3,7 +3,7 @@ import * as pulumi from "@pulumi/pulumi";
 import * as mid from "@sapslaj/pulumi-mid";
 import * as YAML from "yaml";
 
-import { mergeTriggers } from "../../mid-utils";
+import { mergeTriggers } from "../mid-utils";
 
 export interface VectorProps {
   connection?: mid.types.input.ConnectionArgs;

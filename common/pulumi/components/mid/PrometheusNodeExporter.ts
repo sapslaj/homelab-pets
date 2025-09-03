@@ -58,6 +58,9 @@ export class PrometheusNodeExporter extends pulumi.ComponentResource {
     const install = new mid.resource.Exec(`${name}-install`, {
       connection: props.connection,
       triggers: props.triggers,
+      config: {
+        check: false,
+      },
       create: {
         command: [
           "/bin/bash",

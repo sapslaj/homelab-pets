@@ -7,7 +7,7 @@ import * as pulumi from "@pulumi/pulumi";
 import * as time from "@pulumiverse/time";
 import * as mid from "@sapslaj/pulumi-mid";
 
-import { directoryHash } from "../common/pulumi/asset-utils";
+import { directoryHash } from "../common/pulumi/components/asset-utils";
 import { RsyncBackup } from "../common/pulumi/components/mid/RsyncBackup";
 import { SystemdUnit } from "../common/pulumi/components/mid/SystemdUnit";
 import { BaseConfigTrait } from "../common/pulumi/components/proxmox-vm/BaseConfigTrait";

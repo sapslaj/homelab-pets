@@ -2,6 +2,7 @@ import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
 import * as mid from "@sapslaj/pulumi-mid";
 
+import { Distro } from "../common/pulumi/components/homelab-config";
 import { BaselineUsers } from "../common/pulumi/components/mid/BaselineUsers";
 import { PrometheusNodeExporter } from "../common/pulumi/components/mid/PrometheusNodeExporter";
 import { BaseConfigTrait } from "../common/pulumi/components/proxmox-vm/BaseConfigTrait";
@@ -9,7 +10,6 @@ import { CloudImageTrait } from "../common/pulumi/components/proxmox-vm/CloudIma
 import { DNSRecordTrait } from "../common/pulumi/components/proxmox-vm/DNSRecordTrait";
 import { PrivateKeyTrait } from "../common/pulumi/components/proxmox-vm/PrivateKeyTrait";
 import { ProxmoxVM, ProxmoxVMCPUType } from "../common/pulumi/components/proxmox-vm/ProxmoxVM";
-import { Distro } from "../common/pulumi/homelab-config";
 
 const distro = Distro.ROCKY_LINUX_10;
 

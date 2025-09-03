@@ -1,7 +1,7 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as mid from "@sapslaj/pulumi-mid";
 
-import { mergeTriggers } from "../../mid-utils";
+import { mergeTriggers } from "../mid-utils";
 
 export type SystemdSection = pulumi.Input<Record<string, pulumi.Input<string | string[]>>>;
 

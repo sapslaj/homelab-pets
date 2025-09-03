@@ -1,7 +1,7 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as mid from "@sapslaj/pulumi-mid";
 
-import { mergeTriggers } from "../../mid-utils";
+import { mergeTriggers } from "../mid-utils";
 import { DockerContainer } from "./DockerContainer";
 import { SystemdUnit } from "./SystemdUnit";
 
