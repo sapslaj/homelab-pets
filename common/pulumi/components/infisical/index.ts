@@ -1,7 +1,10 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as infisical from "@sapslaj/pulumi-infisical";
 
-import { PulumiInputWrapper } from "./ptypes";
+import { PulumiInputWrapper } from "../ptypes";
+
+export { Secret, SecretProps } from "./Secret";
+export { SecretFolder, SecretFolderProps } from "./SecretFolder";
 
 export type Environment = "prod" | "dev";
 
@@ -39,11 +42,11 @@ export function getSecrets(
   return infisical.getSecrets({
     envSlug: args.env ?? defaultEnvironment,
     folderPath: args.folder ?? "/",
-    workspaceId: args.projectId ?? projectIds[args.project ?? defaultProject],
+    workspaceId: args.projectId ?? projectIds[args.project as ProjectName ?? defaultProject],
   }, opts);
 }
 
-export function getSecretValue(
+export async function getSecretValue(
   args: GetSecretValueArgs,
   opts?: pulumi.InvokeOptions,
 ): Promise<string> {
@@ -58,7 +61,7 @@ export function getSecretsOutput(
     envSlug: pulumi.output(args.env).apply((v) => v ?? defaultEnvironment),
     folderPath: pulumi.output(args.folder).apply((v) => v ?? "/"),
     workspaceId: pulumi.all({ projectId: args.projectId, project: args.project }).apply(({ projectId, project }) =>
-      projectId ?? projectIds[project ?? defaultProject]
+      projectId ?? projectIds[project as ProjectName ?? defaultProject]
     ),
   }, opts);
 }
