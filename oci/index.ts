@@ -7,6 +7,7 @@ import { DockerHost } from "../common/pulumi/components/mid/DockerHost";
 import { BaseConfigTrait } from "../common/pulumi/components/proxmox-vm/BaseConfigTrait";
 import { ProxmoxVM } from "../common/pulumi/components/proxmox-vm/ProxmoxVM";
 import { DNSRecord } from "../common/pulumi/components/shimiko";
+import { RotatingAccessKey } from "../common/pulumi/components/aws/RotatingAccessKey";
 
 const vm = new ProxmoxVM("oci", {
   name: pulumi.getStack() === "prod" ? "oci" : `oci-${pulumi.getStack()}`,
@@ -67,7 +68,7 @@ const dockerInstall = new DockerHost("oci", {
 });
 
 const iamUser = new aws.iam.User("oci-traefik", {});
-const iamKey = new aws.iam.AccessKey("oci-traefik", {
+const iamKey = new RotatingAccessKey("oci-traefik", {
   user: iamUser.name,
 });
 new aws.iam.UserPolicyAttachment("oci-traefik-route53", {
