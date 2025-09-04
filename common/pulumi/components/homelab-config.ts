@@ -6,7 +6,8 @@ export interface IDistro {
 export class Distro implements IDistro {
   static UBUNTU_24_04 = new Distro({
     // url: "https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img",
-    url: "https://misc.sapslaj.xyz/cloudimages/ubuntu/noble-server-cloudimg-amd64.img",
+    // url: "https://misc.sapslaj.xyz/cloudimages/ubuntu/noble-server-cloudimg-amd64.img",
+    url: "https://misc.sapslaj.xyz/cloudimages/ubuntu/noble-server-sapslaj-amd64.img",
     username: "ubuntu",
   });
 
