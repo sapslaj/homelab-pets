@@ -33,6 +33,31 @@ HAOS VM running inside [aqua](#aqua). Due to my negligence the current name of t
 
 Home Assistant is deployed as a VM instead of on a dedicated Rasberry Pi or similar SBC because it is much easier to do backups of VM disks than it is to do physical disks, especially when access to the underlying OS is somewhat limited as is the case with HAOS. It was never designed with infra-as-code in mind and is hard to shoehorn it in, so for my own sanity I treat it more or less as a black box managed service and just back up the VM disk.
 
+### hoshino
+
+VM inside [mitsuru](#mitsuru).
+
+all (most) things CI
+
+#### Uses
+
+##### act_runner
+
+Runs [Gitea act_runner](https://gitea.com/gitea/act_runner) as a Docker
+container and spins up other Docker containers for running jobs.
+
+##### GARM
+
+Runs a (currently broken) [garm](https://github.com/cloudbase/garm) config with the following providers:
+
+- AWS Sandbox account us-east-1
+- Incus container
+- Incus virtual machine
+- K8s Nekopara
+
+garm is set up with Gitea and GitHub but repository provisioning is currently
+manual.
+
 ### koyuki
 
 Physical server running Ubuntu
@@ -54,11 +79,13 @@ Need host networking for DLNA to work right
 
 Needs host networking because UDP in containers is still painful.
 
-This is used for network devices (routers, switches, etc) that can't natively run Promtail or another Loki client but can send logs to a network syslog server.
+This is used for network devices (routers, switches, etc) that can't natively
+run ~Promtail~ Vector or another ~Loki~ VictoriaLogs client but can send logs
+to a network syslog server.
 
 - Syslog-NG listens on 6601/tcp and 5514/udp
-- Silently converts to RFC5424 before sending to Promtail sidecar
-- Promtail sidecar forwards to Loki
+- Silently converts to RFC5424 before sending to Vector sidecar
+- Vector sidecar forwards to VictoriaLogs
 
 ##### PVR
 
@@ -121,16 +148,36 @@ Dell Precision Tower 7910 running Proxmox.
 
 Main Proxmox node.
 
+##### NAS
+
+Secondary NAS that specializes in fast SSD storage. This is mainly to enable
+persistent volumes in [Nekopara](https://github.com/sapslaj/nekopara).
+
+### miyabi
+
+VM inside [mitsuru](#mitsuru).
+
+#### Uses
+
+##### Tailscale router
+
+Currently a Tailscale subnet router _and_ exit node.
+
 ### oci
 
 VM inside [mitsuru](#mitsuru).
 
-Docker/OCI registry. Eventually I wanna get it to be some kind of pull through
-cache for Docker Hub but that doesn't work yet.
+Docker/OCI registry and Docker Hub caching proxy.
+
+- main OCI endpoint: `oci.sapslaj.xyz`
+- Proxy endpoint: `proxy.oci.sapslaj.xyz`
+  - e.g. `ubuntu:24.04` => `proxy.oci.sapslaj.xyz/docker-hub/ubuntu:24.04`
 
 ### playboy
 
 Raspberry Pi 4 running Raspbian located behind the Bedroom TV.
+
+Currently dead 💀
 
 #### Uses
 
@@ -203,3 +250,15 @@ _TODO: should this be a [shimiko](#shimiko) responsibility?_
 
 - Cloudflare DDNS to update current public IP to `sapslaj.com` Cloudflare zone.
 - VSDD for doing dynamic DNS updates to `sapslaj.xyz` Route53 zone based on DHCP leases and IPv6 neighbors.
+
+### uptime-kuma
+
+Vultr VM
+
+#### Uses
+
+##### Uptime Kuma (metamonitoring and status page)
+
+It runs [Uptime Kuma](https://github.com/louislam/uptime-kuma).
+
+Accessible at https://status.sapslaj.com
