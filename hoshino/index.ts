@@ -6,9 +6,10 @@ import * as random from "@pulumi/random";
 import * as mid from "@sapslaj/pulumi-mid";
 import * as YAML from "yaml";
 
-import { getSecretValueOutput } from "../common/pulumi/components/infisical";
+import { getSecretValue, getSecretValueOutput } from "../common/pulumi/components/infisical";
 import { getKubeconfig, newK3sProvider } from "../common/pulumi/components/k3s-shared";
 import { IngressDNS } from "../common/pulumi/components/k8s/IngressDNS";
+import { DockerContainer } from "../common/pulumi/components/mid/DockerContainer";
 import { DockerHost } from "../common/pulumi/components/mid/DockerHost";
 import { SystemdUnit } from "../common/pulumi/components/mid/SystemdUnit";
 import { BaseConfigTrait } from "../common/pulumi/components/proxmox-vm/BaseConfigTrait";
@@ -66,6 +67,29 @@ const dockerHost = new DockerHost("garm", {
   deletedWith: vm,
   dependsOn: [
     vm,
+  ],
+});
+
+new DockerContainer("act_runner", {
+  connection: vm.connection,
+  name: "act_runner",
+  image: "proxy.oci.sapslaj.xyz/docker-hub/gitea/act_runner:latest",
+  restartPolicy: "unless-stopped",
+  env: {
+    GITEA_INSTANCE_URL: "https://git.sapslaj.cloud",
+    GITEA_RUNNER_REGISTRATION_TOKEN: getSecretValue({
+      folder: "/garm",
+      key: "gitea-runner-token",
+    }),
+    GITEA_RUNNER_NAME: "hoshino",
+  },
+  volumes: [
+    "/var/run/docker.sock:/var/run/docker.sock",
+  ],
+}, {
+  deletedWith: vm,
+  dependsOn: [
+    dockerHost,
   ],
 });
 
