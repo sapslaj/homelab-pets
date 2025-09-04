@@ -1,0 +1,5 @@
+name: homelab-pets-hoshino
+runtime:
+  name: nodejs
+  options:
+    packagemanager: npm
