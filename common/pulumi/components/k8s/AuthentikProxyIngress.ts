@@ -1,8 +1,8 @@
 import * as kubernetes from "@pulumi/kubernetes";
 import * as pulumi from "@pulumi/pulumi";
 import * as std from "@pulumi/std";
+import * as authentik from "@sapslaj/pulumi-authentik";
 
-import * as authentik from "../../sdks/authentik";
 import { IngressDNS } from "./IngressDNS";
 
 export interface AuthentikProxyIngressProps {
