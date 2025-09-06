@@ -25,7 +25,7 @@ Physical server running Debian.
 
 Raspberry Pi 4 running Raspbian.
 
-~Currently dead 💀~ it's back (somehow?) but unused 💀
+~~Currently dead 💀~~ it's back (somehow?) but unused 💀
 
 ### ganyu
 
@@ -90,7 +90,7 @@ Need host networking for DLNA to work right
 Needs host networking because UDP in containers is still painful.
 
 This is used for network devices (routers, switches, etc) that can't natively
-run ~Promtail~ Vector or another ~Loki~ VictoriaLogs client but can send logs
+run ~~Promtail~~ Vector or another ~~Loki~~ VictoriaLogs client but can send logs
 to a network syslog server.
 
 - Syslog-NG listens on 6601/tcp and 5514/udp
@@ -231,12 +231,14 @@ dynamic forward and reverse lookup entries.
 Consul-like SD without actually having to deal with the overhead of running
 Consul. It's supposed to be _dead_ simple.
 
-##### ACME _(planned? maybe?)_
+##### ACME
 
-Due to the whole not having things exposed to the world thing it's hard to get
-Let's Encrypt certs, but it sure would be nice to do so. I'm thinking about
-either implementing an ACME protocol proxy or something more simple like
-[acme-dns](https://github.com/joohoi/acme-dns) to make getting certs easier.
+Implements the [acme-dns](https://github.com/joohoi/acme-dns) protocol.
+
+- `ACMEDNS_BASE_URL` - `https://shimiko.sapslaj.xyz/acme-dns`
+- `ACMEDNS_SUBDOMAIN` - `example.sapslaj.xyz` (`_acme-challenge` subdomain will be added automatically, only subdomains of `sapslaj.xyz` are supported)
+- `ACMEDNS_USERNAME` - _ignored_
+- `ACMEDNS_PASSWORD` - _ignored_
 
 ### tohru
 

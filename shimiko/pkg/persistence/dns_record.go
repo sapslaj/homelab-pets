@@ -17,7 +17,7 @@ import (
 	"github.com/sapslaj/homelab-pets/shimiko/pkg/telemetry"
 )
 
-var HostnameRegex = regexp.MustCompile(`^[a-z0-9][a-z0-9\.\-]+[a-z0-9]$`)
+var HostnameRegex = regexp.MustCompile(`^[a-z0-9_][a-z0-9\.\-]+[a-z0-9]$`)
 
 var SupportedRecordTypes = []string{
 	"A",

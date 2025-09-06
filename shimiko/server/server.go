@@ -33,7 +33,13 @@ func LoggerWithEchoContext(c echo.Context, logger *slog.Logger) *slog.Logger {
 	}
 	return logger.With(
 		"request_id", c.Response().Header().Get(echo.HeaderXRequestID),
+		"user_agent.original", c.Request().Header.Get("User-Agent"),
 	)
+}
+
+func HasHeader(header http.Header, key string) bool {
+	_, present := header[http.CanonicalHeaderKey(key)]
+	return present
 }
 
 func NewRequestLoggerMiddleware(parentLogger *slog.Logger) echo.MiddlewareFunc {

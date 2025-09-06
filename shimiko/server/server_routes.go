@@ -4,9 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
+	"strings"
 
 	"github.com/labstack/echo/v4"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 	"gorm.io/gorm"
@@ -32,10 +35,16 @@ func (s *Server) Routes() {
 	e.PUT("/v1/dns-records/:type/:name", s.UpsertDNSRecord)
 	e.PATCH("/v1/dns-records/:type/:name", s.UpsertDNSRecord)
 	e.DELETE("/v1/dns-records/:type/:name", s.DeleteDNSRecord)
+	e.GET("/acme-dns/health", s.AcmeDNSHealth)
+	e.POST("/acme-dns/register", s.AcmeDNSRegister)
+	e.POST("/acme-dns/update", s.AcmeDNSUpdate)
 }
 
 func (s *Server) Root(c echo.Context) error {
-	_, span := telemetry.Tracer.Start(c.Request().Context(), "shimiko/server.Server.Root", trace.WithAttributes())
+	_, span := telemetry.Tracer.Start(
+		c.Request().Context(),
+		"shimiko/server.Server.Root",
+	)
 	defer span.End()
 
 	span.SetStatus(codes.Ok, "")
@@ -45,7 +54,10 @@ func (s *Server) Root(c echo.Context) error {
 }
 
 func (s *Server) HealthzLiveness(c echo.Context) error {
-	_, span := telemetry.Tracer.Start(c.Request().Context(), "shimiko/server.Server.HealthzLiveness", trace.WithAttributes())
+	_, span := telemetry.Tracer.Start(
+		c.Request().Context(),
+		"shimiko/server.Server.HealthzLiveness",
+	)
 	defer span.End()
 
 	span.SetStatus(codes.Ok, "")
@@ -55,7 +67,10 @@ func (s *Server) HealthzLiveness(c echo.Context) error {
 }
 
 func (s *Server) ZonePopEndpoints(c echo.Context) error {
-	ctx, span := telemetry.Tracer.Start(c.Request().Context(), "shimiko/server.Server.ZonePopEndpoints", trace.WithAttributes())
+	ctx, span := telemetry.Tracer.Start(
+		c.Request().Context(),
+		"shimiko/server.Server.ZonePopEndpoints",
+	)
 	defer span.End()
 
 	logger := s.RequestLogger(c)
@@ -84,7 +99,10 @@ func (s *Server) ZonePopEndpoints(c echo.Context) error {
 }
 
 func (s *Server) IndexDNSRecords(c echo.Context) error {
-	ctx, span := telemetry.Tracer.Start(c.Request().Context(), "shimiko/server.Server.IndexDNSRecords", trace.WithAttributes())
+	ctx, span := telemetry.Tracer.Start(
+		c.Request().Context(),
+		"shimiko/server.Server.IndexDNSRecords",
+	)
 	defer span.End()
 
 	logger := s.RequestLogger(c)
@@ -108,7 +126,10 @@ func (s *Server) IndexDNSRecords(c echo.Context) error {
 }
 
 func (s *Server) UpsertDNSRecords(c echo.Context) error {
-	ctx, span := telemetry.Tracer.Start(c.Request().Context(), "shimiko/server.Server.UpsertDNSRecords", trace.WithAttributes())
+	ctx, span := telemetry.Tracer.Start(
+		c.Request().Context(),
+		"shimiko/server.Server.UpsertDNSRecords",
+	)
 	defer span.End()
 
 	logger := s.RequestLogger(c)
@@ -223,7 +244,10 @@ func (s *Server) UpsertDNSRecords(c echo.Context) error {
 }
 
 func (s *Server) DeleteDNSRecords(c echo.Context) error {
-	ctx, span := telemetry.Tracer.Start(c.Request().Context(), "shimiko/server.Server.DeleteDNSRecords", trace.WithAttributes())
+	ctx, span := telemetry.Tracer.Start(
+		c.Request().Context(),
+		"shimiko/server.Server.DeleteDNSRecords",
+	)
 	defer span.End()
 
 	logger := s.RequestLogger(c)
@@ -323,7 +347,10 @@ func (s *Server) DeleteDNSRecords(c echo.Context) error {
 }
 
 func (s *Server) ShowDNSRecord(c echo.Context) error {
-	ctx, span := telemetry.Tracer.Start(c.Request().Context(), "shimiko/server.Server.ShowDNSRecord", trace.WithAttributes())
+	ctx, span := telemetry.Tracer.Start(
+		c.Request().Context(),
+		"shimiko/server.Server.ShowDNSRecord",
+	)
 	defer span.End()
 
 	logger := s.RequestLogger(c)
@@ -361,7 +388,10 @@ func (s *Server) ShowDNSRecord(c echo.Context) error {
 }
 
 func (s *Server) UpsertDNSRecord(c echo.Context) error {
-	ctx, span := telemetry.Tracer.Start(c.Request().Context(), "shimiko/server.Server.UpsertDNSRecord", trace.WithAttributes())
+	ctx, span := telemetry.Tracer.Start(
+		c.Request().Context(),
+		"shimiko/server.Server.UpsertDNSRecord",
+	)
 	defer span.End()
 
 	logger := s.RequestLogger(c)
@@ -477,7 +507,10 @@ func (s *Server) UpsertDNSRecord(c echo.Context) error {
 }
 
 func (s *Server) DeleteDNSRecord(c echo.Context) error {
-	ctx, span := telemetry.Tracer.Start(c.Request().Context(), "shimiko/server.Server.DeleteDNSRecord", trace.WithAttributes())
+	ctx, span := telemetry.Tracer.Start(
+		c.Request().Context(),
+		"shimiko/server.Server.DeleteDNSRecord",
+	)
 	defer span.End()
 
 	logger := s.RequestLogger(c)
@@ -548,7 +581,10 @@ func (s *Server) DeleteDNSRecord(c echo.Context) error {
 }
 
 func (s *Server) RefreshDNSRecords(c echo.Context) error {
-	ctx, span := telemetry.Tracer.Start(c.Request().Context(), "shimiko/server.Server.RefreshDNSRecords", trace.WithAttributes())
+	ctx, span := telemetry.Tracer.Start(
+		c.Request().Context(),
+		"shimiko/server.Server.RefreshDNSRecords",
+	)
 	defer span.End()
 
 	logger := s.RequestLogger(c)
@@ -568,4 +604,188 @@ func (s *Server) RefreshDNSRecords(c echo.Context) error {
 			"error":  err.Error(),
 		})
 	}
+}
+
+func (s *Server) AcmeDNSHealth(c echo.Context) error {
+	_, span := telemetry.Tracer.Start(
+		c.Request().Context(),
+		"shimiko/server.Server.AcmeDNSHealth",
+		trace.WithAttributes(
+			attribute.String("user_agent.original", c.Request().Header.Get("User-Agent")),
+		),
+	)
+	defer span.End()
+
+	span.SetStatus(codes.Ok, "")
+	return c.JSON(200, map[string]any{
+		"msg": "OK",
+	})
+}
+
+func (s *Server) AcmeDNSRegister(c echo.Context) error {
+	ctx, span := telemetry.Tracer.Start(
+		c.Request().Context(),
+		"shimiko/server.Server.AcmeDNSRegister",
+		trace.WithAttributes(
+			attribute.Bool("acmedns_user.present", HasHeader(c.Request().Header, "X-Api-User")),
+			attribute.Bool("acmedns_key.present", HasHeader(c.Request().Header, "X-Api-Key")),
+			attribute.String("acmedns_user.value", c.Request().Header.Get("X-Api-User")),
+			attribute.String("acmedns_key.value", c.Request().Header.Get("X-Api-Key")),
+		),
+	)
+	defer span.End()
+
+	logger := s.RequestLogger(c)
+
+	body := map[string]any{}
+	// decoder := json.NewDecoder(c.Request().Body)
+	// err := decoder.Decode(&body)
+	// if err != nil {
+	// 	logger.ErrorContext(ctx, "acme-dns: error parsing request body", slog.Any("error", err))
+	// 	span.SetStatus(codes.Error, err.Error())
+	// 	return c.JSON(400, map[string]any{
+	// 		"msg":   "error parsing request body",
+	// 		"error": err.Error(),
+	// 	})
+	// }
+	// span.SetAttributes(telemetry.OtelJSON("http.request.body", body))
+
+	body["fulldomain"] = ""
+	body["password"] = ""
+	body["subdomain"] = ""
+	body["username"] = ""
+
+	logger.InfoContext(ctx, "acme-dns: register called")
+	return c.JSON(200, body)
+}
+
+func (s *Server) AcmeDNSUpdate(c echo.Context) error {
+	ctx, span := telemetry.Tracer.Start(
+		c.Request().Context(),
+		"shimiko/server.Server.AcmeDNSUpdate",
+		trace.WithAttributes(
+			attribute.Bool("acmedns_user.present", HasHeader(c.Request().Header, "X-Api-User")),
+			attribute.Bool("acmedns_key.present", HasHeader(c.Request().Header, "X-Api-Key")),
+			attribute.String("acmedns_user.value", c.Request().Header.Get("X-Api-User")),
+			attribute.String("acmedns_key.value", c.Request().Header.Get("X-Api-Key")),
+		),
+	)
+	defer span.End()
+
+	logger := s.RequestLogger(c)
+
+	type bodyType struct {
+		Subdomain string `json:"subdomain"`
+		Txt       string `json:"txt"`
+	}
+	var body bodyType
+
+	decoder := json.NewDecoder(c.Request().Body)
+	err := decoder.Decode(&body)
+	if err != nil {
+		logger.WarnContext(ctx, "acme-dns: error parsing request body", slog.Any("error", err))
+		span.SetStatus(codes.Error, err.Error())
+		return c.JSON(400, map[string]any{
+			"msg":   "error parsing request body",
+			"error": err.Error(),
+		})
+	}
+	span.SetAttributes(telemetry.OtelJSON("http.request.body", body))
+	logger = logger.With(slog.Any("http.request.body", body))
+
+	if body.Txt == "" {
+		logger.WarnContext(ctx, "acme-dns: txt validation token not present")
+		span.SetStatus(codes.Error, "txt validation token not present")
+		return c.JSON(400, map[string]any{
+			"status": "ERROR",
+			"error":  "txt validation token not present",
+		})
+	}
+	if body.Subdomain == "" {
+		logger.WarnContext(ctx, "acme-dns: subdomain not present")
+		span.SetStatus(codes.Ok, "subdomain not present")
+		return c.JSON(400, map[string]any{
+			"status": "ERROR",
+			"error":  "subdomain not present",
+		})
+	}
+
+	subdomain := strings.TrimSuffix(body.Subdomain, "."+persistence.DomainName)
+
+	if !strings.HasPrefix(subdomain, "_acme-challenge.") {
+		subdomain = "_acme-challenge." + subdomain
+	}
+
+	record := &persistence.DNSRecord{
+		Type:    "TXT",
+		Name:    subdomain,
+		Records: []string{`"` + body.Txt + `"`},
+	}
+	span.SetAttributes(
+		telemetry.OtelJSON("dns_record", record),
+	)
+	logger = logger.With(
+		slog.Any("dns_record", record),
+	)
+	validationErr := record.Validate()
+	if validationErr != nil {
+		logger.ErrorContext(ctx, "acme-dns: error validating generated record", slog.Any("error", validationErr))
+		span.SetStatus(codes.Error, validationErr.Error())
+		return c.JSON(500, map[string]any{
+			"status": "ERROR",
+			"error":  validationErr.Error(),
+		})
+	}
+
+	ps, err := persistence.NewSession(ctx, s.DB)
+	if err != nil {
+		logger.ErrorContext(
+			ctx,
+			"acme-dns: failed to start persistence session",
+			"error", err,
+		)
+		err = fmt.Errorf("failed to start persistence session: %w", err)
+		span.SetStatus(codes.Error, err.Error())
+		return c.JSON(500, map[string]any{
+			"msg":    "internal server error",
+			"status": "ERROR",
+			"error":  err.Error(),
+		})
+	}
+
+	err = record.Upsert(ctx, ps)
+	if err != nil {
+		logger.ErrorContext(
+			ctx,
+			"acme-dns: error upserting DNSRecord",
+			"error", err,
+		)
+		err = fmt.Errorf("error upserting DNSRecord: %w", err)
+		span.SetStatus(codes.Error, err.Error())
+		return c.JSON(500, map[string]any{
+			"status": "ERROR",
+			"error":  err.Error(),
+		})
+	}
+
+	err = ps.Finish(ctx)
+	if err != nil {
+		logger.ErrorContext(
+			ctx,
+			"acme-dns: failed to finish persistence session",
+			"error", err,
+		)
+		err = fmt.Errorf("failed to finish persistence session: %w", err)
+		span.SetStatus(codes.Error, err.Error())
+		return c.JSON(500, map[string]any{
+			"status": "ERROR",
+			"error":  err.Error(),
+		})
+	}
+
+	logger.InfoContext(ctx, "acme-dns: updated record")
+	span.SetStatus(codes.Ok, "")
+	return c.JSON(200, map[string]any{
+		"txt": body.Txt,
+	})
 }
