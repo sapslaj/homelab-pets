@@ -1,0 +1,5 @@
+name: homelab-pets-koyuki
+runtime:
+  name: nodejs
+  options:
+    packagemanager: npm

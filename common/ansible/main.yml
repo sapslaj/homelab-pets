@@ -11,11 +11,8 @@
     - role: sapslaj.vector
       vars:
         vector_enable_dns: "{{ 'dns_servers' in group_names }}"
-        vector_enable_docker: "{{ 'docker_standalone' in group_names }}"
         vector_enable_du: "{{ 'nas_servers' in group_names }}"
         vector_enable_libvirt: "{{ 'libvirt_hosts' in group_names }}"
-        vector_enable_morbius: "{{ 'morbius_hosts' in group_names }}"
-        vector_enable_qbittorrent: "{{ 'qbittorrent_hosts' in group_names }}"
 
 - hosts: all
   become: true
@@ -41,17 +38,3 @@
   become: true
   roles:
     - role: sapslaj.qemu_guest
-
-- hosts: docker_standalone
-  become: true
-  roles:
-    - role: sapslaj.docker_standalone
-    - role: sapslaj.rsync_backup
-      vars:
-        rsync_backup_timer:
-          on_calendar: hourly
-          randomized_delay_sec: 1800
-          fixed_random_delay: true
-        rsync_backup_jobs:
-          - src: /var/docker/volumes
-            dest: /mnt/exos/volumes/{{ ansible_hostname }}/docker-volumes

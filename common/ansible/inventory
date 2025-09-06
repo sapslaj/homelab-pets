@@ -3,19 +3,12 @@ eris.sapslaj.xyz
 ram.sapslaj.xyz
 rem.sapslaj.xyz
 tohru.sapslaj.xyz
-koyuki.sapslaj.xyz
 
 [libvirt_hosts]
 aqua.sapslaj.xyz
 
 [nas_servers]
 aqua.sapslaj.xyz
-
-[qbittorrent_hosts]
-koyuki.sapslaj.xyz
-
-[morbius_hosts]
-koyuki.sapslaj.xyz
 
 [dns_servers]
 ram.sapslaj.xyz
@@ -24,7 +17,6 @@ rem.sapslaj.xyz
 [nas_clients]
 eris.sapslaj.xyz
 tohru.sapslaj.xyz
-koyuki.sapslaj.xyz
 
 [bare_hosts]
 aqua.sapslaj.xyz
@@ -32,12 +24,7 @@ eris.sapslaj.xyz
 ram.sapslaj.xyz
 rem.sapslaj.xyz
 tohru.sapslaj.xyz
-koyuki.sapslaj.xyz
 
 [qemu_guests]
 rem.sapslaj.xyz
 tohru.sapslaj.xyz
-
-[docker_standalone]
-eris.sapslaj.xyz
-koyuki.sapslaj.xyz
