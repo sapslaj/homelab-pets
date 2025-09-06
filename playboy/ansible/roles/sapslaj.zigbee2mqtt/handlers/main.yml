@@ -1,5 +1,0 @@
-- name: restart zigbee2mqtt service
-  systemd:
-    name: zigbee2mqtt.service
-    state: restarted
-    daemon_reload: yes

@@ -1,0 +1,5 @@
+name: homelab-pets-playboy
+runtime:
+  name: nodejs
+  options:
+    packagemanager: npm

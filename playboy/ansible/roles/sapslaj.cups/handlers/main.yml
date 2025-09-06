@@ -1,2 +1,0 @@
-- name: update cups permissions
-  command: cupsctl --remote-any

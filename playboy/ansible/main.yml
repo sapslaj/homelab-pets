@@ -1,5 +1,0 @@
-- hosts: all
-  become: true
-  roles:
-    - role: sapslaj.cups
-    - role: sapslaj.zigbee2mqtt

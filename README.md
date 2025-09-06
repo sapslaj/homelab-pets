@@ -175,9 +175,7 @@ Docker/OCI registry and Docker Hub caching proxy.
 
 ### playboy
 
-Raspberry Pi 4 running Raspbian located behind the Bedroom TV.
-
-Currently dead 💀
+Raspberry Pi 4 running Ubuntu located behind the Bedroom TV.
 
 #### Uses
 
@@ -188,10 +186,6 @@ Unfortunately we still need a printer for some things. So getting a free Brother
 ##### Zigbee2MQTT server
 
 Home assistant is installed on a VM and I didn't want to deal with USB passthrough so that meant having the Zigbee radio on a separate machine. This Pi is in the bedroom (not burried away in a rack in my office) and is more central to the house anyway so it makes more sense to do this.
-
-##### Steam Link client
-
-The Pi has a desktop running and the Steam Link client auto-starts. This isn't used as much anymore since I got my Steam Deck.
 
 ### rem/ram
 
