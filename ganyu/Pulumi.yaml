@@ -1,0 +1,5 @@
+name: homelab-pets-ganyu
+runtime:
+  name: nodejs
+  options:
+    packagemanager: npm

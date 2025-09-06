@@ -27,6 +27,16 @@ Raspberry Pi 4 running Raspbian.
 
 ~Currently dead 💀~ it's back (somehow?) but unused 💀
 
+### ganyu
+
+Physical server running Proxmox Backup Server (Debian-based)
+
+#### Uses
+
+##### Proxmox Backup Server
+
+for [mitsuru](#mitsuru), mainly.
+
 ### homeassistant
 
 HAOS VM running inside [aqua](#aqua). Due to my negligence the current name of the VM is `ha` while the DNS name is `homeassistant`. It is deployed as an appliance and is thus (mostly) excluded from being managed as code.
