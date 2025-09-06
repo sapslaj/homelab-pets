@@ -8,6 +8,7 @@ on:
       - playboy/**
 
 env:
+  INFISICAL_API_URL: ${{ secrets.INFISICAL_API_URL }}
   INFISICAL_CLIENT_ID: ${{ secrets.INFISICAL_CLIENT_ID }}
   INFISICAL_CLIENT_SECRET: ${{ secrets.INFISICAL_CLIENT_SECRET }}
   NODE_AUTH_TOKEN: ${{ secrets.GH_ACTIONS_READ_TOKEN }}
