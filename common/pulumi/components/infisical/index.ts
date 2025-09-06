@@ -25,9 +25,9 @@ export const projectSlugs: Record<ProjectName, string> = {
 };
 
 export interface GetSecretsArgs {
-  env?: string;
+  env?: Environment;
   folder?: string;
-  project?: string;
+  project?: ProjectName;
   projectId?: string;
 }
 
