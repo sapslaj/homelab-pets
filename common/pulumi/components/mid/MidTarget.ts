@@ -5,6 +5,7 @@ export interface MidTargetProps {
   connection?: mid.types.input.ConnectionArgs;
   triggers?: mid.types.input.TriggersInputArgs;
   hostname?: pulumi.Input<string>;
+  installSudo?: boolean;
   unfuckUbuntu?: {
     allowInstallRecommends?: boolean;
     allowSnap?: boolean;
@@ -38,7 +39,12 @@ export class MidTarget extends pulumi.ComponentResource {
       retainOnDelete: true,
     });
 
+    let addPackages: string[] = [];
     let removePackages: string[] = [];
+
+    if (props.installSudo !== false) {
+      addPackages.push("sudo");
+    }
 
     if (props.hostname !== undefined) {
       new mid.resource.Exec("hostname", {
@@ -121,6 +127,24 @@ export class MidTarget extends pulumi.ComponentResource {
         "lxd-agent-loader",
         "lxd-installer",
       );
+    }
+
+    if (addPackages.length > 0) {
+      new mid.resource.Apt(`${name}-add-packages`, {
+        connection: props.connection,
+        triggers: props.triggers,
+        names: addPackages,
+        ensure: "present",
+        config: {
+          check: false,
+        },
+      }, {
+        parent: this,
+        retainOnDelete: true,
+        dependsOn: [
+          aptPrereqs,
+        ],
+      });
     }
 
     if (removePackages.length > 0) {
