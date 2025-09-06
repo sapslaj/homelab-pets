@@ -6,6 +6,7 @@ export interface UserDefinition {
   name?: pulumi.Input<string>;
   password?: pulumi.Input<string>;
   sshKey?: pulumi.Input<string>;
+  additionalGroups?: pulumi.Input<pulumi.Input<string>[]>;
 }
 
 export const defaultUsers: Record<string, UserDefinition> = {
@@ -83,9 +84,15 @@ export class BaselineUsers extends pulumi.ComponentResource {
         },
         name: def.name ?? key,
         groupsExclusive: false,
-        groups: [
-          adminGroup.name,
-        ],
+        groups: pulumi.output(def.additionalGroups).apply((additionalGroups) => {
+          if (additionalGroups === undefined) {
+            return ["admin"];
+          }
+          return [
+            "admin",
+            ...additionalGroups,
+          ];
+        }),
       };
       if (props.useBash !== false) {
         userArgs.shell = "/bin/bash";
@@ -93,10 +100,16 @@ export class BaselineUsers extends pulumi.ComponentResource {
       if (def.password !== undefined) {
         userArgs.password = def.password;
       }
-      const user = new mid.resource.User(`${name}-${key}`, userArgs, {
-        ...opts,
-        parent: this,
-      });
+      const user = new mid.resource.User(
+        `${name}-${key}`,
+        userArgs,
+        pulumi.mergeOptions(opts, {
+          parent: this,
+          dependsOn: [
+            adminGroup,
+          ],
+        }),
+      );
 
       if (def.sshKey !== undefined) {
         // TODO: mid: ssh authorized key resource
