@@ -99,19 +99,21 @@ export class DockerHost extends pulumi.ComponentResource {
       parent: this,
     });
 
-    const connectionUserGroupAddition = new mid.resource.User(`${name}-docker-group-addition`, {
-      connection: props.connection,
-      config: {
-        ...props.config,
-        check: false,
-      },
-      name: props.connection!.user!,
-      groupsExclusive: false,
-      groups: [dockerGroup.name],
-    }, {
-      retainOnDelete: true,
-      parent: this,
-    });
+    if (props.connection) {
+      new mid.resource.User(`${name}-docker-group-addition`, {
+        connection: props.connection,
+        config: {
+          ...props.config,
+          check: false,
+        },
+        name: props.connection!.user!,
+        groupsExclusive: false,
+        groups: [dockerGroup.name],
+      }, {
+        retainOnDelete: true,
+        parent: this,
+      });
+    }
 
     this.service = new mid.resource.SystemdService(`${name}-docker`, {
       connection: props.connection,
