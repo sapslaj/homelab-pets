@@ -54,10 +54,10 @@ const vm = new ProxmoxVM("hoshino", {
   ],
   cpu: {
     type: ProxmoxVMCPUType.HOST,
-    cores: 4,
+    cores: 16,
   },
   memory: {
-    dedicated: 8 * 1024,
+    dedicated: 16 * 1024,
   },
 });
 
@@ -67,6 +67,63 @@ const dockerHost = new DockerHost("garm", {
   deletedWith: vm,
   dependsOn: [
     vm,
+  ],
+});
+
+const etcActRunner = new mid.resource.File("/etc/act_runner", {
+  connection: vm.connection,
+  config: {
+    check: false,
+  },
+  path: "/etc/act_runner",
+  ensure: "directory",
+}, {
+  deletedWith: vm,
+  dependsOn: [
+    vm,
+  ],
+});
+
+const actRunnerConfig = new mid.resource.File("/etc/act_runner/config.yaml", {
+  connection: vm.connection,
+  config: {
+    check: false,
+  },
+  path: "/etc/act_runner/config.yaml",
+  content: YAML.stringify({
+    log: {
+      level: "info",
+    },
+    runner: {
+      file: ".runner",
+      capacity: 8,
+      timeout: "3h",
+      shutdown_timeout: "0s",
+      fetch_timeout: "5s",
+      fetch_interval: "2s",
+      labels: [
+        "ubuntu-latest:docker://docker.gitea.com/runner-images:ubuntu-latest",
+        "ubuntu-22.04:docker://docker.gitea.com/runner-images:ubuntu-22.04",
+        "ubuntu-20.04:docker://docker.gitea.com/runner-images:ubuntu-20.04",
+      ],
+    },
+    cache: {
+      enabled: false,
+    },
+    container: {
+      privileged: true,
+      options: "--device /dev/kvm",
+      force_pull: true,
+      force_rebuild: false,
+      require_docker: true,
+      docker_timeout: "0s",
+    },
+  }),
+}, {
+  deletedWith: vm,
+  dependsOn: [
+    vm,
+    etcActRunner,
   ],
 });
 
@@ -82,14 +139,20 @@ new DockerContainer("act_runner", {
       key: "gitea-runner-token",
     }),
     GITEA_RUNNER_NAME: "hoshino",
+    CONFIG_FILE: actRunnerConfig.path,
   },
   volumes: [
     "/var/run/docker.sock:/var/run/docker.sock",
+    "/etc/act_runner:/etc/act_runner",
+  ],
+  devices: [
+    "/dev/kvm",
   ],
 }, {
   deletedWith: vm,
   dependsOn: [
     dockerHost,
+    actRunnerConfig,
   ],
 });
 
