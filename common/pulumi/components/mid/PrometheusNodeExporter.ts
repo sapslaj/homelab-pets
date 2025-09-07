@@ -6,8 +6,8 @@ import { SystemdUnit } from "./SystemdUnit";
 export interface PrometheusNodeExporterProps {
   connection?: mid.types.input.ConnectionArgs;
   triggers?: mid.types.input.TriggersInputArgs;
-  arch?: string;
-  version?: string;
+  arch?: pulumi.Input<string>;
+  version?: pulumi.Input<string>;
 }
 
 export class PrometheusNodeExporter extends pulumi.ComponentResource {
@@ -28,7 +28,7 @@ export class PrometheusNodeExporter extends pulumi.ComponentResource {
       }),
     );
 
-    const targetArch = pulumi.unsecret(
+    const targetArch = props.arch ?? pulumi.unsecret(
       mid.agent.execOutput({
         connection: props.connection,
         command: ["uname", "-m"],

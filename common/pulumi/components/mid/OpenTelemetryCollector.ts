@@ -8,6 +8,7 @@ import { mergeTriggers } from "../mid-utils";
 export interface OpenTelemetryCollectorProps {
   connection?: mid.types.input.ConnectionArgs;
   triggers?: mid.types.input.TriggersInputArgs;
+  arch?: pulumi.Input<string>;
   version?: pulumi.Input<string>;
   listenHost?: pulumi.Input<string>;
 }
@@ -35,7 +36,7 @@ export class OpenTelemetryCollector extends pulumi.ComponentResource {
       }),
     );
 
-    const targetArch = pulumi.unsecret(
+    const targetArch = props.arch ?? pulumi.unsecret(
       mid.agent.execOutput({
         connection: props.connection,
         command: ["uname", "-m"],
