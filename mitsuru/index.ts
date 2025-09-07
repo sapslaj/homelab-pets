@@ -10,6 +10,7 @@ import { getSecretValue } from "../common/pulumi/components/infisical";
 import { Autoupdate } from "../common/pulumi/components/mid/Autoupdate";
 import { BaselineUsers } from "../common/pulumi/components/mid/BaselineUsers";
 import { MidTarget } from "../common/pulumi/components/mid/MidTarget";
+import { NASClient } from "../common/pulumi/components/mid/NASClient";
 import { PrometheusNodeExporter } from "../common/pulumi/components/mid/PrometheusNodeExporter";
 import { Rclone } from "../common/pulumi/components/mid/Rclone";
 import { SystemdUnit } from "../common/pulumi/components/mid/SystemdUnit";
@@ -54,6 +55,14 @@ new Vector("mitsuru", {
 new Autoupdate("mitsuru", {
   connection,
   autoreboot: false,
+}, {
+  dependsOn: [
+    midTarget,
+  ],
+});
+
+new NASClient("mitsuru", {
+  connection,
 }, {
   dependsOn: [
     midTarget,
@@ -132,7 +141,7 @@ new mid.resource.SystemdService("nfs-kernel-server.service", {
   ],
 });
 
-new Rclone("ganyu", {
+new Rclone("mitsuru", {
   connection,
   configs: [
     {
