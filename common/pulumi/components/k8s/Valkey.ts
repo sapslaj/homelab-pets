@@ -248,8 +248,10 @@ export class Valkey extends pulumi.ComponentResource {
         selector: selectorLabels,
         ports: [
           {
-            name: "redis",
-            port: 6379,
+            name: "metrics",
+            port: 80,
+            protocol: "TCP",
+            targetPort: 9121,
           },
         ],
       },
