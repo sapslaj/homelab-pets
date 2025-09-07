@@ -2,12 +2,14 @@ import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
 import * as mid from "@sapslaj/pulumi-mid";
 
+import { RotatingAccessKey } from "../common/pulumi/components/aws/RotatingAccessKey";
 import { DockerContainer } from "../common/pulumi/components/mid/DockerContainer";
 import { DockerHost } from "../common/pulumi/components/mid/DockerHost";
+import { NASClient } from "../common/pulumi/components/mid/NASClient";
+import { RsyncBackup } from "../common/pulumi/components/mid/RsyncBackup";
 import { BaseConfigTrait } from "../common/pulumi/components/proxmox-vm/BaseConfigTrait";
 import { ProxmoxVM } from "../common/pulumi/components/proxmox-vm/ProxmoxVM";
 import { DNSRecord } from "../common/pulumi/components/shimiko";
-import { RotatingAccessKey } from "../common/pulumi/components/aws/RotatingAccessKey";
 
 const vm = new ProxmoxVM("oci", {
   name: pulumi.getStack() === "prod" ? "oci" : `oci-${pulumi.getStack()}`,
@@ -57,13 +59,43 @@ const vm = new ProxmoxVM("oci", {
   ],
 });
 
+const nasClient = new NASClient("oci", {
+  connection: vm.connection,
+}, {
+  deletedWith: vm,
+  dependsOn: [
+    vm,
+  ],
+});
+
 const dockerInstall = new DockerHost("oci", {
   connection: vm.connection,
   // default is the proxy, but _we're_ the proxy so we can't proxy ourselves.
   watchtowerImage: "containrrr/watchtower",
 }, {
+  deletedWith: vm,
   dependsOn: [
     vm,
+  ],
+});
+
+new RsyncBackup("oci", {
+  connection: vm.connection,
+  backupTimer: {
+    onCalendar: "hourly",
+    randomizedDelaySec: 1800,
+    fixedRandomDelay: true,
+  },
+  backupJobs: [
+    {
+      src: "/var/docker/volumes",
+      dest: "/mnt/exos/volumes/oci/docker-volumes",
+    },
+  ],
+}, {
+  deletedWith: vm,
+  dependsOn: [
+    nasClient,
   ],
 });
 
