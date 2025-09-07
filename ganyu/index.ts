@@ -6,6 +6,7 @@ import { getSecretValueOutput } from "../common/pulumi/components/infisical";
 import { Autoupdate } from "../common/pulumi/components/mid/Autoupdate";
 import { BaselineUsers } from "../common/pulumi/components/mid/BaselineUsers";
 import { MidTarget } from "../common/pulumi/components/mid/MidTarget";
+import { NASClient } from "../common/pulumi/components/mid/NASClient";
 import { PrometheusNodeExporter } from "../common/pulumi/components/mid/PrometheusNodeExporter";
 import { Vector } from "../common/pulumi/components/mid/Vector";
 import { DNSRecord } from "../common/pulumi/components/shimiko";
@@ -54,6 +55,13 @@ new Vector("ganyu", {}, {
 });
 
 new Autoupdate("ganyu", {}, {
+  provider: midProvider,
+  dependsOn: [
+    midTarget,
+  ],
+});
+
+new NASClient("ganyu", {}, {
   provider: midProvider,
   dependsOn: [
     midTarget,
