@@ -13,6 +13,7 @@ import { MidTarget } from "../common/pulumi/components/mid/MidTarget";
 import { NASClient } from "../common/pulumi/components/mid/NASClient";
 import { PrometheusNodeExporter } from "../common/pulumi/components/mid/PrometheusNodeExporter";
 import { Rclone } from "../common/pulumi/components/mid/Rclone";
+import { RsyncBackup } from "../common/pulumi/components/mid/RsyncBackup";
 import { SystemdUnit } from "../common/pulumi/components/mid/SystemdUnit";
 import { Vector } from "../common/pulumi/components/mid/Vector";
 
@@ -61,7 +62,7 @@ new Autoupdate("mitsuru", {
   ],
 });
 
-new NASClient("mitsuru", {
+const nasClient = new NASClient("mitsuru", {
   connection,
 }, {
   dependsOn: [
@@ -141,6 +142,81 @@ new mid.resource.SystemdService("nfs-kernel-server.service", {
   ],
 });
 
+new RsyncBackup("mitsuru-rsync", {
+  connection,
+  retainRsyncPackageOnDelete: true,
+  backupTimer: {
+    onCalendar: "hourly",
+    randomizedDelaySec: 1800,
+    fixedRandomDelay: true,
+  },
+  backupJobs: [
+    {
+      src: "/mnt/exos/volumes/nekopara/nfs",
+      dest: "/red/nekopara/",
+    },
+    {
+      src: "/red/nekopara/nfs",
+      dest: "/mnt/exos/volumes/nekopara/",
+    },
+  ],
+}, {
+  dependsOn: [
+    midTarget,
+    nasClient,
+  ],
+});
+
+const redbackupScript = new mid.resource.File("red-backup.sh", {
+  connection,
+  path: "/usr/local/sbin/red-backup.sh",
+  mode: "+x",
+  content: fs.readFileSync("./sbin/red-backup.sh", { encoding: "utf8" }),
+});
+
+const redbackupService = new SystemdUnit("red-backup.service", {
+  connection,
+  config: {
+    check: false,
+  },
+  name: "red-backup.service",
+  unit: {
+    Description: "red-backup",
+  },
+  service: {
+    Type: "oneshot",
+    ExecStart: "/usr/local/sbin/red-backup.sh",
+  },
+  install: {
+    WantedBy: "multi-user.target",
+  },
+}, {
+  dependsOn: [
+    redbackupScript,
+  ],
+});
+
+new SystemdUnit("red-backup.timer", {
+  connection,
+  config: {
+    check: false,
+  },
+  name: "red-backup.timer",
+  unit: {
+    Description: "red-backup",
+  },
+  timer: {
+    OnCalendar: "Mon *-*-* 00:15:00",
+  },
+  install: {
+    WantedBy: "multi-user.target",
+  },
+}, {
+  dependsOn: [
+    redbackupService,
+  ],
+});
+
 new Rclone("mitsuru", {
   connection,
   configs: [
@@ -157,6 +233,21 @@ new Rclone("mitsuru", {
         secret_access_key: getSecretValue({
           folder: "/wasabi/rclone-mitsuru",
           key: "AWS_SECRET_ACCESS_KEY",
+        }),
+      },
+    },
+    {
+      name: "red-nekopara",
+      properties: {
+        type: "crypt",
+        remote: "wasabi-use1:sapslaj-homelab-backups/red-nekopara",
+        password: getSecretValue({
+          folder: "/rclone",
+          key: "password",
+        }),
+        password2: getSecretValue({
+          folder: "/rclone",
+          key: "password2",
         }),
       },
     },
@@ -192,6 +283,12 @@ new Rclone("mitsuru", {
     },
   ],
   jobs: {
+    "red-nekopara": {
+      src: "/red/nekopara",
+      dest: "red-nekopara:",
+      enabled: true,
+      ensure: "started",
+    },
     "red-nfs": {
       src: "/red/nfs",
       dest: "red-nfs:",
