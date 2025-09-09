@@ -108,6 +108,25 @@ func (record *DNSRecord) ShouldReplace(other *DNSRecord) bool {
 	return false
 }
 
+func (record *DNSRecord) ExistsInDB(ctx context.Context, ps *PersistenceSession) bool {
+	ctx, span := telemetry.Tracer.Start(ctx, "shimiko/pkg/persistence.DNSRecord.ExistsInDB", trace.WithAttributes(
+		telemetry.OtelJSON("record", record),
+	))
+	defer span.End()
+
+	var existing *DNSRecord
+	if record.ID == 0 {
+		if record.Name == "" || record.Type == "" {
+			return false
+		}
+		ps.DB.WithContext(ctx).Unscoped().Where("name = ? AND type = ?", record.Name, record.Type).First(&existing)
+	} else {
+		ps.DB.WithContext(ctx).Where("id = ?", record.ID).First(&existing)
+	}
+
+	return existing != nil
+}
+
 func (record *DNSRecord) Upsert(ctx context.Context, ps *PersistenceSession) error {
 	ctx, span := telemetry.Tracer.Start(ctx, "shimiko/pkg/persistence.DNSRecord.Upsert", trace.WithAttributes(
 		telemetry.OtelJSON("record", record),
@@ -160,16 +179,18 @@ func (record *DNSRecord) Upsert(ctx context.Context, ps *PersistenceSession) err
 		return result.Error
 	}
 
-	err := ps.CoreDNS.UpsertRecord(ctx, record, existing)
-	if err != nil {
-		span.SetStatus(codes.Error, err.Error())
-		return err
-	}
+	if !ps.Shallow {
+		err := ps.CoreDNS.UpsertRecord(ctx, record, existing)
+		if err != nil {
+			span.SetStatus(codes.Error, err.Error())
+			return err
+		}
 
-	err = ps.Route53.UpsertRecord(ctx, record, existing)
-	if err != nil {
-		span.SetStatus(codes.Error, err.Error())
-		return err
+		err = ps.Route53.UpsertRecord(ctx, record, existing)
+		if err != nil {
+			span.SetStatus(codes.Error, err.Error())
+			return err
+		}
 	}
 
 	span.SetStatus(codes.Ok, "")
@@ -207,14 +228,16 @@ func (record *DNSRecord) Delete(ctx context.Context, ps *PersistenceSession) err
 		)
 	}
 
-	err := ps.CoreDNS.DeleteRecord(ctx, record)
-	if err != nil {
-		return err
-	}
+	if !ps.Shallow {
+		err := ps.CoreDNS.DeleteRecord(ctx, record)
+		if err != nil {
+			return err
+		}
 
-	err = ps.Route53.DeleteRecord(ctx, record)
-	if err != nil {
-		return err
+		err = ps.Route53.DeleteRecord(ctx, record)
+		if err != nil {
+			return err
+		}
 	}
 
 	span.SetStatus(codes.Ok, "")

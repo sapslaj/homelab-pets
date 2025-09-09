@@ -15,6 +15,7 @@ type PersistenceSession struct {
 	DB      *gorm.DB
 	CoreDNS *CoreDNS
 	Route53 *Route53
+	Shallow bool
 }
 
 func NewSession(ctx context.Context, db *gorm.DB) (*PersistenceSession, error) {
@@ -47,14 +48,16 @@ func FinishSession(ctx context.Context, session *PersistenceSession) error {
 	ctx, span := telemetry.Tracer.Start(ctx, "shimiko/pkg/persistence.FinishSession", trace.WithAttributes())
 	defer span.End()
 
-	coreDNSErr := session.CoreDNS.Save(ctx)
-	_, r53err := session.Route53.FlushChangeBatch(ctx)
+	if !session.Shallow {
+		coreDNSErr := session.CoreDNS.Save(ctx)
+		_, r53err := session.Route53.FlushChangeBatch(ctx)
 
-	err := errors.Join(coreDNSErr, r53err)
+		err := errors.Join(coreDNSErr, r53err)
 
-	if err != nil {
-		span.SetStatus(codes.Error, err.Error())
-		return err
+		if err != nil {
+			span.SetStatus(codes.Error, err.Error())
+			return err
+		}
 	}
 
 	span.SetStatus(codes.Ok, "")

@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/rand"
 	"slices"
 	"strconv"
 	"strings"
@@ -187,15 +188,15 @@ func (coreDNS *CoreDNS) Save(ctx context.Context) error {
 	ctx, span := telemetry.Tracer.Start(ctx, "shimiko/pkg/persistence.CoreDNS.Save", trace.WithAttributes())
 	defer span.End()
 
-	err := coreDNS.FormatEntries()
+	err := coreDNS.GenerateZonePreamble()
 	if err != nil {
-		err = fmt.Errorf("error formatting CoreDNS entries: %w", err)
+		err = fmt.Errorf("error generating CoreDNS preamble: %w", err)
 		span.SetStatus(codes.Error, err.Error())
 		return err
 	}
-	err = coreDNS.BumpSOASerial()
+	err = coreDNS.FormatEntries()
 	if err != nil {
-		err = fmt.Errorf("error bumping CoreDNS zone file SOA serial: %w", err)
+		err = fmt.Errorf("error formatting CoreDNS entries: %w", err)
 		span.SetStatus(codes.Error, err.Error())
 		return err
 	}
@@ -326,6 +327,101 @@ func (coreDNS *CoreDNS) BumpSOASerial() error {
 	}
 
 	return errors.New("could not find SOA entry")
+}
+
+func (coreDNS *CoreDNS) GenerateZonePreamble() error {
+	serial := rand.Intn(65535)
+	newEntries := []ast.Node{
+		{
+			NodeType: ast.NodeTypeOriginControlEntry,
+			Entry: ast.OriginControlEntry{
+				DomainName: "sapslaj.xyz.",
+			},
+		},
+		{
+			NodeType: ast.NodeTypeTTLControlEntry,
+			Entry: ast.TTLControlEntry{
+				TTL: 300 * time.Second,
+			},
+		},
+		{
+			NodeType: ast.NodeTypeRREntry,
+			Entry: ast.RREntry{
+				DomainName: "sapslaj.xyz.",
+				RRecord: ast.RRecord{
+					Class: "IN",
+					Type:  "SOA",
+					RData: []ast.RData{
+						{
+							Value: "rem.sapslaj.xyz.",
+						},
+						{
+							Value: "dns.sapslaj.com",
+						},
+						{
+							Value: fmt.Sprint(serial),
+						},
+						{
+							Value: "180",
+						},
+						{
+							Value: "60",
+						},
+						{
+							Value: "1209600",
+						},
+						{
+							Value: "900",
+						},
+					},
+				},
+			},
+		},
+		{
+			NodeType: ast.NodeTypeRREntry,
+			Entry: ast.RREntry{
+				DomainName: "sapslaj.xyz.",
+				RRecord: ast.RRecord{
+					Class: "IN",
+					Type:  "NS",
+					RData: []ast.RData{
+						{
+							Value: "rem.sapslaj.xyz.",
+						},
+					},
+				},
+			},
+		},
+		{
+			NodeType: ast.NodeTypeRREntry,
+			Entry: ast.RREntry{
+				DomainName: "sapslaj.xyz.",
+				RRecord: ast.RRecord{
+					Class: "IN",
+					Type:  "NS",
+					RData: []ast.RData{
+						{
+							Value: "ram.sapslaj.xyz.",
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for _, entry := range coreDNS.Entries {
+		if !entry.IsRREntry() {
+			continue
+		}
+		if entry.RREntry().RRecord.Type == "SOA" || entry.RREntry().RRecord.Type == "NS" {
+			continue
+		}
+		newEntries = append(newEntries, entry)
+	}
+
+	coreDNS.Entries = newEntries
+
+	return nil
 }
 
 func (coreDNS *CoreDNS) FormatEntries() error {

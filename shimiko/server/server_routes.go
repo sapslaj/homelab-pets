@@ -191,6 +191,16 @@ func (s *Server) UpsertDNSRecords(c echo.Context) error {
 			})
 			continue
 		}
+	}
+
+	ps.Shallow = true
+	for _, record := range body.Records {
+		if !record.ExistsInDB(ctx, ps) {
+			ps.Shallow = false
+		}
+	}
+
+	for _, record := range body.Records {
 		err := record.Upsert(ctx, ps)
 		if err != nil {
 			hasError = true
@@ -467,6 +477,8 @@ func (s *Server) UpsertDNSRecord(c echo.Context) error {
 			"error":  err.Error(),
 		})
 	}
+
+	ps.Shallow = body.Record.ExistsInDB(ctx, ps)
 
 	err = body.Record.Upsert(ctx, ps)
 	if err != nil {
