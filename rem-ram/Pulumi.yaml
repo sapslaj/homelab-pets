@@ -1,0 +1,5 @@
+name: homelab-pets-rem-ram
+runtime:
+  name: nodejs
+  options:
+    packagemanager: npm
