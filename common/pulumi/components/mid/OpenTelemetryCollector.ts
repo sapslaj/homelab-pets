@@ -3,7 +3,7 @@ import * as pulumi from "@pulumi/pulumi";
 import * as mid from "@sapslaj/pulumi-mid";
 import * as YAML from "yaml";
 
-import { mergeTriggers } from "../mid-utils";
+import { getGoarchOutput, latestGithubRelease, mergeTriggers } from "../mid-utils";
 
 export interface OpenTelemetryCollectorProps {
   connection?: mid.types.input.ConnectionArgs;
@@ -24,10 +24,7 @@ export class OpenTelemetryCollector extends pulumi.ComponentResource {
 
     const version: pulumi.Input<string> = pulumi.unsecret(
       pulumi.output(
-        props.version
-          ?? fetch("https://api.github.com/repos/open-telemetry/opentelemetry-collector-releases/releases/latest")
-            .then((res) => res.json())
-            .then((res) => res["tag_name"]),
+        props.version ?? latestGithubRelease("open-telemetry/opentelemetry-collector-releases"),
       ).apply((v) => {
         if (v.startsWith("v")) {
           return v.replace(/^v/, "");
@@ -36,27 +33,11 @@ export class OpenTelemetryCollector extends pulumi.ComponentResource {
       }),
     );
 
-    const targetArch = props.arch ?? pulumi.unsecret(
-      mid.agent.execOutput({
-        connection: props.connection,
-        command: ["uname", "-m"],
-      }, {
-        parent: this,
-      }).apply((arch) => {
-        switch (arch.stdout.trim()) {
-          case "arm":
-            return "armv7";
-          case "aarch64":
-            return "arm64";
-          case "i386":
-          case "i686":
-            return "386";
-          case "x86_64":
-            return "amd64";
-        }
-        throw new Error(`unsupported architecture: ${arch.stdout.trim()}`);
-      }),
-    );
+    const targetArch = props.arch ?? getGoarchOutput({
+      connection: props.connection,
+    }, {
+      parent: this,
+    });
 
     const downloadURL = pulumi.all({ version, targetArch }).apply(({ version, targetArch }) => {
       return `https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v${version}/otelcol_${version}_linux_${targetArch}.deb`;
