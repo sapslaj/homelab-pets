@@ -5,6 +5,8 @@ import { SystemdUnit } from "./SystemdUnit";
 
 export interface RsyncBackupProps {
   connection?: mid.types.input.ConnectionArgs;
+  ensure?: pulumi.Input<string>;
+  enabled?: pulumi.Input<boolean>;
   triggers?: mid.types.input.TriggersInputArgs;
   retainRsyncPackageOnDelete?: boolean;
   backupJobs: {
@@ -107,6 +109,8 @@ export class RsyncBackup extends pulumi.ComponentResource {
     this.timer = new SystemdUnit(`${name}-timer`, {
       connection: props.connection,
       triggers: props.triggers,
+      ensure: props.ensure ?? "started",
+      enabled: props.enabled ?? true,
       name: "rsync-backup.timer",
       unit: {
         "Description": "rsync backup",

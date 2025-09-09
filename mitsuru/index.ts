@@ -144,6 +144,8 @@ new mid.resource.SystemdService("nfs-kernel-server.service", {
 
 new RsyncBackup("mitsuru-rsync", {
   connection,
+  ensure: "started",
+  enabled: true,
   retainRsyncPackageOnDelete: true,
   backupTimer: {
     onCalendar: "hourly",
@@ -202,6 +204,8 @@ new SystemdUnit("red-backup.timer", {
     check: false,
   },
   name: "red-backup.timer",
+  ensure: "started",
+  enabled: true,
   unit: {
     Description: "red-backup",
   },
