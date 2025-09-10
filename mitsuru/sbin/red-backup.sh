@@ -7,5 +7,5 @@ if [[ "$snapshots" == *"red@backup-latest"* ]]; then
   zfs destroy 'red@backup-latest'
 fi
 zfs snapshot 'red@backup-latest'
-zfs send 'red@backup-latest' | gzip > "/mnt/exos/volumes/red/snapshots/red-backup-$ts.gz"
+zfs send 'red@backup-latest' | gzip | pv --format 'time_elapsed=%t rate=%r average_rate=%a bytes_transferred=%b' > "/mnt/exos/volumes/red/snapshots/red-backup-$ts.gz"
 find '/mnt/exos/volumes/red/snapshots' -maxdepth 1 -mtime +35 -type f -delete

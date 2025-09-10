@@ -169,6 +169,15 @@ new RsyncBackup("mitsuru-rsync", {
   ],
 });
 
+const pv = new mid.resource.Apt("pv", {
+  connection,
+  name: "pv",
+}, {
+  dependsOn: [
+    midTarget,
+  ],
+});
+
 const redbackupScript = new mid.resource.File("red-backup.sh", {
   connection,
   path: "/usr/local/sbin/red-backup.sh",
@@ -195,6 +204,7 @@ const redbackupService = new SystemdUnit("red-backup.service", {
 }, {
   dependsOn: [
     redbackupScript,
+    pv,
   ],
 });
 
