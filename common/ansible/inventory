@@ -1,7 +1,5 @@
 aqua.sapslaj.xyz
 eris.sapslaj.xyz
-ram.sapslaj.xyz
-rem.sapslaj.xyz
 tohru.sapslaj.xyz
 
 [libvirt_hosts]
@@ -10,10 +8,6 @@ aqua.sapslaj.xyz
 [nas_servers]
 aqua.sapslaj.xyz
 
-[dns_servers]
-ram.sapslaj.xyz
-rem.sapslaj.xyz
-
 [nas_clients]
 eris.sapslaj.xyz
 tohru.sapslaj.xyz
@@ -21,10 +15,7 @@ tohru.sapslaj.xyz
 [bare_hosts]
 aqua.sapslaj.xyz
 eris.sapslaj.xyz
-ram.sapslaj.xyz
-rem.sapslaj.xyz
 tohru.sapslaj.xyz
 
 [qemu_guests]
-rem.sapslaj.xyz
 tohru.sapslaj.xyz
