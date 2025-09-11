@@ -1,8 +1,0 @@
----
-- hosts: all
-  any_errors_fatal: true
-  #become: true
-  roles:
-    - role: ansible-role-promtail
-      vars:
-        promtail_binary_propagate: True

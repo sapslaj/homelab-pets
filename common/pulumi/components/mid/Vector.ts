@@ -12,6 +12,7 @@ export interface VectorProps {
   transforms?: Record<string, Record<string, any>>;
   sinks?: Record<string, Record<string, any>>;
   config?: any;
+  rsyslogForwarding?: boolean;
 }
 
 export class Vector extends pulumi.ComponentResource {
@@ -32,6 +33,18 @@ export class Vector extends pulumi.ComponentResource {
       parent: this,
       retainOnDelete: true,
     });
+
+    if (props.rsyslogForwarding === true) {
+      new mid.resource.File(`${name}-rsyslog-vector-forwarding-config`, {
+        connection: props.connection,
+        triggers: props.triggers,
+        path: "/etc/rsyslog.d/vector.conf",
+        content:
+          `*.* action(type="omfwd" protocol="tcp" target="127.0.0.1" port="5144" Template="RSYSLOG_SyslogProtocol23Format" TCP_Framing="octet-counted")`,
+      }, {
+        parent: this,
+      });
+    }
 
     const repoSetup = new mid.resource.Exec(`${name}-vector-repo-setup`, {
       connection: props.connection,
@@ -127,6 +140,15 @@ export class Vector extends pulumi.ComponentResource {
         scrape_timeout_secs: 45,
       },
     };
+
+    if (props.rsyslogForwarding) {
+      defaultSources["logs_syslog"] = {
+        type: "syslog",
+        address: "0.0.0.0:5144",
+        mode: "tcp",
+        path: "/var/lib/vector/syslog.lock",
+      };
+    }
 
     const defaultSinks: Record<string, Record<string, any>> = {
       victorialogs: {

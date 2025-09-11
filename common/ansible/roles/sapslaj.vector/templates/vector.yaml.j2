@@ -25,40 +25,6 @@ sources:
     scrape_interval_secs: 60
     scrape_timeout_secs: 45
 
-{% if vector_enable_dns %}
-  metrics_adguard:
-    type: prometheus_scrape
-    endpoints:
-      - http://localhost:9617/metrics
-    scrape_interval_secs: 60
-    scrape_timeout_secs: 45
-
-  metrics_coredns:
-    type: prometheus_scrape
-    endpoints:
-      - http://localhost:9153/metrics
-    scrape_interval_secs: 60
-    scrape_timeout_secs: 45
-{% endif %}
-
-{% if vector_enable_du %}
-  metrics_du:
-    type: prometheus_scrape
-    endpoints:
-      - http://localhost:9477/metrics
-    scrape_interval_secs: 60
-    scrape_timeout_secs: 45
-{% endif %}
-
-{% if vector_enable_libvirt %}
-  metrics_libvirt:
-    type: prometheus_scrape
-    endpoints:
-      - http://localhost:9177/metrics
-    scrape_interval_secs: 60
-    scrape_timeout_secs: 45
-{% endif %}
-
 transforms:
   logs_syslog_default_labels:
     type: remap
@@ -109,56 +75,6 @@ transforms:
         .tags.instance = .tags.hostname
       }
 
-{% if vector_enable_dns %}
-  metrics_adguard_default_labels:
-    type: remap
-    inputs:
-      - metrics_adguard
-    source: |
-      .tags.job = "host_vector/metrics_adguard"
-      .tags.hostname = get_hostname!()
-      if .tags.instance == null {
-        .tags.instance = .tags.hostname
-      }
-
-  metrics_coredns_default_labels:
-    type: remap
-    inputs:
-      - metrics_coredns
-    source: |
-      .tags.job = "host_vector/metrics_coredns"
-      .tags.hostname = get_hostname!()
-      if .tags.instance == null {
-        .tags.instance = .tags.hostname
-      }
-{% endif %}
-
-{% if vector_enable_du %}
-  metrics_du_default_labels:
-    type: remap
-    inputs:
-      - metrics_du
-    source: |
-      .tags.job = "host_vector/metrics_du"
-      .tags.hostname = get_hostname!()
-      if .tags.instance == null {
-        .tags.instance = .tags.hostname
-      }
-{% endif %}
-
-{% if vector_enable_libvirt %}
-  metrics_libvirt_default_labels:
-    type: remap
-    inputs:
-      - metrics_libvirt
-    source: |
-      .tags.job = "host_vector/metrics_libvirt"
-      .tags.hostname = get_hostname!()
-      if .tags.instance == null {
-        .tags.instance = .tags.hostname
-      }
-{% endif %}
-
 sinks:
   victorialogs:
     type: elasticsearch
@@ -187,19 +103,6 @@ sinks:
       - metrics_internal_default_labels
       - metrics_host_default_labels
       - metrics_node_exporter_default_labels
-
-{% if vector_enable_dns %}
-      - metrics_adguard_default_labels
-      - metrics_coredns_default_labels
-{% endif %}
-
-{% if vector_enable_du %}
-      - metrics_du_default_labels
-{% endif %}
-
-{% if vector_enable_libvirt %}
-      - metrics_libvirt_default_labels
-{% endif %}
 
     endpoint: https://victoriametrics-vminsert.sapslaj.xyz/insert/0/prometheus/api/v1/write
     compression: zstd

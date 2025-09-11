@@ -1,6 +1,0 @@
-[Unit]
-Description=rclone sync %i
-
-[Service]
-Type=simple
-ExecStart=/usr/local/libexec/rclone/rclone-sync-%i.sh

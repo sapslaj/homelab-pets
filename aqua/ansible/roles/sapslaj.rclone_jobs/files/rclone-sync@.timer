@@ -1,9 +1,0 @@
-[Unit]
-Description=rclone sync %i
-Wants=network-online.target
-
-[Timer]
-OnCalendar=weekly
-
-[Install]
-WantedBy=timers.target

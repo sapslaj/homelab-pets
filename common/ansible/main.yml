@@ -11,8 +11,6 @@
     - role: sapslaj.vector
       vars:
         vector_enable_dns: "{{ 'dns_servers' in group_names }}"
-        vector_enable_du: "{{ 'nas_servers' in group_names }}"
-        vector_enable_libvirt: "{{ 'libvirt_hosts' in group_names }}"
 
 - hosts: all
   become: true

@@ -1,6 +1,0 @@
-[Unit]
-Description=virt-backup backup
-
-[Service]
-Type=oneshot
-ExecStart=/root/.local/bin/virt-backup backup

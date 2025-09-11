@@ -1,19 +1,11 @@
-aqua.sapslaj.xyz
 eris.sapslaj.xyz
 tohru.sapslaj.xyz
-
-[libvirt_hosts]
-aqua.sapslaj.xyz
-
-[nas_servers]
-aqua.sapslaj.xyz
 
 [nas_clients]
 eris.sapslaj.xyz
 tohru.sapslaj.xyz
 
 [bare_hosts]
-aqua.sapslaj.xyz
 eris.sapslaj.xyz
 tohru.sapslaj.xyz
 

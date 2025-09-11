@@ -1,0 +1,5 @@
+name: homelab-pets-aqua
+runtime:
+  name: nodejs
+  options:
+    packagemanager: npm
