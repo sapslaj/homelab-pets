@@ -1,0 +1,5 @@
+name: homelab-pets-eris
+runtime:
+  name: nodejs
+  options:
+    packagemanager: npm

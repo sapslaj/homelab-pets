@@ -76,7 +76,7 @@ export class Selfheal extends pulumi.ComponentResource {
     const taskFiles: mid.resource.File[] = [];
     for (const [key, value] of Object.entries(props.tasks ?? {})) {
       taskFiles.push(
-        new mid.resource.File(`${name}-/etc/selfheal/${key}.yml`, {
+        new mid.resource.File(`${name}-/etc/selfheal/tasks/${key}.yml`, {
           connection: props.connection,
           triggers: props.triggers,
           path: `/etc/selfheal/tasks/${key}.yml`,
