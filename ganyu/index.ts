@@ -29,8 +29,24 @@ const midProvider = new mid.Provider("ganyu", {
   },
 });
 
+const pbsSourcesList = new mid.resource.File("/etc/apt/sources.list.d/pbs.sources", {
+  path: "/etc/apt/sources.list.d/pbs.sources",
+  content: `Types: deb
+URIs: http://download.proxmox.com/debian/pbs
+Suites: trixie
+Components: pbs-no-subscription
+Signed-By: /usr/share/keyrings/proxmox-archive-keyring.gpg
+Enabled: true
+`,
+}, {
+  provider: midProvider,
+});
+
 const midTarget = new MidTarget("ganyu", {}, {
   provider: midProvider,
+  dependsOn: [
+    pbsSourcesList,
+  ],
 });
 
 new BaselineUsers("ganyu", {}, {
