@@ -1,12 +1,9 @@
-eris.sapslaj.xyz
 tohru.sapslaj.xyz
 
 [nas_clients]
-eris.sapslaj.xyz
 tohru.sapslaj.xyz
 
 [bare_hosts]
-eris.sapslaj.xyz
 tohru.sapslaj.xyz
 
 [qemu_guests]

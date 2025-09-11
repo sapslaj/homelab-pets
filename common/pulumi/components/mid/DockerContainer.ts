@@ -76,6 +76,42 @@ export class DockerContainer extends pulumi.ComponentResource {
             },
           },
         ],
+        update: [
+          {
+            module: "docker_container",
+            args: {
+              restart: true,
+              comparisons: {
+                "*": "strict",
+              },
+              capabilities: props.capabilities,
+              command: props.command,
+              devices: props.devices,
+              entrypoint: props.entrypoint,
+              env: props.env,
+              healthcheck: props.healthcheck === undefined ? undefined : {
+                interval: props.healthcheck.interval,
+                retries: props.healthcheck.retries,
+                start_interval: props.healthcheck.startInterval,
+                start_period: props.healthcheck.startPeriod,
+                test: props.healthcheck.test,
+                test_cli_compatible: props.healthcheck.testCliCompatible,
+                timeout: props.healthcheck.timeout,
+              },
+              image: props.image,
+              labels: props.labels,
+              links: props.links,
+              memory: props.memory,
+              name: props.name ?? name,
+              network_mode: props.networkMode,
+              pid_mode: props.pidMode,
+              privileged: props.privileged,
+              published_ports: props.publishedPorts,
+              restart_policy: props.restartPolicy,
+              volumes: props.volumes,
+            },
+          },
+        ],
         delete: [
           {
             module: "docker_container",

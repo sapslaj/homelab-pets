@@ -1,3 +1,0 @@
-jellyfin_cache_dir: /var/docker/volumes/jellyfin-cache
-jellyfin_config_dir: /var/docker/volumes/jellyfin-config
-jellyfin_media_dir: /srv

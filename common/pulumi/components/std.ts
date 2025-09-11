@@ -2,6 +2,12 @@ import * as pulumi from "@pulumi/pulumi";
 import * as pstd from "@pulumi/std";
 import * as YAML from "yaml";
 
+export function base64encode(input: pulumi.Input<string>): pulumi.Output<string> {
+  return pstd.base64encodeOutput({
+    input,
+  }).result;
+}
+
 export function jsonencode(input: pulumi.Input<any>): pulumi.Output<string> {
   return pulumi.output(input).apply((v) => JSON.stringify(v));
 }

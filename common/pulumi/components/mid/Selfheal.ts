@@ -90,10 +90,10 @@ export class Selfheal extends pulumi.ComponentResource {
       );
     }
 
-    const systemdServiceFile = new mid.resource.File(`${name}-/etc/systemd/system/selfhealh.service`, {
+    const systemdServiceFile = new mid.resource.File(`${name}-/etc/systemd/system/selfheal.service`, {
       connection: props.connection,
       triggers: props.triggers,
-      path: "/etc/systemd/system/selfhealh.service",
+      path: "/etc/systemd/system/selfheal.service",
       content: [
         "[Unit]",
         "Description=Self-heal services",
@@ -110,10 +110,10 @@ export class Selfheal extends pulumi.ComponentResource {
       parent: this,
     });
 
-    const systemdTimerFile = new mid.resource.File(`${name}-/etc/systemd/system/selfhealh.timer`, {
+    const systemdTimerFile = new mid.resource.File(`${name}-/etc/systemd/system/selfheal.timer`, {
       connection: props.connection,
       triggers: props.triggers,
-      path: "/etc/systemd/system/selfhealh.timer",
+      path: "/etc/systemd/system/selfheal.timer",
       content: [
         "[Unit]",
         "Description=Self-heal services",

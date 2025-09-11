@@ -1,6 +1,0 @@
-network_syslog_vector_volumes_dir: /var/docker/volumes
-network_syslog_vector_debug: false
-network_syslog_vector_tcp_port: 6601
-network_syslog_vector_udp_port: 5514
-network_syslog_vector_transforms: {}
-network_syslog_vector_sinks: {}
