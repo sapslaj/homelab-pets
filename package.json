@@ -25,6 +25,7 @@
     "@pulumi/tls": "^5.0.10",
     "@pulumiverse/time": "^0.1.1",
     "@sapslaj/pulumi-authentik": "^2025.8.0",
+    "@sapslaj/pulumi-aws-ec2-instance": "^1.0.3",
     "@sapslaj/pulumi-gitea": "^0.7.0",
     "@sapslaj/pulumi-infisical": "^0.15.33",
     "@sapslaj/pulumi-mid": "^0.0.16",

@@ -1,0 +1,5 @@
+name: homelab-pets-omada
+runtime:
+  name: nodejs
+  options:
+    packagemanager: npm
