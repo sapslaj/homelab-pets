@@ -40,6 +40,24 @@ const instance = new EC2Instance("omada", {
     },
     ignoreChanges: ["ami"],
   },
+  securityGroup: {
+    create: true,
+    createDefaultEgressRule: true,
+    ingresses: {
+      "uptime-kuma-ipv4": {
+        ipProtocol: "tcp",
+        fromPort: 8043,
+        toPort: 8043,
+        cidrIpv4: "155.138.194.189/32",
+      },
+      "uptime-kuma-ipv6": {
+        ipProtocol: "tcp",
+        fromPort: 8043,
+        toPort: 8043,
+        cidrIpv6: "2001:19f0:5401:7:5400:5ff:fe9b:cb9d/128",
+      },
+    },
+  },
   tags: {
     Name: name,
     ConfigGroup: "omada",
