@@ -42,6 +42,36 @@ const instance = new EC2Instance("aws-vpn-router", {
     ignoreChanges: ["ami"],
     sourceDestCheck: false,
   },
+  securityGroup: {
+    create: true,
+    createDefaultEgressRule: true,
+    ingresses: {
+      icmpv4: {
+        fromPort: -1,
+        toPort: -1,
+        ipProtocol: "icmp",
+        cidrIpv4: "0.0.0.0/0",
+      },
+      icmpv6: {
+        fromPort: -1,
+        toPort: -1,
+        ipProtocol: "icmpv6",
+        cidrIpv6: "::/0",
+      },
+      vpcipv4: {
+        fromPort: 0,
+        toPort: 0,
+        ipProtocol: "-1",
+        cidrIpv4: "172.31.0.0/16",
+      },
+      vpcipv6: {
+        fromPort: 0,
+        toPort: 0,
+        ipProtocol: "-1",
+        cidrIpv6: "2600:1f18:1a9:7200::/56",
+      },
+    },
+  },
   tags: {
     Name: name,
   },
