@@ -1,0 +1,5 @@
+name: homelab-pets-aws-vpn-router
+runtime:
+  name: nodejs
+  options:
+    packagemanager: npm

@@ -52,6 +52,9 @@ export function getGoarchOutput(
       ...args,
       command: ["uname", "-m"],
     }, opts).apply((arch) => {
+      if (arch === undefined || arch.stdout === undefined) {
+        return undefined as any as SupportedGoarch; // special case for `unknown` values
+      }
       return unameMachineToGoarch(arch.stdout.trim());
     }),
   );
