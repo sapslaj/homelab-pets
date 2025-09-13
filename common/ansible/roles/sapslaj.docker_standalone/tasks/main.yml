@@ -1,6 +1,0 @@
-- include_tasks: raspberrypi.yml
-- include_tasks: install.yml
-- include_tasks: watchtower.yml
-- include_tasks: cadvisor.yml
-- include_tasks: docker_housekeeper.yml
-- include_tasks: selfheal.yml

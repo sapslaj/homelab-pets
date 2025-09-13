@@ -1,9 +1,0 @@
-enable_cadvisor: true
-enable_watchtower: true
-enable_docker_housekeeper: true
-enable_selfheal: true
-cadvisor_args: []
-cadvisor_image: gcr.io/cadvisor/cadvisor:v0.47.0 # latest is not actually latest :(
-docker_install_from_official_repo: false
-watchtower_http_api_token: adminadmin
-watchtower_port: 9420

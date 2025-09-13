@@ -1,9 +1,0 @@
-- name: install qemu-guest-agent
-  apt:
-    name: qemu-guest-agent
-    state: present
-- name: enable qemu-guest-agent
-  systemd:
-    name: qemu-guest-agent.service
-    state: started
-    enabled: true

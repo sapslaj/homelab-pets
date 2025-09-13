@@ -1,4 +1,0 @@
-- name: run codesync
-  systemd:
-    name: codesync.service
-    state: restarted
