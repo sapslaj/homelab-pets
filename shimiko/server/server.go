@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ganawaj/go-vyos/vyos"
 	"github.com/labstack/echo-contrib/echoprometheus"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -282,6 +283,17 @@ func RunServer(s *Server) error {
 
 	errChan := make(chan error)
 
+	var vyosClient *vyos.Client
+	vyosAPIToken := env.MustGetDefault("VYOS_API_TOKEN", "")
+	if vyosAPIToken == "" {
+		logger.Info("no VyOS API token, disabling public IP sync")
+	} else {
+		vyosClient = vyos.NewClient(nil).
+			WithToken(vyosAPIToken).
+			WithURL("https://172.24.0.0:9443").
+			Insecure()
+	}
+
 	go func() {
 		if s.ReconcileInterval == 0 {
 			logger.Info("reconcile interval is 0, reconciliation disabled")
@@ -289,7 +301,9 @@ func RunServer(s *Server) error {
 		}
 
 		ctx := context.Background()
+
 		logger.InfoContext(ctx, "starting initial record reconcile")
+
 		err := s.ReconcileAll(ctx)
 		if err == nil {
 			logger.InfoContext(ctx, "finished initial record reconcile with no errors")
@@ -297,14 +311,24 @@ func RunServer(s *Server) error {
 			logger.WarnContext(ctx, "finished initial record reconcile with errors", "error", err)
 		}
 
+		if vyosClient != nil {
+			s.ReconcilePublicIP(ctx, vyosClient)
+		}
+
 		for range time.Tick(s.ReconcileInterval) {
 			ctx := context.Background()
+
 			logger.InfoContext(ctx, "starting record reconcile")
+
 			err := s.ReconcileAll(ctx)
 			if err == nil {
 				logger.InfoContext(ctx, "finished record reconcile with no errors")
 			} else {
 				logger.WarnContext(ctx, "finished record reconcile with errors", "error", err)
+			}
+
+			if vyosClient != nil {
+				s.ReconcilePublicIP(ctx, vyosClient)
 			}
 		}
 	}()
@@ -598,4 +622,99 @@ updates:
 		span.SetStatus(codes.Ok, "")
 	}
 	return multierr
+}
+
+func (s *Server) ReconcilePublicIP(ctx context.Context, client *vyos.Client) error {
+	if client == nil {
+		return nil
+	}
+
+	ctx, span := telemetry.Tracer.Start(ctx, "shimiko/server.Server.ReconcilePublicIP")
+	defer span.End()
+
+	logger := s.Logger.With("subsystem", "reconcile")
+
+	show, _, err := client.Show.Do(ctx, "interfaces ethernet eth13 brief")
+	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		return err
+	}
+
+	if !show.Success {
+		err = fmt.Errorf("could not get eth13 interface status")
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		return err
+	}
+
+	ips := []net.IP{}
+	for line := range strings.SplitSeq(show.Data.(string), "\n") {
+		fields := strings.Fields(line)
+		if len(fields) == 0 {
+			continue
+		}
+		field := -1
+		if len(fields) == 1 && len(ips) > 0 {
+			field = 0
+		} else if fields[0] == "eth13" {
+			field = 1
+		}
+		if field == -1 {
+			continue
+		}
+		ip, _, err := net.ParseCIDR(fields[field])
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
+			return err
+		}
+		ips = append(ips, ip)
+	}
+
+	addresses := []string{}
+	for _, ip := range ips {
+		if !ip.IsPrivate() {
+			addresses = append(addresses, ip.String())
+		}
+	}
+
+	if len(addresses) == 0 {
+		err = fmt.Errorf("could not detect public IP address from eth13")
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		return err
+	}
+
+	ps, err := persistence.NewSession(ctx, s.DB)
+	if err != nil {
+		logger.ErrorContext(ctx, "error creating persistence session", "error", err)
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		return err
+	}
+
+	record := &persistence.DNSRecord{
+		Name:    "@",
+		Records: addresses,
+		Type:    "A",
+	}
+
+	err = record.Upsert(ctx, ps)
+	if err != nil {
+		logger.ErrorContext(ctx, "failed to upsert apex", "error", err)
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		return err
+	}
+
+	err = ps.Finish(ctx)
+	if err != nil {
+		logger.ErrorContext(ctx, "failed to finish persistence session", "error", err)
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		return err
+	}
+
+	return nil
 }

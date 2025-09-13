@@ -224,7 +224,8 @@ DNS or SD related that I need.
 shimiko is not a DNS resolver (that is taken care of my rem and ram) but
 provides a RESTful interface for managing DNS records that sync to both rem/ram
 and Route53. It also runs [ZonePop](https://github.com/sapslaj/zonepop) for
-dynamic forward and reverse lookup entries.
+dynamic forward and reverse lookup entries. It is also responsible for making
+sure the public IP address is up-to-date for external ingress.
 
 ##### Service Discovery _(planned)_
 

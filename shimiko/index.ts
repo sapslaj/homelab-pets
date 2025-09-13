@@ -8,6 +8,7 @@ import * as time from "@pulumiverse/time";
 import * as mid from "@sapslaj/pulumi-mid";
 
 import { directoryHash } from "../common/pulumi/components/asset-utils";
+import { getSecretValue, getSecretValueOutput } from "../common/pulumi/components/infisical";
 import { RsyncBackup } from "../common/pulumi/components/mid/RsyncBackup";
 import { SystemdUnit } from "../common/pulumi/components/mid/SystemdUnit";
 import { BaseConfigTrait } from "../common/pulumi/components/proxmox-vm/BaseConfigTrait";
@@ -209,6 +210,9 @@ const shimikoEnv = new mid.resource.File("/etc/sysconfig/shimiko.env", {
       SHIMIKO_HTTPS_PORT: "443",
       SHIMIKO_HTTP_PORT: "80",
       SHIMIKO_RECONCILE_INTERVAL: production ? "1h" : "0s",
+      VYOS_API_TOKEN: getSecretValueOutput({
+        key: "vyos-api-token",
+      }),
       VYOS_PASSWORD: process.env.VYOS_PASSWORD, // FIXME: don't do this.
       VYOS_USERNAME: process.env.VYOS_USERNAME, // FIXME: don't do this.
     }).map(([key, value]) => {

@@ -57,6 +57,9 @@ func (validation *DNSRecordValidation) Error() string {
 }
 
 func (record *DNSRecord) FullHostname() string {
+	if record.Name == "@" {
+		return DomainName
+	}
 	return record.Name + "." + DomainName
 }
 

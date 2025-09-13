@@ -12,6 +12,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.29.9
 	github.com/aws/aws-sdk-go-v2/service/route53 v1.52.2
 	github.com/bramvdbogaerde/go-scp v1.5.0
+	github.com/ganawaj/go-vyos v0.1.0
 	github.com/go-acme/lego/v4 v4.22.2
 	github.com/go-slog/otelslog v0.3.0
 	github.com/labstack/echo-contrib v0.17.4
