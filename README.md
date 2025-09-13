@@ -21,6 +21,16 @@ Physical server running Debian.
 - libvirtd
 - [virt-backup](https://github.com/aruhier/virt-backup) backs up all VMs to main datastore (which is then backed up to Wasabi)
 
+### aws-vpn-router
+
+AWS EC2 instance
+
+#### Uses
+
+##### Wireguard
+
+Site-to-site Wireguard VPN to yor for trusted access to AWS VPC.
+
 ### eris
 
 Raspberry Pi 4 running Raspbian.
@@ -182,6 +192,16 @@ Docker/OCI registry and Docker Hub caching proxy.
 - main OCI endpoint: `oci.sapslaj.xyz`
 - Proxy endpoint: `proxy.oci.sapslaj.xyz`
   - e.g. `ubuntu:24.04` => `proxy.oci.sapslaj.xyz/docker-hub/ubuntu:24.04`
+
+### omada
+
+AWS EC2 instance
+
+#### Uses
+
+##### Omada Controller
+
+Host for [TP-Link Omada SDN Controller](https://www.omadanetworks.com/)
 
 ### playboy
 
