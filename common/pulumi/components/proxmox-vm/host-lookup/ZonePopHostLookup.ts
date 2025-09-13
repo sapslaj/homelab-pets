@@ -4,13 +4,13 @@ import * as pulumi from "@pulumi/pulumi";
 import { IHostLookup } from "./IHostLookup";
 
 export class ZonePopHostLookup implements IHostLookup {
-  constructor(public options: { endpoint?: string; timeout?: number }) {
+  constructor(public options: { endpoint?: string; timeout?: number } = {}) {
     if (!this.options.endpoint) {
       this.options.endpoint = process.env.SHIMIKO_ENDPOINT ?? "https://shimiko.sapslaj.xyz";
       if (this.options.endpoint.endsWith("/")) {
         this.options.endpoint = this.options.endpoint.slice(0, -1);
       }
-      this.options.endpoint += "/zonepop";
+      this.options.endpoint += "/v1/zonepop";
     }
   }
 
@@ -19,7 +19,7 @@ export class ZonePopHostLookup implements IHostLookup {
       if (!networkDevices) {
         throw new Error("cannot lookup host without network devices");
       }
-      const timeout = new Date().getTime() + (this.options.timeout ?? 60000);
+      const timeout = new Date().getTime() + (this.options.timeout ?? 120000);
       while (timeout > new Date().getTime()) {
         const endpoints = await (await fetch(`${this.options.endpoint}/endpoints/forward`)).json();
         for (const networkDevice of networkDevices) {
@@ -44,7 +44,7 @@ export class ZonePopHostLookup implements IHostLookup {
       if (!networkDevices) {
         throw new Error("cannot lookup host without network devices");
       }
-      const timeout = new Date().getTime() + (this.options.timeout ?? 60000);
+      const timeout = new Date().getTime() + (this.options.timeout ?? 120000);
       while (timeout > new Date().getTime()) {
         const endpoints = await (await fetch(`${this.options.endpoint}/endpoints/forward`)).json();
         for (const networkDevice of networkDevices) {

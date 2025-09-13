@@ -154,7 +154,9 @@ export class AuthentikProxyIngress extends pulumi.ComponentResource {
                 },
                 ...(props.enableAnubis === false ? [] : [
                   {
-                    name: "anubis",
+                    name: pulumi.output(props.hostname).apply((hostname) =>
+                      hostname.endsWith(".sapslaj.xyz") ? "botstopper" : "anubis"
+                    ),
                     namespace: "traefik",
                   },
                 ]),

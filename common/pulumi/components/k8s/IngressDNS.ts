@@ -24,7 +24,7 @@ export class IngressDNS extends pulumi.ComponentResource {
         new DNSRecord(name, {
           name: hostname.replace(/\.sapslaj\.xyz$/, ""),
           type: "CNAME",
-          records: ["homelab.sapslaj.com."],
+          records: ["sapslaj.xyz."],
         }, {
           parent: this,
         });
@@ -33,7 +33,7 @@ export class IngressDNS extends pulumi.ComponentResource {
           name: hostname,
           ttl: props.ttl ?? 300,
           type: "CNAME",
-          records: ["homelab.sapslaj.com."],
+          records: ["sapslaj.xyz."],
           zoneId: aws.route53.getZoneOutput({
             name: "sapslaj.cloud",
           }).zoneId,
@@ -45,7 +45,7 @@ export class IngressDNS extends pulumi.ComponentResource {
           name: hostname,
           ttl: props.ttl ?? 300,
           type: "CNAME",
-          records: ["homelab.sapslaj.com."],
+          records: ["sapslaj.xyz."],
           zoneId: aws.route53.getZoneOutput({
             name: "cloud.sapslaj.com",
           }).zoneId,
@@ -57,7 +57,7 @@ export class IngressDNS extends pulumi.ComponentResource {
           name: hostname.replace(/\.sapslaj\.com$/, ""),
           type: "CNAME",
           ttl: props.ttl ?? 300,
-          content: "homelab.sapslaj.com",
+          content: "sapslaj.xyz",
           zoneId: cloudflare.getZoneOutput({
             filter: {
               name: "sapslaj.com",
