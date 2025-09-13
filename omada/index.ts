@@ -29,7 +29,7 @@ const instance = new EC2Instance("omada", {
     attachDefaultPolicies: true,
   },
   instance: {
-    instanceType: "t3a.small",
+    instanceType: "t3a.medium",
     vpcSecurityGroupIds: [
       "sg-0e3ce83256d914c98", // CI
       "sg-0f21c10c93a07ea5c", // ServerAdmin
