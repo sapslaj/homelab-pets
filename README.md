@@ -263,20 +263,14 @@ Implements the [acme-dns](https://github.com/joohoi/acme-dns) protocol.
 
 ### tohru
 
-VM inside [aqua](#aqua).
+VM inside [mitsuru](#mitsuru).
 
 #### Uses
 
-##### GitHub Actions CI
+##### odd jobs
 
-Actions runner for this repository and some others. Needed since direct access to these servers is not possible from the outside via IPv4.
-
-##### DDNS
-
-_TODO: should this be a [shimiko](#shimiko) responsibility?_
-
-- Cloudflare DDNS to update current public IP to `sapslaj.com` Cloudflare zone.
-- VSDD for doing dynamic DNS updates to `sapslaj.xyz` Route53 zone based on DHCP leases and IPv6 neighbors.
+Sometimes you just need something to do odd jobs. Trying to do it "properly"
+isn't worth it. Tohru handles this.
 
 ### uptime-kuma
 
