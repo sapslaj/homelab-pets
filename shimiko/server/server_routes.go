@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -16,6 +17,7 @@ import (
 
 	"github.com/sapslaj/homelab-pets/shimiko/pkg/persistence"
 	"github.com/sapslaj/homelab-pets/shimiko/pkg/telemetry"
+	"github.com/sapslaj/homelab-pets/shimiko/static"
 )
 
 func (s *Server) Routes() {
@@ -23,6 +25,7 @@ func (s *Server) Routes() {
 	e.GET("/", s.Root)
 	e.GET("/healthz", s.HealthzLiveness)
 	e.GET("/healthz/liveness", s.HealthzLiveness)
+	e.GET("/v1", s.V1Root)
 	e.GET("/v1/zonepop/endpoints/forward", s.ZonePopEndpoints)
 	e.GET("/v1/dns-records", s.IndexDNSRecords)
 	e.POST("/v1/dns-records", s.UpsertDNSRecords)
@@ -44,6 +47,30 @@ func (s *Server) Root(c echo.Context) error {
 	_, span := telemetry.Tracer.Start(
 		c.Request().Context(),
 		"shimiko/server.Server.Root",
+	)
+	defer span.End()
+
+	file, err := static.Files.Open("index.html")
+	if err != nil {
+		span.SetStatus(codes.Error, err.Error())
+		return c.NoContent(http.StatusNotFound)
+	}
+	defer file.Close()
+
+	seeker, ok := file.(io.ReadSeeker)
+	if !ok {
+		span.SetStatus(codes.Error, "embedded file does not implement io.ReadSeeker")
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	span.SetStatus(codes.Ok, "")
+	return c.Stream(http.StatusOK, "text/html", seeker)
+}
+
+func (s *Server) V1Root(c echo.Context) error {
+	_, span := telemetry.Tracer.Start(
+		c.Request().Context(),
+		"shimiko/server.Server.V1Root",
 	)
 	defer span.End()
 
