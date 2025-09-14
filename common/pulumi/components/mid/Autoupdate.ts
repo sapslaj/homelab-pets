@@ -69,6 +69,8 @@ export class Autoupdate extends pulumi.ComponentResource {
       connection: props.connection,
       triggers: props.triggers,
       name: "autoupdate.timer",
+      enabled: true,
+      ensure: "started",
       unit: {
         "Description": "Autoupdate",
         "Wants": "network-online.target",
