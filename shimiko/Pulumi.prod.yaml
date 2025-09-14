@@ -1,3 +1,4 @@
 encryptionsalt: v1:7Ezo/68ohMI=:v1:wZpbAfHmTomsTjHA:7iMpMurzOaxw6jAEDJlCnjb3vh99vg==
 config:
   production: true
+  aws:region: us-east-1
