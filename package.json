@@ -4,6 +4,7 @@
   "description": "Pet servers; and an attempt to make them less pet-like.",
   "devDependencies": {
     "@types/node": "^18",
+    "@types/nunjucks": "^3.2.6",
     "tsx": "^4.19.3",
     "typescript": "^5.0.0"
   },
@@ -31,6 +32,7 @@
     "@sapslaj/pulumi-mid": "^0.0.16",
     "dedent": "^1.5.3",
     "node-ssh": "^13.2.0",
+    "nunjucks": "^3.2.4",
     "yaml": "^2.7.0"
   }
 }

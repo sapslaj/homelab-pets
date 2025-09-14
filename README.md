@@ -272,6 +272,16 @@ VM inside [mitsuru](#mitsuru).
 Sometimes you just need something to do odd jobs. Trying to do it "properly"
 isn't worth it. Tohru handles this.
 
+### unifi
+
+AWS EC2 instance
+
+#### Uses
+
+##### Ubiquiti UniFi Controller
+
+Controller to [UniFi](https://ui.com/).
+
 ### uptime-kuma
 
 Vultr VM

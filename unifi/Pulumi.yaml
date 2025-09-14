@@ -1,0 +1,5 @@
+name: homelab-pets-unifi
+runtime:
+  name: nodejs
+  options:
+    packagemanager: npm
