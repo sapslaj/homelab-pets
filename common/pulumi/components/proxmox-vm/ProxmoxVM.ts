@@ -621,7 +621,12 @@ export class ProxmoxVM extends pulumi.ComponentResource {
           data,
           ...mutatedProps.userDataFileConfig?.sourceRaw,
         },
-      }, { parent: this });
+      }, {
+        parent: this,
+        ignoreChanges: [
+          "sourceRaw.data",
+        ],
+      });
       config.initialization = {
         userDataFileId: this.userDataFile.id,
         ...config.initialization,
