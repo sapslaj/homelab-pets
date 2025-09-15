@@ -487,10 +487,11 @@ const garmProviderAWSInstall = new mid.resource.Exec("garm-provider-aws-install"
       "-c",
       `
         set -euo pipefail
-        test ! -d garm-provider-aws && git clone https://github.com/cloudbase/garm-provider-aws
+        rm -rf garm-provider-aws
+        test ! -d garm-provider-aws && git clone https://github.com/sapslaj/garm-provider-aws
         cd garm-provider-aws
-        git fetch
-        git checkout e2b0aee740113d30aa004fd2e63a225cd8ee1bbe
+        git switch gzip-for-linux
+        git pull
         go build .
         systemctl stop garm.service || true
         cp garm-provider-aws /usr/local/bin/garm-provider-aws
@@ -503,8 +504,8 @@ const garmProviderAWSInstall = new mid.resource.Exec("garm-provider-aws-install"
       "-c",
       `
         set -euo pipefail
-        rm -f /usr/local/bin/garm-provider-incus
-        rm -rf garm-provider-incus
+        rm -f /usr/local/bin/garm-provider-aws
+        rm -rf garm-provider-aws
       `,
     ],
   },
@@ -839,6 +840,30 @@ new kubernetes.apiextensions.CustomResource("garm-ingressroute", {
             namespace: ipAllowListMiddleware.metadata.namespace,
           },
         ],
+        services: [
+          {
+            kind: kubernetesService.kind,
+            namespace: kubernetesService.metadata.namespace,
+            name: kubernetesService.metadata.name,
+            port: 9997,
+          },
+        ],
+      },
+      {
+        kind: "Rule",
+        match: "Host(`garm.sapslaj.xyz`) && PathPrefix(`/api/v1/callbacks`)",
+        services: [
+          {
+            kind: kubernetesService.kind,
+            namespace: kubernetesService.metadata.namespace,
+            name: kubernetesService.metadata.name,
+            port: 9997,
+          },
+        ],
+      },
+      {
+        kind: "Rule",
+        match: "Host(`garm.sapslaj.xyz`) && PathPrefix(`/api/v1/metadata`)",
         services: [
           {
             kind: kubernetesService.kind,
