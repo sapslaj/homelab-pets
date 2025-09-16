@@ -14,8 +14,7 @@ export const defaultUsers: Record<string, UserDefinition> = {
     enabled: true,
     name: "sapslaj",
     password: "$y$j9T$r7CWaFZ5qBQPTwd7HoJPJ0$fiOZxuOs8Vr3oQXjK2rXzE7NxnNZ/V/O6Bi2a0axqG5",
-    sshKey:
-      "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDALIs2j0FT1nlmRdIoaGt+gzyn8iOgHDQS1lg5ivSYDpU3tKsLQgFB9l+q0zB0hODNaVSiJfekMi43gkULnUf20g5M0ysAgjowDKIeGsFQIKWifO9J7aXSEdAaupIcPDZt8oWqJysxqpxL5pICbQzU1+f7yk2L8bC5rd1mQGgoDWvRkwUCtAdL5pGndDpZ7xke2eYvTwglDEjr32F0zQf1u2t7XNGWPJhIbvvipEsRZY68W0HAgNKo3qWA/Q2jdbFvgNWXeEvvHKT+13exjhZrXFUaA3XCkZx0WZanCn5MMShENhVgn01HGGrKOLCm5jk49lJIesYHRkYfx5PzZT6B saps.laj@gmail.com",
+    sshKey: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEmyx5be02T6JbXdsamTbMLPgWV0s7XXtca5tARft4NT saps.laj@gmail.com",
   },
   ci: {
     enabled: true,
