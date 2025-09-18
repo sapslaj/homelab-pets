@@ -402,7 +402,6 @@ const garmProviderIncusInstall = new mid.resource.Exec("garm-provider-incus-inst
         git fetch
         git checkout bfb551e585cb0d79bc5b47352bd9cf00cff5b921
         go build .
-        systemctl stop garm.service || true
         cp garm-provider-incus /usr/local/bin/garm-provider-incus
       `,
     ],
@@ -493,7 +492,6 @@ const garmProviderAWSInstall = new mid.resource.Exec("garm-provider-aws-install"
         git switch gzip-for-linux
         git pull
         go build .
-        systemctl stop garm.service || true
         cp garm-provider-aws /usr/local/bin/garm-provider-aws
       `,
     ],
@@ -574,7 +572,6 @@ const garmProviderK8sInstall = new mid.resource.Exec("garm-provider-k8s-install"
         mkdir -p garm-provider-k8s
         cd garm-provider-k8s
         wget -q -O - https://github.com/mercedes-benz/garm-provider-k8s/releases/download/v0.3.2/garm-provider-k8s_Linux_x86_64.tar.gz | tar xzf -
-        systemctl stop garm.service || true
         cp garm-provider-k8s /usr/local/bin/garm-provider-k8s
       `,
     ],
@@ -712,11 +709,12 @@ const garmInstall = new mid.resource.Exec("garm-install", {
         test ! -d garm && git clone https://github.com/cloudbase/garm
         cd garm
         git fetch
-        git checkout 7b0046b614c803e328b051ee8c41e7bffe804c43
+        git checkout 57aff41b4162a5d0537fff11184085617b72a071
         make clean build
         systemctl stop garm.service || true
         cp bin/garm /usr/local/bin/garm
         cp bin/garm-cli /usr/local/bin/garm-cli
+        systemctl start garm.service || true
       `,
     ],
   },
