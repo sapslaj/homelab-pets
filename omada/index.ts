@@ -8,6 +8,7 @@ import { BaselineUsers } from "../common/pulumi/components/mid/BaselineUsers";
 import { MidTarget } from "../common/pulumi/components/mid/MidTarget";
 import { PrometheusNodeExporter } from "../common/pulumi/components/mid/PrometheusNodeExporter";
 import { Vector } from "../common/pulumi/components/mid/Vector";
+import { Swap } from "../common/pulumi/components/mid/Swap";
 
 const production = pulumi.getStack() === "prod";
 
@@ -29,7 +30,7 @@ const instance = new EC2Instance("omada", {
     attachDefaultPolicies: true,
   },
   instance: {
-    instanceType: "t3a.medium",
+    instanceType: "t3a.small",
     vpcSecurityGroupIds: [
       "sg-0e3ce83256d914c98", // CI
       "sg-0f21c10c93a07ea5c", // ServerAdmin
@@ -130,6 +131,15 @@ new Vector("omada-vector", {}, {
 });
 
 new Autoupdate("autoupdate", {}, {
+  deletedWith: instance.instance,
+  providers: {
+    mid: provider,
+  },
+});
+
+new Swap("swap", {
+  swappiness: 10,
+}, {
   deletedWith: instance.instance,
   providers: {
     mid: provider,
