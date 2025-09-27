@@ -9,6 +9,7 @@ import { BaselineUsers } from "../common/pulumi/components/mid/BaselineUsers";
 import { MidTarget } from "../common/pulumi/components/mid/MidTarget";
 import { PrometheusNodeExporter } from "../common/pulumi/components/mid/PrometheusNodeExporter";
 import { Vector } from "../common/pulumi/components/mid/Vector";
+import { Swap } from "../common/pulumi/components/mid/Swap";
 
 const production = pulumi.getStack() === "prod";
 
@@ -155,6 +156,15 @@ new Vector("vector", {}, {
 });
 
 new Autoupdate("autoupdate", {}, {
+  deletedWith: instance.instance,
+  providers: {
+    mid: provider,
+  },
+});
+
+new Swap("swap", {
+  swappiness: 10,
+}, {
   deletedWith: instance.instance,
   providers: {
     mid: provider,
