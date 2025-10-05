@@ -709,7 +709,7 @@ const garmInstall = new mid.resource.Exec("garm-install", {
         test ! -d garm && git clone https://github.com/cloudbase/garm
         cd garm
         git fetch
-        git checkout 57aff41b4162a5d0537fff11184085617b72a071
+        git checkout 76f538ffb3861fd14803eb54e91a5f65d5ff201b
         make clean build
         systemctl stop garm.service || true
         cp bin/garm /usr/local/bin/garm
