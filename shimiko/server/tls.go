@@ -207,6 +207,10 @@ func GetOrGenerateACMECert(ctx context.Context, filename string, config *LegoCer
 
 	logger.InfoContext(ctx, "generating new certificate")
 	dns01.SetIPv4Only()
+	dns01.AddRecursiveNameservers([]string{
+		"8.8.8.8:53",
+		"8.8.4.4:53",
+	})(nil)
 	legoConfig := lego.NewConfig(config)
 
 	legoConfig.CADirURL = config.ACMEUrl
@@ -220,7 +224,7 @@ func GetOrGenerateACMECert(ctx context.Context, filename string, config *LegoCer
 	legoDNSProvider, err := legoroute53.NewDNSProviderConfig(&legoroute53.Config{
 		HostedZoneID:             config.Route53HostedZoneID,
 		MaxRetries:               5,
-		WaitForRecordSetsChanged: true,
+		WaitForRecordSetsChanged: false,
 		TTL:                      10,
 		PropagationTimeout:       2 * time.Minute,
 		PollingInterval:          4 * time.Second,
