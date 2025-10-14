@@ -242,7 +242,7 @@ const shimikoService = new SystemdUnit("shimiko-server.service", {
     "WorkingDirectory": varShimiko.path,
     "ExecStart": pulumi.interpolate`${shimikoBinary.path} server`,
     "Restart": "always",
-    "RestartSec": "1",
+    "RestartSec": "60",
   },
   install: {
     "WantedBy": "multi-user.target",
