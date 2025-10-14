@@ -12,6 +12,7 @@ import (
 	"regexp"
 	"slices"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/ganawaj/go-vyos/vyos"
@@ -117,7 +118,9 @@ type Server struct {
 	Logger *slog.Logger
 	DB     *gorm.DB
 
-	ReconcileInterval time.Duration
+	OnDemandReconcileAll           atomic.Bool
+	OnDemandReconcileAllInProgress atomic.Bool
+	ReconcileInterval              time.Duration
 
 	HTTPPort    int
 	HTTPSPort   int
@@ -295,6 +298,39 @@ func RunServer(s *Server) error {
 	}
 
 	go func() {
+		for range time.Tick(time.Second) {
+			if !s.OnDemandReconcileAll.Load() {
+				continue
+			}
+
+			s.OnDemandReconcileAllInProgress.Store(true)
+			s.OnDemandReconcileAll.Store(false)
+
+			ctx := context.Background()
+
+			logger.InfoContext(ctx, "starting on-demand record reconcile")
+
+			err := s.ReconcileAll(ctx)
+			if err == nil {
+				logger.InfoContext(ctx, "finished on-demand record reconcile with no errors")
+			} else {
+				logger.WarnContext(ctx, "finished on-demand record reconcile with errors", "error", err)
+			}
+
+			if vyosClient != nil {
+				err = s.ReconcilePublicIP(ctx, vyosClient)
+				if err == nil {
+					logger.InfoContext(ctx, "finished on-demand public IP reconcile with no errors")
+				} else {
+					logger.WarnContext(ctx, "finished on-demand public IP reconcile with errors", "error", err)
+				}
+			}
+
+			s.OnDemandReconcileAllInProgress.Store(false)
+		}
+	}()
+
+	go func() {
 		if s.ReconcileInterval == 0 {
 			logger.Info("reconcile interval is 0, reconciliation disabled")
 			return
@@ -312,23 +348,37 @@ func RunServer(s *Server) error {
 		}
 
 		if vyosClient != nil {
-			s.ReconcilePublicIP(ctx, vyosClient)
+			err = s.ReconcilePublicIP(ctx, vyosClient)
+			if err == nil {
+				logger.InfoContext(ctx, "finished initial public IP reconcile with no errors")
+			} else {
+				logger.WarnContext(ctx, "finished initial public IP reconcile with errors", "error", err)
+			}
 		}
 
 		for range time.Tick(s.ReconcileInterval) {
 			ctx := context.Background()
+			if s.OnDemandReconcileAllInProgress.Load() {
+				logger.InfoContext(ctx, "detected on-demand record reconcile, skipping scheduled record reconcile")
+				continue
+			}
 
-			logger.InfoContext(ctx, "starting record reconcile")
+			logger.InfoContext(ctx, "starting scheduled record reconcile")
 
 			err := s.ReconcileAll(ctx)
 			if err == nil {
-				logger.InfoContext(ctx, "finished record reconcile with no errors")
+				logger.InfoContext(ctx, "finished scheduled record reconcile with no errors")
 			} else {
-				logger.WarnContext(ctx, "finished record reconcile with errors", "error", err)
+				logger.WarnContext(ctx, "finished scheduled record reconcile with errors", "error", err)
 			}
 
 			if vyosClient != nil {
-				s.ReconcilePublicIP(ctx, vyosClient)
+				err = s.ReconcilePublicIP(ctx, vyosClient)
+				if err == nil {
+					logger.InfoContext(ctx, "finished scheduled public IP reconcile with no errors")
+				} else {
+					logger.WarnContext(ctx, "finished scheduled public IP reconcile with errors", "error", err)
+				}
 			}
 		}
 	}()

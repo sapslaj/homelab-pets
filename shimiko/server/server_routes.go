@@ -262,6 +262,10 @@ func (s *Server) UpsertDNSRecords(c echo.Context) error {
 		response.Error = err.Error()
 	}
 
+	if ps.Shallow {
+		s.OnDemandReconcileAll.Store(true)
+	}
+
 	var statusCode int
 	if hasError {
 		statusCode = 500
@@ -364,6 +368,10 @@ func (s *Server) DeleteDNSRecords(c echo.Context) error {
 		)
 		hasError = true
 		response.Error = err.Error()
+	}
+
+	if ps.Shallow {
+		s.OnDemandReconcileAll.Store(true)
 	}
 
 	var statusCode int
@@ -538,6 +546,10 @@ func (s *Server) UpsertDNSRecord(c echo.Context) error {
 		})
 	}
 
+	if ps.Shallow {
+		s.OnDemandReconcileAll.Store(true)
+	}
+
 	span.SetStatus(codes.Ok, "")
 	return c.JSON(200, responseResultType{
 		Record: body.Record,
@@ -610,6 +622,10 @@ func (s *Server) DeleteDNSRecord(c echo.Context) error {
 			Status: "ERROR",
 			Error:  err.Error(),
 		})
+	}
+
+	if ps.Shallow {
+		s.OnDemandReconcileAll.Store(true)
 	}
 
 	span.SetStatus(codes.Ok, "")
@@ -820,6 +836,10 @@ func (s *Server) AcmeDNSUpdate(c echo.Context) error {
 			"status": "ERROR",
 			"error":  err.Error(),
 		})
+	}
+
+	if ps.Shallow {
+		s.OnDemandReconcileAll.Store(true)
 	}
 
 	logger.InfoContext(ctx, "acme-dns: updated record")
