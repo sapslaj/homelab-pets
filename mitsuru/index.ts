@@ -1,12 +1,6 @@
 import * as fs from "fs";
-import * as os from "os";
-import * as path from "path";
 
-import * as aws from "@pulumi/aws";
-import * as pulumi from "@pulumi/pulumi";
-import * as random from "@pulumi/random";
 import * as mid from "@sapslaj/pulumi-mid";
-import * as YAML from "yaml";
 
 import { getSecretValue, getSecretValueOutput } from "../common/pulumi/components/infisical";
 import { Autoupdate } from "../common/pulumi/components/mid/Autoupdate";
@@ -23,9 +17,11 @@ import { yamlencode } from "../common/pulumi/components/std";
 const connection: mid.types.input.ConnectionArgs = {
   host: "mitsuru.sapslaj.xyz",
   port: 22,
-  user: os.userInfo().username,
-  // TODO: fix SSH agent in CI
-  privateKey: fs.readFileSync(path.join(os.userInfo().homedir, ".ssh", "id_rsa"), { encoding: "utf8" }),
+  user: "ci",
+  privateKey: getSecretValueOutput({
+    folder: "/ci",
+    key: "SSH_PRIVATE_KEY",
+  }),
 };
 
 const midTarget = new MidTarget("mitsuru", {
