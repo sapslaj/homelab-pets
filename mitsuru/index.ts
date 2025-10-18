@@ -4,9 +4,11 @@ import * as path from "path";
 
 import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
+import * as random from "@pulumi/random";
 import * as mid from "@sapslaj/pulumi-mid";
+import * as YAML from "yaml";
 
-import { getSecretValue } from "../common/pulumi/components/infisical";
+import { getSecretValue, getSecretValueOutput } from "../common/pulumi/components/infisical";
 import { Autoupdate } from "../common/pulumi/components/mid/Autoupdate";
 import { BaselineUsers } from "../common/pulumi/components/mid/BaselineUsers";
 import { MidTarget } from "../common/pulumi/components/mid/MidTarget";
@@ -16,6 +18,7 @@ import { Rclone } from "../common/pulumi/components/mid/Rclone";
 import { RsyncBackup } from "../common/pulumi/components/mid/RsyncBackup";
 import { SystemdUnit } from "../common/pulumi/components/mid/SystemdUnit";
 import { Vector } from "../common/pulumi/components/mid/Vector";
+import { yamlencode } from "../common/pulumi/components/std";
 
 const connection: mid.types.input.ConnectionArgs = {
   host: "mitsuru.sapslaj.xyz",
@@ -47,6 +50,14 @@ new PrometheusNodeExporter("mitsuru", {
 
 new Vector("mitsuru", {
   connection,
+  sources: {
+    metrics_pve: {
+      type: "prometheus_scrape",
+      endpoints: ["http://localhost:9221/metrics"],
+      scrape_interval_secs: 60,
+      scrape_timeout_secs: 45,
+    },
+  },
 }, {
   dependsOn: [
     midTarget,
@@ -59,6 +70,69 @@ new Autoupdate("mitsuru", {
 }, {
   dependsOn: [
     midTarget,
+  ],
+});
+
+const pveExporterConfig = new mid.resource.File("/etc/pve_exporter.yaml", {
+  connection,
+  path: "/etc/pve_exporter.yaml",
+  mode: "600",
+  content: yamlencode({
+    default: {
+      user: "monitoring@pve",
+      password: getSecretValueOutput({
+        key: "proxmox-monitoring-user-password",
+      }),
+      verify_ssl: false,
+    },
+  }),
+}, {
+  dependsOn: [
+    midTarget,
+  ],
+});
+
+const pveExporterBinary = new mid.resource.File("/usr/local/bin/pve_exporter", {
+  connection,
+  path: "/usr/local/bin/pve_exporter",
+  remoteSource:
+    "https://git.sapslaj.cloud/sapslaj/prometheus-pve-exporter-go/releases/download/v1.0.1/prometheus-pve-exporter-go_Linux_x86_64",
+  mode: "a+x",
+}, {
+  dependsOn: [
+    midTarget,
+  ],
+});
+
+const pveExporterService = new SystemdUnit("pve_exporter.service", {
+  connection,
+  triggers: {
+    refresh: [
+      pveExporterConfig.triggers.lastChanged,
+      pveExporterBinary.triggers.lastChanged,
+    ],
+  },
+  name: "pve_exporter.service",
+  ensure: "started",
+  enabled: true,
+  unit: {
+    Description: "Prometheus Proxmox exporter",
+    After: "network-online.target",
+  },
+  service: {
+    Type: "simple",
+    ExecStart: "/usr/local/bin/pve_exporter --config.file=/etc/pve_exporter.yaml --target.default=localhost:8006",
+    SyslogIdentifier: "pve_exporter",
+    Restart: "always",
+    RestartSec: "1",
+  },
+  install: {
+    WantedBy: "multi-user.target",
+  },
+}, {
+  dependsOn: [
+    pveExporterConfig,
+    pveExporterBinary,
   ],
 });
 
