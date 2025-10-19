@@ -1,0 +1,5 @@
+name: homelab-pets-aws-ingress
+runtime:
+  name: nodejs
+  options:
+    packagemanager: npm
