@@ -207,14 +207,21 @@ const shimikoEnv = new mid.resource.File("/etc/sysconfig/shimiko.env", {
       SHIMIKO_ACME_EMAIL: "alerts@sapslaj.com",
       SHIMIKO_ACME_URL: acmeURL,
       SHIMIKO_CERT_DOMAINS: production ? "shimiko.sapslaj.xyz" : dnsRecord.fullname,
+      SHIMIKO_FAILOVER_IPS: "98.87.108.43", // FIXME: should this be hardcoded?
       SHIMIKO_HTTPS_PORT: "443",
       SHIMIKO_HTTP_PORT: "80",
       SHIMIKO_RECONCILE_INTERVAL: production ? "1h" : "0s",
       VYOS_API_TOKEN: getSecretValueOutput({
         key: "vyos-api-token",
       }),
-      VYOS_PASSWORD: process.env.VYOS_PASSWORD, // FIXME: don't do this.
-      VYOS_USERNAME: process.env.VYOS_USERNAME, // FIXME: don't do this.
+      VYOS_PASSWORD: getSecretValueOutput({
+        key: "VYOS_PASSWORD",
+        folder: "/ci",
+      }),
+      VYOS_USERNAME: getSecretValueOutput({
+        key: "VYOS_USERNAME",
+        folder: "/ci",
+      }),
     }).map(([key, value]) => {
       return pulumi.concat(key, "='", value, "'\n");
     }),
@@ -305,8 +312,14 @@ const zonepopEnv = new mid.resource.File("/etc/sysconfig/zonepop.env", {
       AWS_ACCESS_KEY_ID: iamKeyZonepop.id,
       AWS_SECRET_ACCESS_KEY: iamKeyZonepop.secret,
       VYOS_HOST: "yor.sapslaj.xyz",
-      VYOS_USERNAME: process.env.VYOS_USERNAME, // FIXME: don't do this.
-      VYOS_PASSWORD: process.env.VYOS_PASSWORD, // FIXME: don't do this.
+      VYOS_PASSWORD: getSecretValueOutput({
+        key: "VYOS_PASSWORD",
+        folder: "/ci",
+      }),
+      VYOS_USERNAME: getSecretValueOutput({
+        key: "VYOS_USERNAME",
+        folder: "/ci",
+      }),
     }).map(([key, value]) => {
       return pulumi.concat(key, "='", value, "'\n");
     }),

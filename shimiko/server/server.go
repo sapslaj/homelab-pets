@@ -684,53 +684,115 @@ func (s *Server) ReconcilePublicIP(ctx context.Context, client *vyos.Client) err
 
 	logger := s.Logger.With("subsystem", "reconcile")
 
-	show, _, err := client.Show.Do(ctx, "interfaces ethernet eth13 brief")
+	showWanLB, _, err := client.Show.Do(ctx, "wan-load-balance")
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 		return err
 	}
 
-	if !show.Success {
-		err = fmt.Errorf("could not get eth13 interface status")
+	if !showWanLB.Success {
+		err = fmt.Errorf("could not get WAN load-balancing status")
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 		return err
 	}
 
-	ips := []net.IP{}
-	for line := range strings.SplitSeq(show.Data.(string), "\n") {
-		fields := strings.Fields(line)
-		if len(fields) == 0 {
+	var status string
+
+	showWanLBLines := strings.Split(showWanLB.Data.(string), "\n")
+	for i := range showWanLBLines {
+		if !strings.Contains(showWanLBLines[i], "Interface: eth13") {
 			continue
 		}
-		field := -1
-		if len(fields) == 1 && len(ips) > 0 {
-			field = 0
-		} else if fields[0] == "eth13" {
-			field = 1
+		_, err := fmt.Sscanf(showWanLBLines[i+1], "Status: %s", &status)
+		if err != nil {
+			err = fmt.Errorf("could not get WAN load-balancing status for eth13: %w", err)
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
+			return err
 		}
-		if field == -1 {
-			continue
+		if status == "" {
+			err = fmt.Errorf("could not get WAN load-balancing status for eth13")
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
+			return err
 		}
-		ip, _, err := net.ParseCIDR(fields[field])
+		break
+	}
+
+	failoverIPs, err := env.Get[string]("SHIMIKO_FAILOVER_IPS")
+	if err != nil {
+		err = fmt.Errorf("could not get failover IP addresses: %w", err)
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		return err
+	}
+
+	addresses := []string{}
+
+	if status == "active" {
+		showInterface, _, err := client.Show.Do(ctx, "interfaces ethernet eth13 brief")
 		if err != nil {
 			span.RecordError(err)
 			span.SetStatus(codes.Error, err.Error())
 			return err
 		}
-		ips = append(ips, ip)
-	}
 
-	addresses := []string{}
-	for _, ip := range ips {
-		if !ip.IsPrivate() {
-			addresses = append(addresses, ip.String())
+		if !showInterface.Success {
+			err = fmt.Errorf("could not get eth13 interface status")
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
+			return err
 		}
-	}
 
-	if len(addresses) == 0 {
-		err = fmt.Errorf("could not detect public IP address from eth13")
+		ips := []net.IP{}
+		for line := range strings.SplitSeq(showInterface.Data.(string), "\n") {
+			fields := strings.Fields(line)
+			if len(fields) == 0 {
+				continue
+			}
+			field := -1
+			if len(fields) == 1 && len(ips) > 0 {
+				field = 0
+			} else if fields[0] == "eth13" {
+				field = 1
+			}
+			if field == -1 {
+				continue
+			}
+			ip, _, err := net.ParseCIDR(fields[field])
+			if err != nil {
+				span.RecordError(err)
+				span.SetStatus(codes.Error, err.Error())
+				return err
+			}
+			ips = append(ips, ip)
+		}
+
+		for _, ip := range ips {
+			if !ip.IsPrivate() {
+				addresses = append(addresses, ip.String())
+			}
+		}
+
+		if len(addresses) == 0 {
+			err = fmt.Errorf("could not detect public IP address from eth13")
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
+			return err
+		}
+	} else if status == "failed" {
+		addresses = strings.Split(failoverIPs, ",")
+
+		if len(addresses) == 0 {
+			err = fmt.Errorf("could not get failover IP addresses")
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
+			return err
+		}
+	} else {
+		err = fmt.Errorf("unknown WAN status: %q", status)
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 		return err
