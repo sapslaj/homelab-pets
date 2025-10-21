@@ -700,6 +700,8 @@ go.opentelemetry.io/contrib/instrumentation/github.com/aws/aws-sdk-go-v2/otelaws
 go.opentelemetry.io/contrib/instrumentation/github.com/aws/aws-sdk-go-v2/otelaws v0.63.0/go.mod h1:wIvTiRUU7Pbfqas/5JVjGZcftBeSAGSYVMOHWzWG0qE=
 go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho v0.62.0 h1:b3/7WwVpLaIBTXHz6vp04idQOu02K0MFrkhF2ls7DbQ=
 go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho v0.62.0/go.mod h1:aHqs9aFRWZBvil6ClpaKd/+bZ+o30+Q7xjcgMaSvuRw=
+go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho v0.63.0 h1:6YeICKmGrvgJ5th4+OMNpcuoB6q/Xs8gt0YCO7MUv1k=
+go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho v0.63.0/go.mod h1:ZEA7j2B35siNV0T00aapacNzjz4tvOlNoHp0ncCfwNQ=
 go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.59.0 h1:CV7UdSGJt/Ao6Gp4CXckLxVRRsRgDHoI8XjbL3PDl8s=
 go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.59.0/go.mod h1:FRmFuRJfag1IZ2dPkHnEoSFVgTVPUd2qf5Vi69hLb8I=
 go.opentelemetry.io/contrib/propagators/b3 v1.37.0 h1:0aGKdIuVhy5l4GClAjl72ntkZJhijf2wg1S7b5oLoYA=
