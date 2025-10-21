@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-iam": "^3.879.0",
-    "@ediri/vultr": "2.26.0",
+    "@ediri/vultr": "2.27.1",
     "@iarna/toml": "^2.2.5",
     "@muhlba91/pulumi-proxmoxve": "^7.0.0",
     "@nodesecure/fs-walk": "^2.0.0",
