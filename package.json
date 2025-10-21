@@ -21,7 +21,7 @@
     "@pulumi/kubernetes": "^4.23.0",
     "@pulumi/pulumi": "^3.113.0",
     "@pulumi/random": "^4.16.8",
-    "@pulumi/std": "^1.7.3",
+    "@pulumi/std": "^2.0.0",
     "@pulumi/tailscale": "^0.22.0",
     "@pulumi/tls": "^5.0.10",
     "@pulumiverse/time": "^0.1.1",
