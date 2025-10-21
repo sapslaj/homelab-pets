@@ -10,6 +10,7 @@ export interface AutoupdateProps {
   onCalendar?: string;
   randomizedDelaySec?: number;
   fixedRandomDelay?: boolean;
+  allowReleaseinfoChange?: boolean;
 }
 
 export class Autoupdate extends pulumi.ComponentResource {
@@ -23,8 +24,14 @@ export class Autoupdate extends pulumi.ComponentResource {
     const onCalendar = props.onCalendar ?? "Tue *-*-* 10:00:00 UTC";
     const randomizedDelaySec = props.randomizedDelaySec ?? 3600;
 
+    let aptUpdate = "/usr/bin/apt-get update";
+
+    if (props.allowReleaseinfoChange) {
+      aptUpdate += " --allow-releaseinfo-change";
+    }
+
     const execStart: string[] = [
-      "/usr/bin/apt-get update",
+      aptUpdate,
       "/usr/bin/apt-get full-upgrade -q -y --autoremove",
     ];
 

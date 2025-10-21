@@ -221,7 +221,9 @@ new Vector("unifi-vector", {}, {
   ],
 });
 
-new Autoupdate("unifi-autoupdate", {}, {
+new Autoupdate("unifi-autoupdate", {
+  allowReleaseinfoChange: true,
+}, {
   deletedWith: instance.instance,
   providers: {
     mid: provider,
