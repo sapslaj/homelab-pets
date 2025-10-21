@@ -28,8 +28,8 @@ require (
 	go.opentelemetry.io/otel/sdk v1.38.0
 	go.opentelemetry.io/otel/trace v1.38.0
 	golang.org/x/crypto v0.43.0
-	gorm.io/driver/sqlite v1.5.7
-	gorm.io/gorm v1.30.0
+	gorm.io/driver/sqlite v1.6.0
+	gorm.io/gorm v1.31.0
 	gorm.io/plugin/opentelemetry v0.1.16
 )
 
