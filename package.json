@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "description": "Pet servers; and an attempt to make them less pet-like.",
   "devDependencies": {
-    "@types/node": "^18",
+    "@types/node": "^24.0.0",
     "@types/nunjucks": "^3.2.6",
     "tsx": "^4.19.3",
     "typescript": "^5.0.0"
