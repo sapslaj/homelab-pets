@@ -67,7 +67,7 @@ jobs:
         go-version: ^1.24
     - uses: pulumi/actions@v6
       with:
-        command: up
+        command: ${{ github.ref_name == 'main' && 'up' || 'preview' }}
         stack-name: prod
         cloud-url: 
           s3://sapslaj-tf-state?region=us-east-1&awssdk=v2&profile=pulumi-state
