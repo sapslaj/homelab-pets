@@ -62,7 +62,7 @@ jobs:
         region=us-east-1
         output=json
         EOF
-    - uses: actions/setup-go@v5
+    - uses: actions/setup-go@v6
       with:
         go-version: ^1.24
     - uses: pulumi/actions@v6
