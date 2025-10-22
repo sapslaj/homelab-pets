@@ -17,7 +17,7 @@ require (
 	github.com/go-slog/otelslog v0.3.0
 	github.com/labstack/echo-contrib v0.17.4
 	github.com/labstack/echo/v4 v4.13.4
-	github.com/ncruces/go-strftime v0.1.10
+	github.com/ncruces/go-strftime v1.0.0
 	github.com/spf13/cobra v1.10.1
 	github.com/stretchr/testify v1.11.1
 	go.opentelemetry.io/contrib/instrumentation/github.com/aws/aws-sdk-go-v2/otelaws v0.63.0
