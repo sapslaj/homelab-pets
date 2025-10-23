@@ -24,6 +24,7 @@ ENV = {
     "CLOUDFLARE_API_KEY": "${{ secrets.CLOUDFLARE_API_KEY }}",
     "CLOUDFLARE_EMAIL": "${{ secrets.CLOUDFLARE_EMAIL }}",
     "GH_ACTIONS_READ_TOKEN": "${{ secrets.GH_ACTIONS_READ_TOKEN }}",
+    "GITHUB_TOKEN": "${{ secrets.GH_ACTIONS_ADMIN_GITHUB_TOKEN }}",
     "INFISICAL_API_URL": "https://infisical.sapslaj.cloud/api",
     "INFISICAL_CLIENT_ID": "${{ secrets.INFISICAL_CLIENT_ID }}",
     "INFISICAL_CLIENT_SECRET": "${{ secrets.INFISICAL_CLIENT_SECRET }}",

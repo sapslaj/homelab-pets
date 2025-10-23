@@ -19,6 +19,7 @@ env:
   CLOUDFLARE_API_KEY: ${{ secrets.CLOUDFLARE_API_KEY }}
   CLOUDFLARE_EMAIL: ${{ secrets.CLOUDFLARE_EMAIL }}
   GH_ACTIONS_READ_TOKEN: ${{ secrets.GH_ACTIONS_READ_TOKEN }}
+  GITHUB_TOKEN: ${{ secrets.GH_ACTIONS_ADMIN_GITHUB_TOKEN }}
   INFISICAL_API_URL: https://infisical.sapslaj.cloud/api
   INFISICAL_CLIENT_ID: ${{ secrets.INFISICAL_CLIENT_ID }}
   INFISICAL_CLIENT_SECRET: ${{ secrets.INFISICAL_CLIENT_SECRET }}
@@ -50,11 +51,11 @@ jobs:
     - uses: actions/cache@v4
       with:
         path: ~/.pulumi/dynamic_tf_plugins
-        key: pulumi-dynamic-tf-plugins-${{ hashFiles('package-lock.json') }}
+        key: pulumi-dynamic-tf-plugins
     - uses: actions/cache@v4
       with:
         path: ~/.pulumi/plugins
-        key: pulumi-plugins-${{ hashFiles('package-lock.json') }}
+        key: pulumi-plugins
     - run: npm ci --ignore-scripts
     - name: Create pulumi-state AWS profile
       shell: bash
