@@ -61,7 +61,14 @@ export function getGoarchOutput(
 }
 
 export async function latestGithubRelease(repo: string): Promise<string> {
-  return fetch(`https://api.github.com/repos/${repo}/releases/latest`)
+  const headers: HeadersInit = {};
+  if (process.env.GITHUB_TOKEN) {
+    headers["Authorization"] = `Bearer ${process.env.GITHUB_TOKEN}`;
+  }
+
+  return fetch(`https://api.github.com/repos/${repo}/releases/latest`, {
+    headers,
+  })
     .then((res) => res.json())
     .then((res) => res["tag_name"]);
 }

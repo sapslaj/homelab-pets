@@ -131,7 +131,6 @@ class Job extends pulumi.ComponentResource {
         Type: "oneshot",
         User: "ci",
         Group: "ci",
-        StandardOut: "journal",
         ...props.service,
       },
       install: {
@@ -189,7 +188,7 @@ new Job("photography-rebuild", {
 new Job("playboy-backup", {
   connection: vm.connection,
   service: {
-    ExecStart: "/usr/sbin/playboy-backup.sh",
+    ExecStart: "/usr/local/sbin/playboy-backup.sh",
     Restart: "on-failure",
     RestartSec: "5min",
     WatchdogSec: "30",
@@ -203,10 +202,43 @@ new Job("playboy-backup", {
   deletedWith: vm,
   dependsOn: [
     vm,
-    new mid.resource.File("/usr/sbin/playboy-backup.sh", {
+    new mid.resource.File("/usr/local/sbin/playboy-backup.sh", {
       connection: vm.connection,
-      path: "/usr/sbin/playboy-backup.sh",
-      content: fs.readFileSync("./playboy-backup.sh", { encoding: "utf8" }),
+      path: "/usr/local/sbin/playboy-backup.sh",
+      content: fs.readFileSync("./sbin/playboy-backup.sh", { encoding: "utf8" }),
+      mode: "a+rx",
+    }, {
+      deletedWith: vm,
+      dependsOn: [
+        ciSSHKey,
+        nas,
+        vm,
+      ],
+    }),
+  ],
+});
+
+new Job("uptime-kuma-backup", {
+  connection: vm.connection,
+  service: {
+    ExecStart: "/usr/local/sbin/uptime-kuma-backup.sh",
+    Restart: "on-failure",
+    RestartSec: "5min",
+    WatchdogSec: "30",
+  },
+  timer: {
+    OnCalendar: "daily",
+    RandomizedDelaySec: "1800",
+    FixedRandomDelay: "true",
+  },
+}, {
+  deletedWith: vm,
+  dependsOn: [
+    vm,
+    new mid.resource.File("/usr/sbin/uptime-kuma-backup.sh", {
+      connection: vm.connection,
+      path: "/usr/local/sbin/uptime-kuma-backup.sh",
+      content: fs.readFileSync("./sbin/uptime-kuma-backup.sh", { encoding: "utf8" }),
       mode: "a+rx",
     }, {
       deletedWith: vm,
