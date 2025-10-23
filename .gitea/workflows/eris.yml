@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     paths:
-    - .github/workflows/eris.yml
+    - .gitea/workflows/eris.yml
     - common/pulumi/**
     - eris/**
 

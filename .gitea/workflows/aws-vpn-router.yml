@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     paths:
-    - .github/workflows/aws-vpn-router.yml
+    - .gitea/workflows/aws-vpn-router.yml
     - common/pulumi/**
     - aws-vpn-router/**
 

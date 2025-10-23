@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     paths:
-    - .github/workflows/shimiko.yml
+    - .gitea/workflows/shimiko.yml
     - common/pulumi/**
     - shimiko/**
 

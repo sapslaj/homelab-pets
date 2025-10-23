@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     paths:
-    - .github/workflows/miyabi.yml
+    - .gitea/workflows/miyabi.yml
     - common/pulumi/**
     - miyabi/**
 

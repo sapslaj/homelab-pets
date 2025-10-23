@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     paths:
-    - .github/workflows/playboy.yml
+    - .gitea/workflows/playboy.yml
     - common/pulumi/**
     - playboy/**
 

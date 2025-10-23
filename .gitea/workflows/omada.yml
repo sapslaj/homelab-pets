@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     paths:
-    - .github/workflows/omada.yml
+    - .gitea/workflows/omada.yml
     - common/pulumi/**
     - omada/**
 

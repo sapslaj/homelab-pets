@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     paths:
-    - .github/workflows/tohru.yml
+    - .gitea/workflows/tohru.yml
     - common/pulumi/**
     - tohru/**
 

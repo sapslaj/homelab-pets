@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     paths:
-    - .github/workflows/koyuki.yml
+    - .gitea/workflows/koyuki.yml
     - common/pulumi/**
     - koyuki/**
 

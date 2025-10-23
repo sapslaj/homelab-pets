@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     paths:
-    - .github/workflows/aws-ingress.yml
+    - .gitea/workflows/aws-ingress.yml
     - common/pulumi/**
     - aws-ingress/**
 

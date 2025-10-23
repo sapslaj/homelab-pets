@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     paths:
-    - .github/workflows/aqua.yml
+    - .gitea/workflows/aqua.yml
     - common/pulumi/**
     - aqua/**
 

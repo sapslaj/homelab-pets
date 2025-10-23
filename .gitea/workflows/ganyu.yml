@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     paths:
-    - .github/workflows/ganyu.yml
+    - .gitea/workflows/ganyu.yml
     - common/pulumi/**
     - ganyu/**
 

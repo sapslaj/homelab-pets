@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     paths:
-    - .github/workflows/mitsuru.yml
+    - .gitea/workflows/mitsuru.yml
     - common/pulumi/**
     - mitsuru/**
 

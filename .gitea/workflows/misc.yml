@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     paths:
-    - .github/workflows/misc.yml
+    - .gitea/workflows/misc.yml
     - common/pulumi/**
     - misc/**
 

@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     paths:
-    - .github/workflows/unifi.yml
+    - .gitea/workflows/unifi.yml
     - common/pulumi/**
     - unifi/**
 

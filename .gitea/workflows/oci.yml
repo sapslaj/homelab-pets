@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     paths:
-    - .github/workflows/oci.yml
+    - .gitea/workflows/oci.yml
     - common/pulumi/**
     - oci/**
 

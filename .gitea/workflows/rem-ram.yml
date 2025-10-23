@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     paths:
-    - .github/workflows/rem-ram.yml
+    - .gitea/workflows/rem-ram.yml
     - common/pulumi/**
     - rem-ram/**
 
