@@ -11,17 +11,6 @@ const config = new pulumi.Config();
 
 const production = config.getBoolean("production");
 
-const iamUser = new aws.iam.User("misc", {
-  name: production ? "misc" : undefined,
-});
-const iamKey = new aws.iam.AccessKey("misc", {
-  user: iamUser.name,
-});
-new aws.iam.UserPolicyAttachment("misc-route53", {
-  user: iamUser.name,
-  policyArn: "arn:aws:iam::aws:policy/AmazonRoute53FullAccess",
-});
-
 const vm = new ProxmoxVM("misc", {
   name: production ? "misc" : `misc-${pulumi.getStack()}`,
   traits: [
@@ -69,6 +58,23 @@ const vm = new ProxmoxVM("misc", {
   ],
 });
 
+const golangPPA = new mid.resource.Exec("golang-ppa", {
+  connection: vm.connection,
+  create: {
+    command: [
+      "add-apt-repository",
+      "ppa:longsleep/golang-backports",
+    ],
+  },
+  delete: {
+    command: [
+      "add-apt-repository",
+      "--remove",
+      "ppa:longsleep/golang-backports",
+    ],
+  },
+});
+
 const xcaddyDeps = new mid.resource.Apt("xcaddy-deps", {
   connection: vm.connection,
   updateCache: true,
@@ -87,6 +93,7 @@ const xcaddyDeps = new mid.resource.Apt("xcaddy-deps", {
   retainOnDelete: true,
   dependsOn: [
     vm,
+    golangPPA,
   ],
 });
 
@@ -165,9 +172,6 @@ const caddyEnv = new mid.resource.File("/etc/sysconfig/caddy.env", {
   path: "/etc/sysconfig/caddy.env",
   content: pulumi.concat(
     ...Object.entries({
-      AWS_REGION: "us-east-1",
-      AWS_ACCESS_KEY_ID: iamKey.id,
-      AWS_SECRET_ACCESS_KEY: iamKey.secret,
     }).map(([key, value]) => {
       return pulumi.concat(key, "='", value, "'\n");
     }),
@@ -193,7 +197,6 @@ const caddyfile = new mid.resource.File("/etc/caddy/Caddyfile", {
   content: pulumi.interpolate`
 {
   email alerts@sapslaj.com
-  acme_dns route53
   metrics
   admin
 }
@@ -201,6 +204,14 @@ const caddyfile = new mid.resource.File("/etc/caddy/Caddyfile", {
 ${DNSRecordTrait.dnsRecordFor(vm).fullname} {
   root * /mnt/exos/volumes/misc/
   file_server browse
+  tls {
+    dns acmedns {
+      username misc
+      password misc
+      subdomain ${DNSRecordTrait.dnsRecordFor(vm).fullname}
+      server_url https://shimiko.sapslaj.xyz/acme-dns
+    }
+  }
 }
 `,
 }, {
@@ -210,10 +221,10 @@ ${DNSRecordTrait.dnsRecordFor(vm).fullname} {
   ],
 });
 
-const caddyVersion = "v2.9.1";
+const caddyVersion = "v2.10.2";
 
 const buildArgs = [
-  "--with github.com/caddy-dns/route53@v1.5.0",
+  "--with github.com/caddy-dns/acmedns@v0.6.0",
 ].join(" ");
 
 const caddyEntrypoint = new mid.resource.File("/usr/local/sbin/caddy.sh", {
