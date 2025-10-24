@@ -52,13 +52,8 @@ new mid.resource.File("/etc/motd", {
   ],
 });
 
-const pipxPreRequisites = new mid.resource.Apt("pipx-pre-requisites", {
-  names: [
-    "pkg-config",
-    "python3-dev",
-    "python3-pip",
-    "python3-venv",
-  ],
+const pipx = new mid.resource.Apt("pipx", {
+  name: "pipx",
 }, {
   provider: midProvider,
   dependsOn: [
@@ -66,47 +61,18 @@ const pipxPreRequisites = new mid.resource.Apt("pipx-pre-requisites", {
   ],
 });
 
-const pipx = new mid.resource.AnsibleTaskList("pipx", {
-  tasks: {
-    create: [
-      {
-        module: "pip",
-        args: {
-          name: "pipx",
-          executable: "pip3",
-          state: "present",
-        },
-      },
-    ],
-    delete: [
-      {
-        module: "pip",
-        args: {
-          name: "pipx",
-          executable: "pip3",
-          state: "absent",
-        },
-      },
-    ],
-  },
-}, {
-  provider: midProvider,
-  dependsOn: [
-    pipxPreRequisites,
-  ],
-});
-
 const kvmPackages = new mid.resource.Apt("kvm-packages", {
   names: [
-    "netcat",
-    "ovmf",
-    "ovmf-ia32",
-    "qemu-system",
-    "qemu-utils",
     "libvirt-clients",
     "libvirt-daemon",
     "libvirt-daemon-system",
     "libvirt-dev",
+    "netcat",
+    "ovmf",
+    "ovmf-ia32",
+    "qemu-system",
+    "qemu-system-modules-spice",
+    "qemu-utils",
   ],
 }, {
   provider: midProvider,
@@ -352,16 +318,7 @@ new mid.resource.AnsibleTaskList("networking-config", {
         module: "nmcli",
         args: {
           state: "present",
-          conn_name: "enp10s0",
-          method4: "auto",
-          method6: "auto",
-        },
-      },
-      {
-        module: "nmcli",
-        args: {
-          state: "present",
-          conn_name: "enp7s0f0",
+          conn_name: "enp7s0f0np0",
           dns4: [
             "172.24.4.2",
             "172.24.4.3",
@@ -386,30 +343,6 @@ new mid.resource.AnsibleTaskList("networking-config", {
       {
         module: "nmcli",
         args: {
-          state: "absent",
-          conn_name: "enp5s0f0.4",
-          type: "vlan",
-          vlandev: "enp5s0f0",
-          vlanid: 4,
-          method4: "manual",
-          method6: "manual",
-          ip4: "172.24.4.10/24",
-          ip6: "2001:470:e022:4::a/64",
-        },
-      },
-      {
-        module: "nmcli",
-        args: {
-          state: "absent",
-          conn_name: "enp7s0f2",
-          type: "ethernet",
-          method4: "disabled",
-          method6: "disabled",
-        },
-      },
-      {
-        module: "nmcli",
-        args: {
           state: "present",
           conn_name: "vm.br0.4",
           type: "bridge",
@@ -422,22 +355,12 @@ new mid.resource.AnsibleTaskList("networking-config", {
         module: "nmcli",
         args: {
           state: "present",
-          conn_name: "enp7s0f2.4",
+          conn_name: "enp7s0f2np2.4",
           master: "vm.br0.4",
           type: "vlan",
-          vlandev: "enp7s0f2",
+          vlandev: "enp7s0f2np2",
           vlanid: 4,
           slave_type: "bridge",
-        },
-      },
-      {
-        module: "nmcli",
-        args: {
-          state: "absent",
-          conn_name: "enp5s0f1.4",
-          master: "vm.br0.4",
-          type: "vlan",
-          vlanid: 4,
         },
       },
       {
@@ -455,22 +378,12 @@ new mid.resource.AnsibleTaskList("networking-config", {
         module: "nmcli",
         args: {
           state: "present",
-          conn_name: "enp7s0f2.5",
+          conn_name: "enp7s0f2np2.5",
           master: "vm.br0.5",
           type: "vlan",
-          vlandev: "enp7s0f2",
+          vlandev: "enp7s0f2np2",
           vlanid: 5,
           slave_type: "bridge",
-        },
-      },
-      {
-        module: "nmcli",
-        args: {
-          state: "absent",
-          conn_name: "enp5s0f1.5",
-          master: "vm.br0.5",
-          type: "vlan",
-          vlanid: 5,
         },
       },
     ],
@@ -482,20 +395,6 @@ new mid.resource.AnsibleTaskList("networking-config", {
     networkmanagerService,
   ],
 });
-
-// new mid.resource.File("/var/lib/libvirt/images", {
-//   path: "/var/lib/libvirt/images",
-//   ensure: "directory",
-//   recurse: true,
-//   owner: "root",
-//   group: "libvirt",
-//   mode: "g+rwx",
-// }, {
-//   provider: midProvider,
-//   dependsOn: [
-//     kvmPackages,
-//   ],
-// });
 
 const libvirtExporterBinary = new mid.resource.File("/usr/local/bin/libvirt_exporter", {
   path: "/usr/local/bin/libvirt_exporter",
@@ -530,7 +429,7 @@ new SystemdUnit("libvirt_exporter.service", {
 }, {
   provider: midProvider,
   dependsOn: [
-    duExporterBinary,
+    libvirtExporterBinary,
   ],
 });
 
